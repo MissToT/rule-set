@@ -18,8 +18,8 @@
 
 | 规则集 | 类型 | 说明 | 下载 |
 |--------|------|------|------|
-| `proxy-domain` | 域名 | 代理域名规则 | [.srs](./dist/domain/proxy.srs) · [.json](./dist/domain/proxy.json) |
-| `proxy-ipcidr` | IP 段 | 代理 IP 段规则 | [.srs](./dist/ipcidr/proxy.srs) · [.json](./dist/ipcidr/proxy.json) |
+| `proxy-domain` | 域名 | 代理域名规则 | [.srs](https://raw.githubusercontent.com/MissToT/rule-set/main/dist/domain/proxy.srs) · [.json](https://raw.githubusercontent.com/MissToT/rule-set/main/dist/domain/proxy.json) |
+| `proxy-ipcidr` | IP 段 | 代理 IP 段规则 | [.srs](https://raw.githubusercontent.com/MissToT/rule-set/main/dist/ipcidr/proxy.srs) · [.json](https://raw.githubusercontent.com/MissToT/rule-set/main/dist/ipcidr/proxy.json) |
 
 ---
 

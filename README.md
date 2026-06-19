@@ -6,9 +6,9 @@
 
 每日自动从上游 mihomo 规则仓库拉取，转换并编译为 sing-box `.srs` 格式
 
-[![Update](https://github.com/MissToT/singbox-proxyrules/actions/workflows/update.yml/badge.svg)](https://github.com/MissToT/singbox-proxyrules/actions/workflows/update.yml)
-![GitHub last commit](https://img.shields.io/github/last-commit/MissToT/singbox-proxyrules?label=最近更新)
-![GitHub repo size](https://img.shields.io/github/repo-size/MissToT/singbox-proxyrules?label=仓库大小)
+[![Update](https://github.com/MissToT/rule-set/actions/workflows/update.yml/badge.svg)](https://github.com/MissToT/rule-set/actions/workflows/update.yml)
+![GitHub last commit](https://img.shields.io/github/last-commit/MissToT/rule-set?label=最近更新)
+![GitHub repo size](https://img.shields.io/github/repo-size/MissToT/rule-set?label=仓库大小)
 
 </div>
 
@@ -34,7 +34,7 @@
       "tag": "proxy-domain",
       "type": "remote",
       "format": "binary",
-      "url": "https://raw.githubusercontent.com/MissToT/singbox-proxyrules/main/dist/domain/proxy.srs",
+      "url": "https://raw.githubusercontent.com/MissToT/rule-set/main/dist/domain/proxy.srs",
       "download_detour": "direct",
       "update_interval": "1d"
     },
@@ -42,7 +42,7 @@
       "tag": "proxy-ipcidr",
       "type": "remote",
       "format": "binary",
-      "url": "https://raw.githubusercontent.com/MissToT/singbox-proxyrules/main/dist/ipcidr/proxy.srs",
+      "url": "https://raw.githubusercontent.com/MissToT/rule-set/main/dist/ipcidr/proxy.srs",
       "download_detour": "direct",
       "update_interval": "1d"
     }

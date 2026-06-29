@@ -120,15 +120,7 @@ rules:
 
 规则从以下上游仓库下载并合并，脚本本身不修改任何规则内容：
 
-| 规则集 | 上游来源 |
-|--------|---------|
-| `domain/china` | MissToT/Picture · QuixoticHeart/rule-set · MetaCubeX/meta-rules-dat |
-| `domain/proxy` | MissToT/Picture · QuixoticHeart/rule-set |
-| `domain/adblock` | privacy-protection-tools/anti-ad · MissToT/Picture |
-| `domain/japan` | MetaCubeX/meta-rules-dat (dlsite/dmm/pixiv) · MissToT/Picture |
-| `domain/taiwan` | MetaCubeX/meta-rules-dat (bahamut/manhuagui) · MissToT/Picture |
-| `ipcidr/china` | QuixoticHeart/rule-set · MetaCubeX/meta-rules-dat |
-| `ipcidr/proxy` | QuixoticHeart/rule-set |
+[QuixoticHeart/rule-set](https://github.com/QuixoticHeart/rule-set) / [MetaCubeX/meta-rules-dat](https://github.com/MetaCubeX/meta-rules-dat) / [privacy-protection-tools/anti-ad](https://github.com/privacy-protection-tools/anti-AD)
 
 ---
 

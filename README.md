@@ -18,20 +18,18 @@
 
 ### 域名规则（Geosite）
 
-| 规则集 | 说明 | Mihomo `.yaml` | Mihomo `.mrs` | Sing-box `.json` | Sing-box `.srs` |
-|--------|------|:-:|:-:|:-:|:-:|
-| `china` | 国内域名直连 | [yaml](https://raw.githubusercontent.com/MissToT/rule-set/mihomo/geo/geosite/china.yaml) | [mrs](https://raw.githubusercontent.com/MissToT/rule-set/mihomo/geo/geosite/china.mrs) | [json](https://raw.githubusercontent.com/MissToT/rule-set/singbox/geo/geosite/china.json) | [srs](https://raw.githubusercontent.com/MissToT/rule-set/singbox/geo/geosite/china.srs) |
-| `proxy` | 代理域名规则 | [yaml](https://raw.githubusercontent.com/MissToT/rule-set/mihomo/geo/geosite/proxy.yaml) | [mrs](https://raw.githubusercontent.com/MissToT/rule-set/mihomo/geo/geosite/proxy.mrs) | [json](https://raw.githubusercontent.com/MissToT/rule-set/singbox/geo/geosite/proxy.json) | [srs](https://raw.githubusercontent.com/MissToT/rule-set/singbox/geo/geosite/proxy.srs) |
-| `adblock` | 广告拦截规则 | [yaml](https://raw.githubusercontent.com/MissToT/rule-set/mihomo/geo/geosite/adblock.yaml) | [mrs](https://raw.githubusercontent.com/MissToT/rule-set/mihomo/geo/geosite/adblock.mrs) | [json](https://raw.githubusercontent.com/MissToT/rule-set/singbox/geo/geosite/adblock.json) | [srs](https://raw.githubusercontent.com/MissToT/rule-set/singbox/geo/geosite/adblock.srs) |
-| `japan` | 日本流媒体 / 内容平台 | [yaml](https://raw.githubusercontent.com/MissToT/rule-set/mihomo/geo/geosite/japan.yaml) | [mrs](https://raw.githubusercontent.com/MissToT/rule-set/mihomo/geo/geosite/japan.mrs) | [json](https://raw.githubusercontent.com/MissToT/rule-set/singbox/geo/geosite/japan.json) | [srs](https://raw.githubusercontent.com/MissToT/rule-set/singbox/geo/geosite/japan.srs) |
-| `taiwan` | 台湾流媒体 / 内容平台 | [yaml](https://raw.githubusercontent.com/MissToT/rule-set/mihomo/geo/geosite/taiwan.yaml) | [mrs](https://raw.githubusercontent.com/MissToT/rule-set/mihomo/geo/geosite/taiwan.mrs) | [json](https://raw.githubusercontent.com/MissToT/rule-set/singbox/geo/geosite/taiwan.json) | [srs](https://raw.githubusercontent.com/MissToT/rule-set/singbox/geo/geosite/taiwan.srs) |
+| 规则集 | 说明 | Mihomo | Sing-box |
+|--------|------|:-:|:-:|
+| `china` | 国内域名 | [yaml](https://raw.githubusercontent.com/MissToT/rule-set/mihomo/geo/geosite/china.yaml) / [mrs](https://raw.githubusercontent.com/MissToT/rule-set/mihomo/geo/geosite/china.mrs) | [json](https://raw.githubusercontent.com/MissToT/rule-set/singbox/geo/geosite/china.json) / [srs](https://raw.githubusercontent.com/MissToT/rule-set/singbox/geo/geosite/china.srs) |
+| `proxy` | 代理域名 | [yaml](https://raw.githubusercontent.com/MissToT/rule-set/mihomo/geo/geosite/proxy.yaml) / [mrs](https://raw.githubusercontent.com/MissToT/rule-set/mihomo/geo/geosite/proxy.mrs) | [json](https://raw.githubusercontent.com/MissToT/rule-set/singbox/geo/geosite/proxy.json) / [srs](https://raw.githubusercontent.com/MissToT/rule-set/singbox/geo/geosite/proxy.srs) |
+| `adblock` | 广告域名 | [yaml](https://raw.githubusercontent.com/MissToT/rule-set/mihomo/geo/geosite/adblock.yaml) / [mrs](https://raw.githubusercontent.com/MissToT/rule-set/mihomo/geo/geosite/adblock.mrs) | [json](https://raw.githubusercontent.com/MissToT/rule-set/singbox/geo/geosite/adblock.json) / [srs](https://raw.githubusercontent.com/MissToT/rule-set/singbox/geo/geosite/adblock.srs) |
 
 ### IP 段规则（GeoIP）
 
-| 规则集 | 说明 | Mihomo `.yaml` | Mihomo `.mrs` | Sing-box `.json` | Sing-box `.srs` |
-|--------|------|:-:|:-:|:-:|:-:|
-| `china` | 国内 IP 直连 | [yaml](https://raw.githubusercontent.com/MissToT/rule-set/mihomo/geo/geoip/china.yaml) | [mrs](https://raw.githubusercontent.com/MissToT/rule-set/mihomo/geo/geoip/china.mrs) | [json](https://raw.githubusercontent.com/MissToT/rule-set/singbox/geo/geoip/china.json) | [srs](https://raw.githubusercontent.com/MissToT/rule-set/singbox/geo/geoip/china.srs) |
-| `proxy` | 代理 IP 段规则 | [yaml](https://raw.githubusercontent.com/MissToT/rule-set/mihomo/geo/geoip/proxy.yaml) | [mrs](https://raw.githubusercontent.com/MissToT/rule-set/mihomo/geo/geoip/proxy.mrs) | [json](https://raw.githubusercontent.com/MissToT/rule-set/singbox/geo/geoip/proxy.json) | [srs](https://raw.githubusercontent.com/MissToT/rule-set/singbox/geo/geoip/proxy.srs) |
+| 规则集 | 说明 | Mihomo | Sing-box |
+|--------|------|:-:|:-:|
+| `china` | 国内 IP | [yaml](https://raw.githubusercontent.com/MissToT/rule-set/mihomo/geo/geoip/china.yaml) / [mrs](https://raw.githubusercontent.com/MissToT/rule-set/mihomo/geo/geoip/china.mrs) | [json](https://raw.githubusercontent.com/MissToT/rule-set/singbox/geo/geoip/china.json) / [srs](https://raw.githubusercontent.com/MissToT/rule-set/singbox/geo/geoip/china.srs) |
+| `proxy` | 代理 IP | [yaml](https://raw.githubusercontent.com/MissToT/rule-set/mihomo/geo/geoip/proxy.yaml) / [mrs](https://raw.githubusercontent.com/MissToT/rule-set/mihomo/geo/geoip/proxy.mrs) | [json](https://raw.githubusercontent.com/MissToT/rule-set/singbox/geo/geoip/proxy.json) / [srs](https://raw.githubusercontent.com/MissToT/rule-set/singbox/geo/geoip/proxy.srs) |
 
 ---
 
@@ -150,9 +148,6 @@ geo/
 ├── geosite/
 │   ├── china.yaml / china.mrs
 │   ├── proxy.yaml / proxy.mrs
-│   ├── adblock.yaml / adblock.mrs
-│   ├── japan.yaml  / japan.mrs
-│   └── taiwan.yaml / taiwan.mrs
 └── geoip/
     ├── china.yaml / china.mrs
     └── proxy.yaml / proxy.mrs
@@ -162,14 +157,11 @@ geo/
 ```
 geo/
 ├── geosite/
-│   ├── china.json / china.srs   ✦
-│   ├── proxy.json / proxy.srs   ✦
-│   ├── adblock.json / adblock.srs ✦
-│   ├── japan.json  / japan.srs  ✦
-│   └── taiwan.json / taiwan.srs ✦
+│   ├── china.json / china.srs
+│   ├── proxy.json / proxy.srs
 └── geoip/
-    ├── china.json / china.srs   ✦
-    └── proxy.json / proxy.srs   ✦
+    ├── china.json / china.srs
+    └── proxy.json / proxy.srs
 ```
 
 ---

@@ -1,86 +1,45 @@
-name: Update Singbox Rulesets
+name: Update Rule Sets
 
 on:
   schedule:
-    # 每天 UTC 02:00 运行（北京时间 10:00）
-    - cron: '0 2 * * *'
-  # 允许在 Actions 页面手动触发
-  workflow_dispatch:
+    - cron: '0 20 * * *' # 每天北京时间凌晨 4 点全自动运行
+  workflow_dispatch: # 支持手动点击运行
+
+permissions:
+  contents: write
 
 jobs:
-  update:
+  build-and-deploy:
     runs-on: ubuntu-latest
-
-    permissions:
-      contents: write
-
     steps:
-      # ── 1. 检出代码 ─────────────────────────────────────────────
-      - name: Checkout repository
+      - name: Checkout Default Branch
         uses: actions/checkout@v4
 
-      # ── 2. 配置 Python ──────────────────────────────────────────
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: '3.10'
 
-      # ── 3. 下载源文件并转换为 JSON ─────────────────────────────
-      - name: Convert rules to JSON
+      - name: Execute Compilation Script
+        # 执行 scripts 目录下的 convert.py
         run: python scripts/convert.py
 
-      # ── 4. 查询 sing-box 最新预发布版本号（1.4.x beta，支持 version:5）──
-      - name: Get latest sing-box pre-release version
-        id: singbox
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Deploy to mihomo Branch
         run: |
-          TAG=$(gh release list --repo SagerNet/sing-box --limit 20 \
-            --json tagName,isPrerelease \
-            | jq -r '[.[] | select(.isPrerelease == true)] | .[0].tagName')
-          VERSION="${TAG#v}"
-          echo "tag=${TAG}"         >> "$GITHUB_OUTPUT"
-          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
-          echo "ℹ️  sing-box ${TAG} (pre-release)"
-
-      # ── 5. 下载并安装 sing-box 二进制 ──────────────────────────
-      - name: Install sing-box
-        run: |
-          VERSION="${{ steps.singbox.outputs.version }}"
-          ARCHIVE="sing-box-${VERSION}-linux-amd64"
-
-          echo "📥  下载 sing-box v${VERSION}..."
-          wget -q "https://github.com/SagerNet/sing-box/releases/download/v${VERSION}/${ARCHIVE}.tar.gz"
-          tar -xzf "${ARCHIVE}.tar.gz"
-          sudo install -m 755 "${ARCHIVE}/sing-box" /usr/local/bin/sing-box
-          sing-box version
-
-      # ── 6. 递归编译所有子目录中的 JSON → SRS ───────────────────
-      - name: Compile JSON to SRS
-        run: |
-          echo "🔨  开始编译..."
-          find dist -name "*.json" | while IFS= read -r json_file; do
-            dir=$(dirname "${json_file}")
-            name=$(basename "${json_file}" .json)
-            srs_file="${dir}/${name}.srs"
-            sing-box rule-set compile --output "${srs_file}" "${json_file}"
-            SIZE=$(du -sh "${srs_file}" | cut -f1)
-            echo "✅  ${srs_file}  (${SIZE})"
-          done
-
-      # ── 7. 提交并推送变更 ───────────────────────────────────────
-      - name: Commit and push
-        run: |
-          git config user.name  "github-actions[bot]"
+          cd mihomo_out
+          git init
+          git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Automated Sync: Update Mihomo MRS rules"
+          git push --force "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" HEAD:mihomo
 
-          git add -f dist/
-
-          if git diff --staged --quiet; then
-            echo "ℹ️  规则集无变化，跳过提交。"
-          else
-            TIMESTAMP=$(date -u +'%Y-%m-%d %H:%M UTC')
-            git commit -m "chore: auto-update ruleset [${TIMESTAMP}]"
-            git push
-            echo "✅  已推送最新规则集。"
-          fi
+      - name: Deploy to singbox Branch
+        run: |
+          cd singbox_out
+          git init
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Automated Sync: Update Sing-box SRS rules"
+          git push --force "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" HEAD:singbox

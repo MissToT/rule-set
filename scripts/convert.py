@@ -9,29 +9,29 @@ import shutil
 
 # ==================== 配置区 ====================
 # 1. 基础规则源
-URL_MISSTOT_CHINA_DOMAIN = "https://v6.gh-proxy.org/github.com/MissToT/Picture/raw/Meta/Rules/domain/China.mrs"
-URL_MISSTOT_PROXY_DOMAIN = "https://v6.gh-proxy.org/github.com/MissToT/Picture/raw/Meta/Rules/domain/Proxy.mrs"
-URL_QUIXOTIC_CN_DOMAIN = "https://v6.gh-proxy.org/github.com/QuixoticHeart/rule-set/raw/ruleset/meta/domain/cn.mrs"
-URL_QUIXOTIC_PROXY_DOMAIN = "https://v6.gh-proxy.org/github.com/QuixoticHeart/rule-set/raw/ruleset/meta/domain/proxy.mrs"
-URL_QUIXOTIC_CN_IP = "https://v6.gh-proxy.org/github.com/QuixoticHeart/rule-set/raw/ruleset/meta/ipcidr/cn.mrs"
+URL_MISSTOT_CHINA_DOMAIN = "https://github.com/MissToT/Picture/raw/Meta/Rules/domain/China.mrs"
+URL_MISSTOT_PROXY_DOMAIN = "https://github.com/MissToT/Picture/raw/Meta/Rules/domain/Proxy.mrs"
+URL_QUIXOTIC_CN_DOMAIN = "https://github.com/QuixoticHeart/rule-set/raw/ruleset/meta/domain/cn.mrs"
+URL_QUIXOTIC_PROXY_DOMAIN = "https://github.com/QuixoticHeart/rule-set/raw/ruleset/meta/domain/proxy.mrs"
+URL_QUIXOTIC_CN_IP = "https://github.com/QuixoticHeart/rule-set/raw/ruleset/meta/ipcidr/cn.mrs"
 URL_QUIXOTIC_PROXY_IP = "https://raw.githubusercontent.com/QuixoticHeart/rule-set/ruleset/meta/ipcidr/proxy.mrs"
 
 # 2. 自定义规则集配置
 RULES_CONFIG = {
     "adblock": [
-        "https://v6.gh-proxy.org/github.com/privacy-protection-tools/anti-ad.github.io/raw/master/docs/mihomo.mrs",
-        "https://v6.gh-proxy.org/github.com/MissToT/Picture/raw/Meta/Rules/domain/reject.mrs"
+        "https://github.com/privacy-protection-tools/anti-ad.github.io/raw/master/docs/mihomo.mrs",
+        "https://github.com/MissToT/Picture/raw/Meta/Rules/domain/reject.mrs"
     ],
     "japan": [
         "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geosite/dlsite.mrs",
         "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geosite/dmm.mrs",
         "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geosite/pixiv.mrs",
-        "https://v6.gh-proxy.org/github.com/MissToT/Picture/raw/Meta/Rules/domain/Japan.mrs"
+        "https://github.com/MissToT/Picture/raw/Meta/Rules/domain/Japan.mrs"
     ],
     "taiwan": [
         "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geosite/bahamut.mrs",
         "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geosite/manhuagui.mrs",
-        "https://v6.gh-proxy.org/github.com/MissToT/Picture/raw/Meta/Rules/domain/Taiwan.mrs"
+        "https://github.com/MissToT/Picture/raw/Meta/Rules/domain/Taiwan.mrs"
     ]
 }
 

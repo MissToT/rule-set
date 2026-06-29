@@ -43,8 +43,8 @@ jobs:
           REPO_URL="https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
           WORKSPACE="$GITHUB_WORKSPACE"
 
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
           # 若分支已存在则克隆（保留历史），否则初始化孤立分支
           if git ls-remote --exit-code "$REPO_URL" refs/heads/mihomo > /dev/null 2>&1; then
@@ -77,8 +77,8 @@ jobs:
           REPO_URL="https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
           WORKSPACE="$GITHUB_WORKSPACE"
 
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
           if git ls-remote --exit-code "$REPO_URL" refs/heads/singbox > /dev/null 2>&1; then
             git clone --depth=1 --branch singbox "$REPO_URL" deploy_singbox

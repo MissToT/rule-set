@@ -2,8 +2,8 @@ name: Update Rule Sets
 
 on:
   schedule:
-    - cron: '0 20 * * *' # 每天北京时间凌晨 4 点全自动运行
-  workflow_dispatch: # 支持手动点击运行
+    - cron: '0 20 * * *'  # 每天北京时间凌晨 4:00（UTC 20:00）
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -20,26 +20,85 @@ jobs:
         with:
           python-version: '3.10'
 
+      # 在执行脚本前，将上一次的 mihomo 分支内容克隆到本地。
+      # convert.py 读取此目录作为差异比对基线。
+      # 首次运行时分支不存在，跳过即可，不报错。
+      - name: Checkout Previous Snapshot for Diff
+        run: |
+          REPO_URL="https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+          if git ls-remote --exit-code "$REPO_URL" refs/heads/mihomo > /dev/null 2>&1; then
+            git clone --depth=1 --branch mihomo "$REPO_URL" prev_mihomo
+            echo "[*] 已克隆 mihomo 历史快照，用于差异比对"
+          else
+            echo "[*] mihomo 分支尚不存在（首次运行），跳过差异比对"
+          fi
+
       - name: Execute Compilation Script
-        # 执行 scripts 目录下的 convert.py
         run: python scripts/convert.py
 
+      # 核心改动：不再 git init + force push，改为克隆现有分支后增量提交。
+      # 这样每次 commit 都有完整 diff，可以直接在 GitHub 上查看变更。
       - name: Deploy to mihomo Branch
         run: |
-          cd mihomo_out
-          git init
+          REPO_URL="https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+          WORKSPACE="$GITHUB_WORKSPACE"
+
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add .
-          git commit -m "Automated Sync: Update Mihomo MRS rules"
-          git push --force "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" HEAD:mihomo
+
+          # 若分支已存在则克隆（保留历史），否则初始化孤立分支
+          if git ls-remote --exit-code "$REPO_URL" refs/heads/mihomo > /dev/null 2>&1; then
+            git clone --depth=1 --branch mihomo "$REPO_URL" deploy_mihomo
+          else
+            (mkdir -p deploy_mihomo \
+              && cd deploy_mihomo \
+              && git init \
+              && git remote add origin "$REPO_URL" \
+              && git checkout --orphan mihomo)
+          fi
+
+          # 将新生成的文件同步进去（保留 .git 元数据）
+          rsync -av --delete --exclude='.git' mihomo_out/ deploy_mihomo/
+
+          cd deploy_mihomo
+          git add -A
+
+          # 仅在有实际变更时提交，避免产生空 commit
+          if git status --porcelain | grep -q .; then
+            git commit -m "$(cat $WORKSPACE/mihomo_commit_msg.txt)"
+            git push origin HEAD:mihomo
+            echo "::notice::mihomo 分支已更新"
+          else
+            echo "::notice::mihomo 分支无变更，跳过提交"
+          fi
 
       - name: Deploy to singbox Branch
         run: |
-          cd singbox_out
-          git init
+          REPO_URL="https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+          WORKSPACE="$GITHUB_WORKSPACE"
+
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add .
-          git commit -m "Automated Sync: Update Sing-box SRS rules"
-          git push --force "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" HEAD:singbox
+
+          if git ls-remote --exit-code "$REPO_URL" refs/heads/singbox > /dev/null 2>&1; then
+            git clone --depth=1 --branch singbox "$REPO_URL" deploy_singbox
+          else
+            (mkdir -p deploy_singbox \
+              && cd deploy_singbox \
+              && git init \
+              && git remote add origin "$REPO_URL" \
+              && git checkout --orphan singbox)
+          fi
+
+          rsync -av --delete --exclude='.git' singbox_out/ deploy_singbox/
+
+          cd deploy_singbox
+          git add -A
+
+          if git status --porcelain | grep -q .; then
+            git commit -m "$(cat $WORKSPACE/singbox_commit_msg.txt)"
+            git push origin HEAD:singbox
+            echo "::notice::singbox 分支已更新"
+          else
+            echo "::notice::singbox 分支无变更，跳过提交"
+          fi

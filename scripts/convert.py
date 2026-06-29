@@ -10,10 +10,8 @@ import shutil
 # 规则源配置
 URL_MISSTOT_CHINA = "https://v6.gh-proxy.org/github.com/MissToT/Picture/raw/Meta/Rules/domain/China.mrs"
 URL_MISSTOT_PROXY = "https://v6.gh-proxy.org/github.com/MissToT/Picture/raw/Meta/Rules/domain/Proxy.mrs"
-
 URL_QUIXOTIC_CN_MRS = "https://v6.gh-proxy.org/github.com/QuixoticHeart/rule-set/raw/ruleset/meta/domain/cn.mrs"
 URL_QUIXOTIC_PROXY_MRS = "https://v6.gh-proxy.org/github.com/QuixoticHeart/rule-set/raw/ruleset/meta/domain/proxy.mrs"
-URL_QUIXOTIC_CN_JSON = "https://v6.gh-proxy.org/github.com/QuixoticHeart/rule-set/raw/ruleset/singbox/version5/cn.json"
 
 def get_latest_asset_url(repo, pattern):
     url = f"https://api.github.com/repos/{repo}/releases/latest"
@@ -91,12 +89,11 @@ def main():
     os.makedirs("singbox_out/geo/geosite", exist_ok=True)
     os.makedirs("singbox_out/geo/geoip", exist_ok=True)
 
-    # 下载所需文件
+    # 下载所需文件（移除了 json 文件的下载）
     download_file(URL_MISSTOT_CHINA, "misstot_china.mrs")
     download_file(URL_MISSTOT_PROXY, "misstot_proxy.mrs")
     download_file(URL_QUIXOTIC_CN_MRS, "quixotic_cn.mrs")
     download_file(URL_QUIXOTIC_PROXY_MRS, "quixotic_proxy.mrs")
-    download_file(URL_QUIXOTIC_CN_JSON, "quixotic_cn.json")
 
     # 解编二进制 .mrs 到明文文本
     print("[-] 解析 .mrs 二进制规则文件...")
@@ -118,19 +115,16 @@ def main():
 
     # ==================== 二、Sing-box Geosite 规则处理 ====================
     print("[-] 处理 Task 3: geo/geosite/china.srs")
-    with open("quixotic_cn.json", 'r', encoding='utf-8') as f:
-        sb_china = json.load(f)
-    
-    if "rules" not in sb_china:
-        sb_china["rules"] = []
-    
-    misstot_china_list = sorted(list(read_text_rules("misstot_china.txt")))
-    if misstot_china_list:
-        sb_china["rules"].append({
-            "domain": misstot_china_list,
-            "domain_suffix": misstot_china_list
-        })
-        
+    merged_china_list = sorted(list(read_text_rules("misstot_china.txt").union(read_text_rules("quixotic_cn.txt"))))
+    sb_china = {
+        "version": 1,
+        "rules": [
+            {
+                "domain": merged_china_list,
+                "domain_suffix": merged_china_list
+            }
+        ]
+    }
     with open("merged_china_sb.json", 'w', encoding='utf-8') as f:
         json.dump(sb_china, f, indent=2, ensure_ascii=False)
     os.system("./sing-box rule-set compile --output singbox_out/geo/geosite/china.srs merged_china_sb.json")

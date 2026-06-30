@@ -1,6 +1,6 @@
 # 规则变更记录
 
-**更新时间：** 2026-06-30 04:20 UTC
+**更新时间：** 2026-06-30 10:16 UTC
 
 ---
 
@@ -11,22 +11,12 @@
 
 ## `domain/china`
 
-- 规则总数：**113687**（-11）
+- 规则总数：**113688**（+1）
 
-<details><summary>❌ 移除 11 条（点击展开）</summary>
+<details><summary>✅ 新增 1 条（点击展开）</summary>
 
 ```
-+.gh-proxy.com
-+.gh-proxy.org
-+.ghfast.top
-+.sntp.me
-git.imee.me
-image.moriaruruka.qzz.io
-sub1.sntp.me
-sub2.sntp.me
-sub3.sntp.me
-v6.gh-proxy.com
-v6.gh-proxy.org
+gh-proxy.com
 ```
 </details>
 

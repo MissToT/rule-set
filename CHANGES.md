@@ -1,6 +1,6 @@
 # 规则变更记录
 
-**更新时间：** 2026-06-30 03:28 UTC
+**更新时间：** 2026-06-30 04:20 UTC
 
 ---
 
@@ -11,43 +11,22 @@
 
 ## `domain/china`
 
-- 规则总数：**113698**（+20）
+- 规则总数：**113687**（-11）
 
-<details><summary>✅ 新增 23 条（点击展开）</summary>
-
-```
-+.71shi.net
-+.8m2.net
-+.anixplayer.net
-+.cilisouou.com
-+.cm1.hk
-+.duifene.com
-+.feemoo.hk
-+.fenglingkj.com
-+.gugudata.com
-+.haowenti.net
-+.hibianli.com
-+.jfcoop.com
-+.jlshuiyuan.com
-+.kodakbanjara.com
-+.moliranran.com
-+.oend.net
-+.qingtingai.net
-+.qingye.org
-+.ucdns4.com
-+.vtdd.vip
-+.wsjqnmmrmv.world
-+.yglsr.com
-+.zggx100.com
-```
-</details>
-
-<details><summary>❌ 移除 3 条（点击展开）</summary>
+<details><summary>❌ 移除 11 条（点击展开）</summary>
 
 ```
-+.balldollars.com
-+.kscord.com
-+.qdn4ydsg3s.com
++.gh-proxy.com
++.gh-proxy.org
++.ghfast.top
++.sntp.me
+git.imee.me
+image.moriaruruka.qzz.io
+sub1.sntp.me
+sub2.sntp.me
+sub3.sntp.me
+v6.gh-proxy.com
+v6.gh-proxy.org
 ```
 </details>
 
@@ -58,16 +37,8 @@
 
 ## `domain/proxy`
 
-- 规则总数：**29383**（+3）
-
-<details><summary>✅ 新增 3 条（点击展开）</summary>
-
-```
-+.cloudns.net
-+.desec.io
-+.expressnews.com
-```
-</details>
+- 规则总数：**29383**（+0）
+- 无变化
 
 ## `domain/taiwan`
 
@@ -76,24 +47,8 @@
 
 ## `ipcidr/china`
 
-- 规则总数：**21657**（-1）
-
-<details><summary>✅ 新增 2 条（点击展开）</summary>
-
-```
-155.102.92.0/23
-155.102.94.0/24
-```
-</details>
-
-<details><summary>❌ 移除 3 条（点击展开）</summary>
-
-```
-155.102.92.0/24
-187.54.48.0/23
-2a0f:1cc5:3200::/46
-```
-</details>
+- 规则总数：**21657**（+0）
+- 无变化
 
 ## `ipcidr/proxy`
 

@@ -3,15 +3,8 @@
   "rules": [
     {
       "domain": [
-        "git.imee.me",
         "i.pixiv.re",
-        "image.moriaruruka.qzz.io",
-        "p.sda1.dev",
-        "sub1.sntp.me",
-        "sub2.sntp.me",
-        "sub3.sntp.me",
-        "v6.gh-proxy.com",
-        "v6.gh-proxy.org"
+        "p.sda1.dev"
       ],
       "domain_suffix": [
         "0.xn--czrs0t",
@@ -38979,8 +38972,6 @@
         "ggzuhao.com",
         "ggzx.net",
         "gh-fm.com",
-        "gh-proxy.com",
-        "gh-proxy.org",
         "gh-reagent.com",
         "gh-shipping.com",
         "gh8s.com",
@@ -38995,7 +38986,6 @@
         "ghdoor.com",
         "ghed119.com",
         "ghedu.com",
-        "ghfast.top",
         "ghfdc.org",
         "ghgglobal.com",
         "ghglzx.com",
@@ -85253,7 +85243,6 @@
         "snsyx.com",
         "sntba.com",
         "snto.com",
-        "sntp.me",
         "snuoen.com",
         "snupg.com",
         "snv1.com",

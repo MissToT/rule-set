@@ -2,6 +2,7 @@ import os
 import subprocess
 import json
 import sys
+from datetime import datetime, timedelta, timezone
 
 def commit_changes(target_dir, branch_name):
     os.chdir(target_dir)
@@ -10,9 +11,17 @@ def commit_changes(target_dir, branch_name):
     msg_file = os.path.abspath("../commit_msgs.json")
     commit_msgs = {}
     if os.path.exists(msg_file):
-        with open(msg_file, "r", encoding="utf-8") as f:
-            commit_msgs = json.load(f)
+        try:
+            with open(msg_file, "r", encoding="utf-8") as f:
+                commit_msgs = json.load(f)
+        except Exception as e:
+            print(f"[-] 读取 commit_msgs.json 失败: {e}")
             
+    # 获取当前北京时间
+    tz = timezone(timedelta(hours=8))
+    now = datetime.now(tz)
+    time_str = now.strftime("%Y年%m月%d日 %H:%M:%S")
+    
     # 获取当前 git 状态
     status_output = subprocess.run(["git", "status", "--porcelain"], capture_output=True, text=True).stdout
     lines = status_output.strip().split("\n")
@@ -29,23 +38,27 @@ def commit_changes(target_dir, branch_name):
         # 1. 逐个文件 git add
         subprocess.run(["git", "add", file_path], check=True)
         
-        # 2. 智能匹配提交信息：支持精确路径匹配以及文件名（basename）模糊匹配
+        filename = os.path.basename(file_path)
+        file_stem = os.path.splitext(filename)[0] # 获取不带后缀的主干名（如 adblock, china）
+        
+        # 2. 智能匹配提交信息：支持精确路径、文件名、以及忽略后缀的 Stem 匹配
         msg = None
         if file_path in commit_msgs:
             msg = commit_msgs[file_path]
         else:
-            file_basename = os.path.basename(file_path)
             for k, v in commit_msgs.items():
-                if k == file_basename or k.endswith("/" + file_basename) or os.path.basename(k) == file_basename:
+                k_filename = os.path.basename(k)
+                k_stem = os.path.splitext(k_filename)[0]
+                if k == file_path or k_filename == filename or k_stem == file_stem:
                     msg = v
                     break
         
-        if not msg:
-            filename = os.path.basename(file_path)
-            msg = f"更新 {filename}"
+        # 3. 拦截过于简陋或缺失的提交信息，强制升级为带时间的标准详细格式
+        if not msg or msg.strip() == "更新" or msg.strip() == "Update":
+            msg = f"{time_str} - 更新 {filename}"
             
         print(f"[*] 提交 [{file_path}] -> 消息: {msg}")
-        # 3. 逐个文件执行 git commit
+        # 4. 逐个文件执行 git commit
         subprocess.run(["git", "commit", "-m", msg], check=True)
         
     if has_changes:

@@ -309,7 +309,6 @@ def main():
     generate_change_report(all_changes)
 
     print("\n[*] 正在清理临时工作区...")
-    shutil.rmtree("temp_workspace", ignore_ignore=True) if hasattr(shutil, "rmtree") else None
     shutil.rmtree("temp_workspace", ignore_errors=True)
 
     print("\n[√] 任务全部完成，所有规则集均已生成完毕！")

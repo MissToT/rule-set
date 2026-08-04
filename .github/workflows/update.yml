@@ -29,6 +29,12 @@ jobs:
           else
             echo "[*] mihomo 分支尚不存在（首次运行），跳过差异比对"
           fi
+          if git ls-remote --exit-code "$REPO_URL" refs/heads/bypass > /dev/null 2>&1; then
+            git clone --depth=1 --branch bypass "$REPO_URL" prev_bypass
+            echo "[*] 已克隆 bypass 历史快照，用于差异比对"
+          else
+            echo "[*] bypass 分支尚不存在，跳过差异比对"
+          fi
 
       - name: Execute Compilation Script
         run: python scripts/convert.py
@@ -54,7 +60,6 @@ jobs:
 
           cd deploy_mihomo
           
-          # 获取北京时间作为降级备选消息的时间前缀
           TIME_STR=$(python3 -c "from datetime import datetime, timedelta, timezone; now=datetime.now(timezone(timedelta(hours=8))); print(f\"{now.year}年{now.month}月{now.day}日{now.strftime('%H:%M:%S')}\")")
 
           if [ -n "$(git status --porcelain)" ]; then
@@ -62,13 +67,10 @@ jobs:
               if [ -n "$file" ]; then
                 git add "$file"
                 filename=$(basename "$file")
-                
-                # 尝试从 python 导出的 json 中读取具体的添加/删除条数消息
                 MSG=$(python3 -c "import json; d=json.load(open('../commit_msgs.json')); print(d.get('$file', ''))")
                 
-                # 如果这是普通文件没有被统计(比如 CHANGES.md)，降级显示默认消息
                 if [ -z "$MSG" ]; then
-                  MSG="${TIME_STR}-更新 ${filename}"
+                  MSG="${TIME_STR} - 更新 ${filename}"
                 fi
                 
                 git commit -m "$MSG"
@@ -108,7 +110,7 @@ jobs:
                 MSG=$(python3 -c "import json; d=json.load(open('../commit_msgs.json')); print(d.get('$file', ''))")
                 
                 if [ -z "$MSG" ]; then
-                  MSG="${TIME_STR}-更新 ${filename}"
+                  MSG="${TIME_STR} - 更新 ${filename}"
                 fi
                 
                 git commit -m "$MSG"
@@ -134,7 +136,6 @@ jobs:
               && git checkout --orphan bypass)
           fi
 
-          # 仅把包含两个 txt 的独立目录同步过来，确保 bypass 分支极度纯净
           rsync -av --delete --exclude='.git' bypass_out/ deploy_bypass/
 
           cd deploy_bypass
@@ -146,8 +147,13 @@ jobs:
               if [ -n "$file" ]; then
                 git add "$file"
                 filename=$(basename "$file")
-                # bypass 属于没在统计清单里的独立文件，默认直接输出格式：2026年x月x日xx:xx:xx-更新 cn-ip-v4.txt
-                git commit -m "${TIME_STR}-更新 ${filename}"
+                MSG=$(python3 -c "import json; d=json.load(open('../commit_msgs.json')); print(d.get('$file', ''))")
+                
+                if [ -z "$MSG" ]; then
+                  MSG="${TIME_STR} - 更新 ${filename}"
+                fi
+                
+                git commit -m "$MSG"
               fi
             done
             git push origin HEAD:bypass

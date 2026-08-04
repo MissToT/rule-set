@@ -21,7 +21,6 @@ def commit_changes(target_dir, branch_name):
     for line in lines:
         if not line.strip():
             continue
-        # 解析 git status 输出的文件路径（跳过状态前缀）
         file_path = line[3:].strip()
         if file_path.startswith('"') and file_path.endswith('"'):
             file_path = file_path[1:-1]
@@ -30,13 +29,22 @@ def commit_changes(target_dir, branch_name):
         # 1. 逐个文件 git add
         subprocess.run(["git", "add", file_path], check=True)
         
-        # 2. 精准匹配对应文件的提交信息
-        msg = commit_msgs.get(file_path)
+        # 2. 智能匹配提交信息：支持精确路径匹配以及文件名（basename）模糊匹配
+        msg = None
+        if file_path in commit_msgs:
+            msg = commit_msgs[file_path]
+        else:
+            file_basename = os.path.basename(file_path)
+            for k, v in commit_msgs.items():
+                if k == file_basename or k.endswith("/" + file_basename) or os.path.basename(k) == file_basename:
+                    msg = v
+                    break
+        
         if not msg:
             filename = os.path.basename(file_path)
             msg = f"更新 {filename}"
             
-        print(f"[*] 正在提交 [{file_path}] -> 消息: {msg}")
+        print(f"[*] 提交 [{file_path}] -> 消息: {msg}")
         # 3. 逐个文件执行 git commit
         subprocess.run(["git", "commit", "-m", msg], check=True)
         

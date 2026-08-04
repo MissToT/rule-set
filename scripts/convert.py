@@ -5,6 +5,7 @@ import re
 import tarfile
 import gzip
 import shutil
+import ipaddress
 from datetime import datetime, timezone
 
 # ==================== 1. 全局数据源配置 ====================
@@ -46,8 +47,6 @@ RULES_CONFIG = {
     }
 }
 
-# CI 在执行脚本前提前克隆的 mihomo 分支目录，用于差异比对
-# 不存在时（首次运行）自动跳过对比，不报错
 PREV_SNAPSHOT_DIR = "prev_mihomo"
 
 # ==================== 2. 核心功能函数 ====================
@@ -109,11 +108,7 @@ def read_text_rules(filename):
     return rules
 
 def fetch_prev_rules(rule_type, rule_name):
-    """
-    从 CI 预先克隆的本地快照读取上次规则（用于差异比对）。
-    YAML 格式每行为：  - 'rule'
-    首次运行或快照目录不存在时返回 None，不影响正常编译流程。
-    """
+    """从 CI 预先克隆的本地快照读取上次规则（用于差异比对）"""
     subdir = "geoip" if rule_type == "ipcidr" else "geosite"
     yaml_path = os.path.join(PREV_SNAPSHOT_DIR, "geo", subdir, f"{rule_name}.yaml")
     if not os.path.exists(yaml_path):
@@ -126,6 +121,42 @@ def fetch_prev_rules(rule_type, rule_name):
                 rules.add(s[3:-1])
     print(f"  -> 历史快照 [{rule_name}]: {len(rules)} 条")
     return rules
+
+def export_bypass_txt_files(rules_set):
+    """将 ipcidr/china 的 IP 转换为 cn-ip-v4.txt 和 cn-ip-v6.txt 并进行包含关系去重与网段合并"""
+    v4_nets = []
+    v6_nets = []
+
+    for item in rules_set:
+        clean_item = item.strip()
+        if not clean_item:
+            continue
+        try:
+            net = ipaddress.ip_network(clean_item, strict=False)
+            if net.version == 4:
+                v4_nets.append(net)
+            elif net.version == 6:
+                v6_nets.append(net)
+        except ValueError:
+            continue
+
+    # collapse_addresses 剔除被更大网段包含的子网段，并进行连贯网段合并
+    v4_collapsed = sorted(ipaddress.collapse_addresses(v4_nets))
+    v6_collapsed = sorted(ipaddress.collapse_addresses(v6_nets))
+
+    for out_dir in ["mihomo_out", "singbox_out"]:
+        bypass_dir = os.path.join(out_dir, "bypass")
+        os.makedirs(bypass_dir, exist_ok=True)
+
+        with open(os.path.join(bypass_dir, "cn-ip-v4.txt"), "w", encoding="utf-8") as f:
+            for net in v4_collapsed:
+                f.write(f"{net}\n")
+
+        with open(os.path.join(bypass_dir, "cn-ip-v6.txt"), "w", encoding="utf-8") as f:
+            for net in v6_collapsed:
+                f.write(f"{net}\n")
+
+    print(f"  -> 已生成 bypass 格式文件: IPv4 ({len(v4_collapsed)}条), IPv6 ({len(v6_collapsed)}条)")
 
 def export_four_formats(rule_name, rules_set, rule_type):
     """根据规则类型 (domain/ipcidr) 导出 YAML, JSON, MRS, SRS 四种格式"""
@@ -166,10 +197,7 @@ def export_four_formats(rule_name, rules_set, rule_type):
     os.system(f"./sing-box rule-set compile --output {singbox_dir}/{rule_name}.srs {singbox_dir}/{rule_name}.json")
 
 def generate_change_report(all_changes):
-    """
-    生成 CHANGES.md 差异报告并写入两个输出目录；
-    同时写出供 CI 读取的提交信息文件（mihomo_commit_msg.txt / singbox_commit_msg.txt）。
-    """
+    """生成 CHANGES.md 差异报告并写入输出目录"""
     now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     lines = [f"# 规则变更记录\n\n**更新时间：** {now_str}\n\n---\n\n"]
     summary_parts = []
@@ -178,13 +206,12 @@ def generate_change_report(all_changes):
         data       = all_changes[key]
         total      = data["total"]
         prev_total = data["prev_total"]
-        added      = data["added"]    # sorted list
-        removed    = data["removed"]  # sorted list
+        added      = data["added"]
+        removed    = data["removed"]
 
         lines.append(f"## `{key}`\n\n")
 
         if prev_total is None:
-            # 首次运行，无历史快照可对比
             lines.append(f"> 首次生成，共 **{total}** 条规则\n\n")
             summary_parts.append(f"{key}: 初始化 {total} 条")
         else:
@@ -221,24 +248,10 @@ def generate_change_report(all_changes):
 
     report = "".join(lines)
 
-    # 写入两个输出目录
     for out_dir in ["mihomo_out", "singbox_out"]:
         os.makedirs(out_dir, exist_ok=True)
         with open(os.path.join(out_dir, "CHANGES.md"), "w", encoding="utf-8") as f:
             f.write(report)
-
-    # 生成 CI 提交信息
-    if summary_parts:
-        commit_msg = f"sync({now_str}): " + " | ".join(summary_parts)
-    else:
-        commit_msg = f"sync({now_str}): no changes"
-
-    for fname in ["mihomo_commit_msg.txt", "singbox_commit_msg.txt"]:
-        with open(fname, "w", encoding="utf-8") as f:
-            f.write(commit_msg)
-
-    print(f"\n[*] 提交信息：{commit_msg}")
-
 
 # ==================== 3. 主处理流程 ====================
 
@@ -250,7 +263,6 @@ def process_rules(rule_type, rules_dict):
     for rule_name, urls in rules_dict.items():
         print(f"\n[+] 处理规则集: {rule_name}")
 
-        # 读取历史快照（用于事后差异统计，不影响编译）
         prev_rules = fetch_prev_rules(rule_type, rule_name)
 
         merged_rules = set()
@@ -262,9 +274,13 @@ def process_rules(rule_type, rules_dict):
             merged_rules |= read_text_rules(temp_txt)
 
         print(f"  -> 已完成去重合并，共计 {len(merged_rules)} 条规则，正在执行编译...")
+
+        # 若处理的是 ipcidr 且规则集名为 china，导出新增的 bypass txt 文件
+        if rule_type == "ipcidr" and rule_name == "china":
+            export_bypass_txt_files(merged_rules)
+
         export_four_formats(rule_name, merged_rules, rule_type)
 
-        # 计算新增 / 移除
         if prev_rules is not None:
             added   = sorted(merged_rules - prev_rules)
             removed = sorted(prev_rules - merged_rules)
@@ -281,27 +297,22 @@ def process_rules(rule_type, rules_dict):
 
     return change_log
 
-
 def main():
-    # 1. 环境初始化
     setup_binaries()
     os.makedirs("temp_workspace", exist_ok=True)
 
-    # 2. 数据驱动执行规则构建，同时收集变更日志
     all_changes = {}
     for rule_type, rules_dict in RULES_CONFIG.items():
         changes = process_rules(rule_type, rules_dict)
         all_changes.update(changes)
 
-    # 3. 生成 CHANGES.md 与提交信息
     generate_change_report(all_changes)
 
-    # 4. 清理临时环境
     print("\n[*] 正在清理临时工作区...")
+    shutil.rmtree("temp_workspace", ignore_ignore=True) if hasattr(shutil, "rmtree") else None
     shutil.rmtree("temp_workspace", ignore_errors=True)
 
     print("\n[√] 任务全部完成，所有规则集均已生成完毕！")
-
 
 if __name__ == "__main__":
     main()

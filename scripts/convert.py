@@ -307,14 +307,9 @@ def process_rules(rule_type, rules_dict):
             v4_rules, v6_rules, other_rules = optimize_ip_rules(merged_rules)
             combined_rules = v4_rules + v6_rules + other_rules
 
-            # 导出基础规则集 (如 china)
-            prev_rules = fetch_prev_rules(rule_type, rule_name)
-            export_all_formats(rule_name, combined_rules, rule_type)
-            record_change_log(change_log, rule_type, rule_name, set(combined_rules), prev_rules)
-
-            # 若为 china 规则，自动拆分为 cn-ip-v4 和 cn-ip-v6
+            # 若为 china 规则，仅导出独立分支规则 [cn-ip-v4] 与 [cn-ip-v6]，不导出 china
             if rule_name == "china":
-                print("  -> 自动导出独立分支规则: [cn-ip-v4] 与 [cn-ip-v6]...")
+                print("  -> 导出独立分支规则: [cn-ip-v4] 与 [cn-ip-v6]...")
 
                 # 导出 cn-ip-v4
                 prev_v4 = fetch_prev_rules(rule_type, "cn-ip-v4")
@@ -325,6 +320,11 @@ def process_rules(rule_type, rules_dict):
                 prev_v6 = fetch_prev_rules(rule_type, "cn-ip-v6")
                 export_all_formats("cn-ip-v6", v6_rules, rule_type)
                 record_change_log(change_log, rule_type, "cn-ip-v6", set(v6_rules), prev_v6)
+            else:
+                # 导出其他 IP 规则集（如 proxy）
+                prev_rules = fetch_prev_rules(rule_type, rule_name)
+                export_all_formats(rule_name, combined_rules, rule_type)
+                record_change_log(change_log, rule_type, rule_name, set(combined_rules), prev_rules)
         else:
             prev_rules = fetch_prev_rules(rule_type, rule_name)
             export_all_formats(rule_name, sorted(list(merged_rules)), rule_type)

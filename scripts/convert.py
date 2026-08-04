@@ -154,7 +154,7 @@ def export_bypass_txt_files(v4_collapsed, v6_collapsed, commit_msgs):
     v4_res = process_bypass_file("cn-ip-v4.txt", v4_collapsed)
     v6_res = process_bypass_file("cn-ip-v6.txt", v6_collapsed)
 
-    # 专门为 Bypass 独立生成纯净的 CHANGES.md
+    # 专门为 Bypass 独立生成纯净的 README.md
     lines = [f"# Bypass 规则变更记录\n\n**更新时间：** {time_str}\n\n---\n\n"]
     for key, data in [("cn-ip-v4.txt", v4_res), ("cn-ip-v6.txt", v6_res)]:
         lines.append(f"## `{key}`\n\n")
@@ -181,7 +181,7 @@ def export_bypass_txt_files(v4_collapsed, v6_collapsed, commit_msgs):
                 lines.append("- 无变化\n")
         lines.append("\n")
 
-    with open(os.path.join("bypass_out", "CHANGES.md"), "w", encoding="utf-8") as f:
+    with open(os.path.join("bypass_out", "README.md"), "w", encoding="utf-8") as f:
         f.write("".join(lines))
     print(f"  -> 已生成 bypass 独立目录文件: IPv4 ({v4_res['total']}条), IPv6 ({v6_res['total']}条)")
 
@@ -259,11 +259,11 @@ def generate_change_report(all_changes, commit_msgs):
 
         report = "".join(lines)
         os.makedirs(out_dir, exist_ok=True)
-        with open(os.path.join(out_dir, "CHANGES.md"), "w", encoding="utf-8") as f:
+        with open(os.path.join(out_dir, "README.md"), "w", encoding="utf-8") as f:
             f.write(report)
             
     # 因为每个分支生成的 CHANGES 逻辑基本都在同一时间线，给根目录分配统一的提交信息
-    commit_msgs["CHANGES.md"] = f"{time_str} - 更新 CHANGES.md"
+    commit_msgs["README.md"] = f"{time_str} - 更新 README.md"
 
 # ==================== 3. 主处理流程 ====================
 

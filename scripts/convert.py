@@ -121,7 +121,7 @@ def optimize_ip_rules(rules_set):
     """
     对 IP CIDR 规则进行智能化简与范围去重：
     1. 区分 IPv4 和 IPv6 规则。
-    2. 使用 ipaddress.collapse_addresses 自动执行“大包小”（保留大网段、剔除被包含的子网）及相邻网段合并。
+    2. 使用 ipaddress.collapse_addresses 自动执行“大包小”及相邻网段合并。
     """
     v4_nets = []
     v6_nets = []
@@ -140,17 +140,13 @@ def optimize_ip_rules(rules_set):
         except ValueError:
             other_rules.add(item_clean)
 
-    # collapse_addresses 核心：保留大范围，剔除包含在更大 CIDR 中的子网，合并相邻子网
     v4_collapsed = [str(net) for net in ipaddress.collapse_addresses(v4_nets)]
     v6_collapsed = [str(net) for net in ipaddress.collapse_addresses(v6_nets)]
 
     return v4_collapsed, v6_collapsed, sorted(list(other_rules))
 
 def export_all_formats(rule_name, rules_list, rule_type):
-    """
-    导出 YAML, JSON, TXT, MRS, SRS 五种格式文件。
-    新增 TXT 纯文本输出：每行一个 IP CIDR / 域名。
-    """
+    """导出 YAML, JSON, TXT, MRS, SRS 文件"""
     is_ip = (rule_type == "ipcidr")
     mihomo_dir  = f"mihomo_out/geo/{'geoip' if is_ip else 'geosite'}"
     singbox_dir = f"singbox_out/geo/{'geoip' if is_ip else 'geosite'}"
@@ -185,7 +181,7 @@ def export_all_formats(rule_name, rules_list, rule_type):
             json.dump({"version": 2, "rules": [{"domain": domains, "domain_suffix": suffixes}]},
                       f, indent=2, ensure_ascii=False)
 
-    # 3. TXT (纯文本格式：每行一条 IP CIDR，无任何修饰符)
+    # 3. TXT (纯文本)
     txt_content = "\n".join(sorted_rules) + "\n"
     with open(f"{mihomo_dir}/{rule_name}.txt", 'w', encoding='utf-8') as f:
         f.write(txt_content)
@@ -194,7 +190,7 @@ def export_all_formats(rule_name, rules_list, rule_type):
     with open(f"{bypass_dir}/{rule_name}.txt", 'w', encoding='utf-8') as f:
         f.write(txt_content)
 
-    # 4. MRS & SRS（二进制文件）
+    # 4. MRS & SRS 二进制编译
     temp_txt_path = f"temp_workspace/merged_{rule_name}_{rule_type}.txt"
     with open(temp_txt_path, 'w', encoding='utf-8') as f:
         f.write("\n".join(sorted_rules))
@@ -218,54 +214,57 @@ def record_change_log(change_log, rule_type, rule_name, rules_set, prev_rules):
     }
 
 def generate_change_report(all_changes):
-    """生成 CHANGES.md 报告及提交日志"""
+    """生成 CHANGES.md 报告及各个分支专属的提交日志"""
     now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+
+    # 仅提取真正发生变动（有新增/删除或首次初始化）的文件
+    changed_items = {}
+    for key, data in all_changes.items():
+        if data["prev_total"] is None or data["added"] or data["removed"]:
+            changed_items[key] = data
+
+    # 1. 生成 CHANGES.md（仅记录修改的文件）
     lines = [f"# 规则变更记录\n\n**更新时间：** {now_str}\n\n---\n\n"]
-    summary_parts = []
+    if not changed_items:
+        lines.append("本次更新无任何规则变动。\n")
+    else:
+        for key in sorted(changed_items.keys()):
+            data = changed_items[key]
+            total      = data["total"]
+            prev_total = data["prev_total"]
+            added      = data["added"]
+            removed    = data["removed"]
 
-    for key in sorted(all_changes.keys()):
-        data       = all_changes[key]
-        total      = data["total"]
-        prev_total = data["prev_total"]
-        added      = data["added"]
-        removed    = data["removed"]
+            lines.append(f"## `{key}`\n\n")
 
-        lines.append(f"## `{key}`\n\n")
-
-        if prev_total is None:
-            lines.append(f"> 首次生成，共 **{total}** 条规则\n\n")
-            summary_parts.append(f"{key}: 初始化 {total} 条")
-        else:
-            diff = total - prev_total
-            sign = (f"+{diff}" if diff >= 0 else str(diff))
-            lines.append(f"- 规则总数：**{total}**（{sign}）\n")
-
-            if added:
-                lines.append(
-                    f"\n<details><summary>✅ 新增 {len(added)} 条（点击展开）</summary>\n\n```\n"
-                )
-                for r in added[:50]:
-                    lines.append(f"{r}\n")
-                if len(added) > 50:
-                    lines.append(f"... 以及其他 {len(added) - 50} 条\n")
-                lines.append("```\n</details>\n")
-
-            if removed:
-                lines.append(
-                    f"\n<details><summary>❌ 移除 {len(removed)} 条（点击展开）</summary>\n\n```\n"
-                )
-                for r in removed[:50]:
-                    lines.append(f"{r}\n")
-                if len(removed) > 50:
-                    lines.append(f"... 以及其他 {len(removed) - 50} 条\n")
-                lines.append("```\n</details>\n")
-
-            if not added and not removed:
-                lines.append("- 无变化\n")
+            if prev_total is None:
+                lines.append(f"> 首次生成，共 **{total}** 条规则\n\n")
             else:
-                summary_parts.append(f"{key} +{len(added)}/-{len(removed)}")
+                diff = total - prev_total
+                sign = (f"+{diff}" if diff >= 0 else str(diff))
+                lines.append(f"- 规则总数：**{total}**（{sign}）\n")
 
-        lines.append("\n")
+                if added:
+                    lines.append(
+                        f"\n<details><summary>✅ 新增 {len(added)} 条（点击展开）</summary>\n\n```\n"
+                    )
+                    for r in added[:50]:
+                        lines.append(f"{r}\n")
+                    if len(added) > 50:
+                        lines.append(f"... 以及其他 {len(added) - 50} 条\n")
+                    lines.append("```\n</details>\n")
+
+                if removed:
+                    lines.append(
+                        f"\n<details><summary>❌ 移除 {len(removed)} 条（点击展开）</summary>\n\n```\n"
+                    )
+                    for r in removed[:50]:
+                        lines.append(f"{r}\n")
+                    if len(removed) > 50:
+                        lines.append(f"... 以及其他 {len(removed) - 50} 条\n")
+                    lines.append("```\n</details>\n")
+
+            lines.append("\n")
 
     report = "".join(lines)
 
@@ -274,16 +273,42 @@ def generate_change_report(all_changes):
         with open(os.path.join(out_dir, "CHANGES.md"), "w", encoding="utf-8") as f:
             f.write(report)
 
-    if summary_parts:
-        commit_msg = f"sync({now_str}): " + " | ".join(summary_parts)
-    else:
-        commit_msg = f"sync({now_str}): no changes"
+    # 2. 分别为各个分支单独生成针对修改文件的提交提示
+    branch_configs = {
+        "mihomo": (
+            "mihomo_commit_msg.txt", 
+            lambda rtype, rname: f"geo/{'geoip' if rtype=='ipcidr' else 'geosite'}/{rname}.mrs"
+        ),
+        "singbox": (
+            "singbox_commit_msg.txt", 
+            lambda rtype, rname: f"geo/{'geoip' if rtype=='ipcidr' else 'geosite'}/{rname}.srs"
+        ),
+        "bypass": (
+            "bypass_commit_msg.txt", 
+            lambda rtype, rname: f"{rname}.txt"
+        ),
+    }
 
-    for fname in ["mihomo_commit_msg.txt", "singbox_commit_msg.txt", "bypass_commit_msg.txt"]:
-        with open(fname, "w", encoding="utf-8") as f:
+    for branch_name, (msg_filename, formatter) in branch_configs.items():
+        summary_parts = []
+        for key, data in sorted(changed_items.items()):
+            rtype, rname = key.split("/")
+            file_path = formatter(rtype, rname)
+
+            if data["prev_total"] is None:
+                summary_parts.append(f"{file_path} init:{data['total']}")
+            else:
+                summary_parts.append(f"{file_path} +{len(data['added'])}/-{len(data['removed'])}")
+
+        if summary_parts:
+            commit_msg = f"sync({now_str}): " + " | ".join(summary_parts)
+        else:
+            commit_msg = f"sync({now_str}): no changes"
+
+        with open(msg_filename, "w", encoding="utf-8") as f:
             f.write(commit_msg)
 
-    print(f"\n[*] 提交信息：{commit_msg}")
+        print(f"[*] [{branch_name}] 专属提交信息：{commit_msg}")
 
 # ==================== 3. 主处理流程 ====================
 
@@ -303,25 +328,23 @@ def process_rules(rule_type, rules_dict):
             merged_rules |= read_text_rules(temp_txt)
 
         if rule_type == "ipcidr":
-            print("  -> 正在进行 CIDR 范围化简与去重（保留大网段、剔除被包容的子网、合并相邻网段）...")
+            print("  -> 正在进行 CIDR 范围化简与去重...")
             v4_rules, v6_rules, other_rules = optimize_ip_rules(merged_rules)
             combined_rules = v4_rules + v6_rules + other_rules
 
-            # 若为 china 规则，仅导出独立分支规则 [cn-ip-v4] 与 [cn-ip-v6]，不导出 china
             if rule_name == "china":
                 print("  -> 导出独立分支规则: [cn-ip-v4] 与 [cn-ip-v6]...")
 
-                # 导出 cn-ip-v4
+                # cn-ip-v4
                 prev_v4 = fetch_prev_rules(rule_type, "cn-ip-v4")
                 export_all_formats("cn-ip-v4", v4_rules, rule_type)
                 record_change_log(change_log, rule_type, "cn-ip-v4", set(v4_rules), prev_v4)
 
-                # 导出 cn-ip-v6
+                # cn-ip-v6
                 prev_v6 = fetch_prev_rules(rule_type, "cn-ip-v6")
                 export_all_formats("cn-ip-v6", v6_rules, rule_type)
                 record_change_log(change_log, rule_type, "cn-ip-v6", set(v6_rules), prev_v6)
             else:
-                # 导出其他 IP 规则集（如 proxy）
                 prev_rules = fetch_prev_rules(rule_type, rule_name)
                 export_all_formats(rule_name, combined_rules, rule_type)
                 record_change_log(change_log, rule_type, rule_name, set(combined_rules), prev_rules)

@@ -5,6 +5,7 @@ import re
 import tarfile
 import gzip
 import shutil
+import ipaddress
 from datetime import datetime, timezone
 
 # ==================== 1. 全局数据源配置 ====================
@@ -47,7 +48,6 @@ RULES_CONFIG = {
 }
 
 # CI 在执行脚本前提前克隆的 mihomo 分支目录，用于差异比对
-# 不存在时（首次运行）自动跳过对比，不报错
 PREV_SNAPSHOT_DIR = "prev_mihomo"
 
 # ==================== 2. 核心功能函数 ====================
@@ -109,11 +109,7 @@ def read_text_rules(filename):
     return rules
 
 def fetch_prev_rules(rule_type, rule_name):
-    """
-    从 CI 预先克隆的本地快照读取上次规则（用于差异比对）。
-    YAML 格式每行为：  - 'rule'
-    首次运行或快照目录不存在时返回 None，不影响正常编译流程。
-    """
+    """从 CI 预先克隆的本地快照读取上次规则（用于差异比对）"""
     subdir = "geoip" if rule_type == "ipcidr" else "geosite"
     yaml_path = os.path.join(PREV_SNAPSHOT_DIR, "geo", subdir, f"{rule_name}.yaml")
     if not os.path.exists(yaml_path):
@@ -127,28 +123,67 @@ def fetch_prev_rules(rule_type, rule_name):
     print(f"  -> 历史快照 [{rule_name}]: {len(rules)} 条")
     return rules
 
-def export_four_formats(rule_name, rules_set, rule_type):
-    """根据规则类型 (domain/ipcidr) 导出 YAML, JSON, MRS, SRS 四种格式"""
+def optimize_ip_rules(rules_set):
+    """
+    对 IP CIDR 规则进行智能化简与范围去重：
+    1. 区分 IPv4 和 IPv6 规则。
+    2. 使用 ipaddress.collapse_addresses 自动执行“大包小”（由更大网段覆盖并删除包含的小网段）及相邻网段聚合。
+    """
+    v4_nets = []
+    v6_nets = []
+    other_rules = set()
+
+    for item in rules_set:
+        item_clean = item.strip()
+        if not item_clean:
+            continue
+        try:
+            net = ipaddress.ip_network(item_clean, strict=False)
+            if isinstance(net, ipaddress.IPv4Network):
+                v4_nets.append(net)
+            elif isinstance(net, ipaddress.IPv6Network):
+                v6_nets.append(net)
+        except ValueError:
+            other_rules.add(item_clean)
+
+    # collapse_addresses 核心算法：保留大范围、剔除完全被包含的小范围，并自动合并可相邻连续网段
+    v4_collapsed = [str(net) for net in ipaddress.collapse_addresses(v4_nets)]
+    v6_collapsed = [str(net) for net in ipaddress.collapse_addresses(v6_nets)]
+
+    return v4_collapsed, v6_collapsed, sorted(list(other_rules))
+
+def export_all_formats(rule_name, rules_list, rule_type):
+    """
+    导出 YAML, JSON, TXT, MRS, SRS 五种格式文件。
+    新增的 TXT 文件为纯文本标准格式：每行仅一个 CIDR (例如 1.0.1.0/24)。
+    """
     is_ip = (rule_type == "ipcidr")
     mihomo_dir  = f"mihomo_out/geo/{'geoip' if is_ip else 'geosite'}"
     singbox_dir = f"singbox_out/geo/{'geoip' if is_ip else 'geosite'}"
+    bypass_dir  = "bypass_out"
+
     os.makedirs(mihomo_dir,  exist_ok=True)
     os.makedirs(singbox_dir, exist_ok=True)
+    os.makedirs(bypass_dir,  exist_ok=True)
+
+    sorted_rules = sorted(rules_list)
 
     # 1. YAML (Mihomo)
     with open(f"{mihomo_dir}/{rule_name}.yaml", 'w', encoding='utf-8') as f:
-        f.write("payload:\n")
-        for rule in sorted(rules_set):
-            f.write(f"  - '{rule}'\n")
+        f.write("payload:
+")
+        for rule in sorted_rules:
+            f.write(f"  - '{rule}'
+")
 
     # 2. JSON (Sing-box)
     with open(f"{singbox_dir}/{rule_name}.json", 'w', encoding='utf-8') as f:
         if is_ip:
-            json.dump({"version": 2, "rules": [{"ip_cidr": sorted(list(rules_set))}]},
+            json.dump({"version": 2, "rules": [{"ip_cidr": sorted_rules}]},
                       f, indent=2, ensure_ascii=False)
         else:
             domains, suffixes = [], []
-            for r in sorted(rules_set):
+            for r in sorted_rules:
                 if r.startswith('+.'):
                     suffixes.append(r[2:])
                 elif r.startswith('.'):
@@ -158,18 +193,43 @@ def export_four_formats(rule_name, rules_set, rule_type):
             json.dump({"version": 2, "rules": [{"domain": domains, "domain_suffix": suffixes}]},
                       f, indent=2, ensure_ascii=False)
 
-    # 3. MRS & SRS（二进制）
+    # 3. TXT (纯文本逐行输出：1.0.1.0/24，无额外装饰)
+    txt_content = "
+".join(sorted_rules) + "
+"
+    with open(f"{mihomo_dir}/{rule_name}.txt", 'w', encoding='utf-8') as f:
+        f.write(txt_content)
+    with open(f"{singbox_dir}/{rule_name}.txt", 'w', encoding='utf-8') as f:
+        f.write(txt_content)
+    with open(f"{bypass_dir}/{rule_name}.txt", 'w', encoding='utf-8') as f:
+        f.write(txt_content)
+
+    # 4. MRS & SRS（二进制文件）
     temp_txt_path = f"temp_workspace/merged_{rule_name}_{rule_type}.txt"
     with open(temp_txt_path, 'w', encoding='utf-8') as f:
-        f.write("\n".join(sorted(rules_set)))
+        f.write("
+".join(sorted_rules))
     os.system(f"./mihomo convert-ruleset {rule_type} text {temp_txt_path} {mihomo_dir}/{rule_name}.mrs")
     os.system(f"./sing-box rule-set compile --output {singbox_dir}/{rule_name}.srs {singbox_dir}/{rule_name}.json")
 
+def record_change_log(change_log, rule_type, rule_name, rules_set, prev_rules):
+    """记录规则变化量"""
+    if prev_rules is not None:
+        added   = sorted(rules_set - prev_rules)
+        removed = sorted(prev_rules - rules_set)
+        print(f"  -> [{rule_name}] 差异：新增 {len(added)} 条，移除 {len(removed)} 条")
+    else:
+        added, removed = [], []
+
+    change_log[f"{rule_type}/{rule_name}"] = {
+        "total":      len(rules_set),
+        "prev_total": len(prev_rules) if prev_rules is not None else None,
+        "added":      added,
+        "removed":    removed,
+    }
+
 def generate_change_report(all_changes):
-    """
-    生成 CHANGES.md 差异报告并写入两个输出目录；
-    同时写出供 CI 读取的提交信息文件（mihomo_commit_msg.txt / singbox_commit_msg.txt）。
-    """
+    """生成 CHANGES.md 差异报告并写入输出目录及提交信息文件"""
     now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     lines = [f"# 规则变更记录\n\n**更新时间：** {now_str}\n\n---\n\n"]
     summary_parts = []
@@ -178,13 +238,12 @@ def generate_change_report(all_changes):
         data       = all_changes[key]
         total      = data["total"]
         prev_total = data["prev_total"]
-        added      = data["added"]    # sorted list
-        removed    = data["removed"]  # sorted list
+        added      = data["added"]
+        removed    = data["removed"]
 
         lines.append(f"## `{key}`\n\n")
 
         if prev_total is None:
-            # 首次运行，无历史快照可对比
             lines.append(f"> 首次生成，共 **{total}** 条规则\n\n")
             summary_parts.append(f"{key}: 初始化 {total} 条")
         else:
@@ -221,37 +280,31 @@ def generate_change_report(all_changes):
 
     report = "".join(lines)
 
-    # 写入两个输出目录
-    for out_dir in ["mihomo_out", "singbox_out"]:
+    for out_dir in ["mihomo_out", "singbox_out", "bypass_out"]:
         os.makedirs(out_dir, exist_ok=True)
         with open(os.path.join(out_dir, "CHANGES.md"), "w", encoding="utf-8") as f:
             f.write(report)
 
-    # 生成 CI 提交信息
     if summary_parts:
         commit_msg = f"sync({now_str}): " + " | ".join(summary_parts)
     else:
         commit_msg = f"sync({now_str}): no changes"
 
-    for fname in ["mihomo_commit_msg.txt", "singbox_commit_msg.txt"]:
+    for fname in ["mihomo_commit_msg.txt", "singbox_commit_msg.txt", "bypass_commit_msg.txt"]:
         with open(fname, "w", encoding="utf-8") as f:
             f.write(commit_msg)
 
     print(f"\n[*] 提交信息：{commit_msg}")
 
-
 # ==================== 3. 主处理流程 ====================
 
 def process_rules(rule_type, rules_dict):
-    """通用的规则处理引擎：下载 -> 解编 -> 去重合并 -> 差异比对 -> 导出格式"""
+    """通用的规则处理引擎：下载 -> 解编 -> CIDR范围化简去重 -> 导出五种格式 -> 记录差异"""
     print(f"\n[*] 开始批量构建 [{rule_type.upper()}] 分流规则...")
     change_log = {}
 
     for rule_name, urls in rules_dict.items():
         print(f"\n[+] 处理规则集: {rule_name}")
-
-        # 读取历史快照（用于事后差异统计，不影响编译）
-        prev_rules = fetch_prev_rules(rule_type, rule_name)
 
         merged_rules = set()
         for i, url in enumerate(urls):
@@ -261,47 +314,51 @@ def process_rules(rule_type, rules_dict):
             os.system(f"./mihomo convert-ruleset {rule_type} mrs {temp_mrs} {temp_txt}")
             merged_rules |= read_text_rules(temp_txt)
 
-        print(f"  -> 已完成去重合并，共计 {len(merged_rules)} 条规则，正在执行编译...")
-        export_four_formats(rule_name, merged_rules, rule_type)
+        if rule_type == "ipcidr":
+            print("  -> 正在进行 CIDR 范围化简与去重（保留大网段、剔除被包容的子网、合并相邻网段）...")
+            v4_rules, v6_rules, other_rules = optimize_ip_rules(merged_rules)
+            combined_rules = v4_rules + v6_rules + other_rules
 
-        # 计算新增 / 移除
-        if prev_rules is not None:
-            added   = sorted(merged_rules - prev_rules)
-            removed = sorted(prev_rules - merged_rules)
-            print(f"  -> 差异：新增 {len(added)} 条，移除 {len(removed)} 条")
+            # 导出基础规则集 (如 china)
+            prev_rules = fetch_prev_rules(rule_type, rule_name)
+            export_all_formats(rule_name, combined_rules, rule_type)
+            record_change_log(change_log, rule_type, rule_name, set(combined_rules), prev_rules)
+
+            # 若为 china 规则，自动拆分为 cn-ip-v4 和 cn-ip-v6 导出的 TXT, YAML, JSON 等格式
+            if rule_name == "china":
+                print("  -> 自动导出独立分支规则: [cn-ip-v4] 与 [cn-ip-v6]...")
+
+                # 导出 cn-ip-v4
+                prev_v4 = fetch_prev_rules(rule_type, "cn-ip-v4")
+                export_all_formats("cn-ip-v4", v4_rules, rule_type)
+                record_change_log(change_log, rule_type, "cn-ip-v4", set(v4_rules), prev_v4)
+
+                # 导出 cn-ip-v6
+                prev_v6 = fetch_prev_rules(rule_type, "cn-ip-v6")
+                export_all_formats("cn-ip-v6", v6_rules, rule_type)
+                record_change_log(change_log, rule_type, "cn-ip-v6", set(v6_rules), prev_v6)
         else:
-            added, removed = [], []
-
-        change_log[f"{rule_type}/{rule_name}"] = {
-            "total":      len(merged_rules),
-            "prev_total": len(prev_rules) if prev_rules is not None else None,
-            "added":      added,
-            "removed":    removed,
-        }
+            prev_rules = fetch_prev_rules(rule_type, rule_name)
+            export_all_formats(rule_name, sorted(list(merged_rules)), rule_type)
+            record_change_log(change_log, rule_type, rule_name, merged_rules, prev_rules)
 
     return change_log
 
-
 def main():
-    # 1. 环境初始化
     setup_binaries()
     os.makedirs("temp_workspace", exist_ok=True)
 
-    # 2. 数据驱动执行规则构建，同时收集变更日志
     all_changes = {}
     for rule_type, rules_dict in RULES_CONFIG.items():
         changes = process_rules(rule_type, rules_dict)
         all_changes.update(changes)
 
-    # 3. 生成 CHANGES.md 与提交信息
     generate_change_report(all_changes)
 
-    # 4. 清理临时环境
     print("\n[*] 正在清理临时工作区...")
     shutil.rmtree("temp_workspace", ignore_errors=True)
 
     print("\n[√] 任务全部完成，所有规则集均已生成完毕！")
-
 
 if __name__ == "__main__":
     main()

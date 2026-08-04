@@ -53,28 +53,36 @@ jobs:
           rsync -av --delete --exclude='.git' mihomo_out/ deploy_mihomo/
 
           cd deploy_mihomo
+          
+          # 获取北京时间作为降级备选消息的时间前缀
+          TIME_STR=$(python3 -c "from datetime import datetime, timedelta, timezone; now=datetime.now(timezone(timedelta(hours=8))); print(f\"{now.year}年{now.month}月{now.day}日{now.strftime('%H:%M:%S')}\")")
 
-          # 遍历所有变更/新增的文件，逐个独立提交
           if [ -n "$(git status --porcelain)" ]; then
             git status --porcelain | cut -c4- | while IFS= read -r file; do
               if [ -n "$file" ]; then
                 git add "$file"
                 filename=$(basename "$file")
-                git commit -m "更新 ${filename}"
+                
+                # 尝试从 python 导出的 json 中读取具体的添加/删除条数消息
+                MSG=$(python3 -c "import json; d=json.load(open('../commit_msgs.json')); print(d.get('$file', ''))")
+                
+                # 如果这是普通文件没有被统计(比如 CHANGES.md)，降级显示默认消息
+                if [ -z "$MSG" ]; then
+                  MSG="${TIME_STR}-更新 ${filename}"
+                fi
+                
+                git commit -m "$MSG"
               fi
             done
             git push origin HEAD:mihomo
             echo "::notice::mihomo 分支已更新"
           else
-            echo "::notice::mihomo 分支无变更，跳过提交"
+            echo "::notice::mihomo 分支无变更"
           fi
 
       - name: Deploy to singbox Branch
         run: |
           REPO_URL="https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
-
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
           if git ls-remote --exit-code "$REPO_URL" refs/heads/singbox > /dev/null 2>&1; then
             git clone --depth=1 --branch singbox "$REPO_URL" deploy_singbox
@@ -89,18 +97,61 @@ jobs:
           rsync -av --delete --exclude='.git' singbox_out/ deploy_singbox/
 
           cd deploy_singbox
+          
+          TIME_STR=$(python3 -c "from datetime import datetime, timedelta, timezone; now=datetime.now(timezone(timedelta(hours=8))); print(f\"{now.year}年{now.month}月{now.day}日{now.strftime('%H:%M:%S')}\")")
 
-          # 遍历所有变更/新增的文件，逐个独立提交
           if [ -n "$(git status --porcelain)" ]; then
             git status --porcelain | cut -c4- | while IFS= read -r file; do
               if [ -n "$file" ]; then
                 git add "$file"
                 filename=$(basename "$file")
-                git commit -m "更新 ${filename}"
+                MSG=$(python3 -c "import json; d=json.load(open('../commit_msgs.json')); print(d.get('$file', ''))")
+                
+                if [ -z "$MSG" ]; then
+                  MSG="${TIME_STR}-更新 ${filename}"
+                fi
+                
+                git commit -m "$MSG"
               fi
             done
             git push origin HEAD:singbox
             echo "::notice::singbox 分支已更新"
           else
-            echo "::notice::singbox 分支无变更，跳过提交"
+            echo "::notice::singbox 分支无变更"
+          fi
+
+      - name: Deploy to bypass Branch
+        run: |
+          REPO_URL="https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+
+          if git ls-remote --exit-code "$REPO_URL" refs/heads/bypass > /dev/null 2>&1; then
+            git clone --depth=1 --branch bypass "$REPO_URL" deploy_bypass
+          else
+            (mkdir -p deploy_bypass \
+              && cd deploy_bypass \
+              && git init \
+              && git remote add origin "$REPO_URL" \
+              && git checkout --orphan bypass)
+          fi
+
+          # 仅把包含两个 txt 的独立目录同步过来，确保 bypass 分支极度纯净
+          rsync -av --delete --exclude='.git' bypass_out/ deploy_bypass/
+
+          cd deploy_bypass
+          
+          TIME_STR=$(python3 -c "from datetime import datetime, timedelta, timezone; now=datetime.now(timezone(timedelta(hours=8))); print(f\"{now.year}年{now.month}月{now.day}日{now.strftime('%H:%M:%S')}\")")
+
+          if [ -n "$(git status --porcelain)" ]; then
+            git status --porcelain | cut -c4- | while IFS= read -r file; do
+              if [ -n "$file" ]; then
+                git add "$file"
+                filename=$(basename "$file")
+                # bypass 属于没在统计清单里的独立文件，默认直接输出格式：2026年x月x日xx:xx:xx-更新 cn-ip-v4.txt
+                git commit -m "${TIME_STR}-更新 ${filename}"
+              fi
+            done
+            git push origin HEAD:bypass
+            echo "::notice::bypass 分支已更新"
+          else
+            echo "::notice::bypass 分支无变更"
           fi

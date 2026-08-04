@@ -47,13 +47,11 @@ RULES_CONFIG = {
     }
 }
 
-# CI 在执行脚本前提前克隆的 mihomo 分支目录，用于差异比对
 PREV_SNAPSHOT_DIR = "prev_mihomo"
 
 # ==================== 2. 核心功能函数 ====================
 
 def get_latest_stable_asset_url(repo, pattern):
-    """通过 GitHub API 自动匹配并获取最新稳定版内核资产"""
     url = f"https://api.github.com/repos/{repo}/releases/latest"
     req = urllib.request.Request(url, headers={'User-Agent': 'GitHub-Actions-Script'})
     try:
@@ -63,11 +61,10 @@ def get_latest_stable_asset_url(repo, pattern):
                 if re.search(pattern, asset['name'], re.IGNORECASE):
                     return asset['browser_download_url']
     except Exception as e:
-        print(f"[-] 获取 {repo} 最新稳定版本失败，将回退至默认版本: {e}")
+        print(f"[-] 获取 {repo} 最新版本失败，回退至默认版本: {e}")
     return None
 
 def setup_binaries():
-    """下载并解压 Sing-box 和 Mihomo 编译内核"""
     print("[*] 正在准备编译内核...")
 
     sb_url = get_latest_stable_asset_url("SagerNet/sing-box", r"linux-amd64.*\.tar\.gz") or \
@@ -89,7 +86,6 @@ def setup_binaries():
     os.chmod("mihomo", 0o755)
 
 def download_file(url, filename):
-    """带有基础伪装的下载器"""
     print(f"  -> 下载源: {url}")
     req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
     with urllib.request.urlopen(req) as response:
@@ -97,7 +93,6 @@ def download_file(url, filename):
             f.write(response.read())
 
 def read_text_rules(filename):
-    """读取文本规则，自动过滤注释及空行，利用 Set 结构进行绝对去重"""
     if not os.path.exists(filename):
         return set()
     rules = set()
@@ -109,7 +104,6 @@ def read_text_rules(filename):
     return rules
 
 def fetch_prev_rules(rule_type, rule_name):
-    """从 CI 预先克隆的本地快照读取上次规则（用于差异比对）"""
     subdir = "geoip" if rule_type == "ipcidr" else "geosite"
     yaml_path = os.path.join(PREV_SNAPSHOT_DIR, "geo", subdir, f"{rule_name}.yaml")
     if not os.path.exists(yaml_path):
@@ -127,7 +121,7 @@ def optimize_ip_rules(rules_set):
     """
     对 IP CIDR 规则进行智能化简与范围去重：
     1. 区分 IPv4 和 IPv6 规则。
-    2. 使用 ipaddress.collapse_addresses 自动执行“大包小”（由更大网段覆盖并删除包含的小网段）及相邻网段聚合。
+    2. 使用 ipaddress.collapse_addresses 自动执行“大包小”（保留大网段、剔除被包含的子网）及相邻网段合并。
     """
     v4_nets = []
     v6_nets = []
@@ -146,7 +140,7 @@ def optimize_ip_rules(rules_set):
         except ValueError:
             other_rules.add(item_clean)
 
-    # collapse_addresses 核心算法：保留大范围、剔除完全被包含的小范围，并自动合并可相邻连续网段
+    # collapse_addresses 核心：保留大范围，剔除包含在更大 CIDR 中的子网，合并相邻子网
     v4_collapsed = [str(net) for net in ipaddress.collapse_addresses(v4_nets)]
     v6_collapsed = [str(net) for net in ipaddress.collapse_addresses(v6_nets)]
 
@@ -155,7 +149,7 @@ def optimize_ip_rules(rules_set):
 def export_all_formats(rule_name, rules_list, rule_type):
     """
     导出 YAML, JSON, TXT, MRS, SRS 五种格式文件。
-    新增的 TXT 文件为纯文本标准格式：每行仅一个 CIDR (例如 1.0.1.0/24)。
+    新增 TXT 纯文本输出：每行一个 IP CIDR / 域名。
     """
     is_ip = (rule_type == "ipcidr")
     mihomo_dir  = f"mihomo_out/geo/{'geoip' if is_ip else 'geosite'}"
@@ -170,11 +164,9 @@ def export_all_formats(rule_name, rules_list, rule_type):
 
     # 1. YAML (Mihomo)
     with open(f"{mihomo_dir}/{rule_name}.yaml", 'w', encoding='utf-8') as f:
-        f.write("payload:
-")
+        f.write("payload:\n")
         for rule in sorted_rules:
-            f.write(f"  - '{rule}'
-")
+            f.write(f"  - '{rule}'\n")
 
     # 2. JSON (Sing-box)
     with open(f"{singbox_dir}/{rule_name}.json", 'w', encoding='utf-8') as f:
@@ -193,10 +185,8 @@ def export_all_formats(rule_name, rules_list, rule_type):
             json.dump({"version": 2, "rules": [{"domain": domains, "domain_suffix": suffixes}]},
                       f, indent=2, ensure_ascii=False)
 
-    # 3. TXT (纯文本逐行输出：1.0.1.0/24，无额外装饰)
-    txt_content = "
-".join(sorted_rules) + "
-"
+    # 3. TXT (纯文本格式：每行一条 IP CIDR，无任何修饰符)
+    txt_content = "\n".join(sorted_rules) + "\n"
     with open(f"{mihomo_dir}/{rule_name}.txt", 'w', encoding='utf-8') as f:
         f.write(txt_content)
     with open(f"{singbox_dir}/{rule_name}.txt", 'w', encoding='utf-8') as f:
@@ -207,13 +197,12 @@ def export_all_formats(rule_name, rules_list, rule_type):
     # 4. MRS & SRS（二进制文件）
     temp_txt_path = f"temp_workspace/merged_{rule_name}_{rule_type}.txt"
     with open(temp_txt_path, 'w', encoding='utf-8') as f:
-        f.write("
-".join(sorted_rules))
+        f.write("\n".join(sorted_rules))
     os.system(f"./mihomo convert-ruleset {rule_type} text {temp_txt_path} {mihomo_dir}/{rule_name}.mrs")
     os.system(f"./sing-box rule-set compile --output {singbox_dir}/{rule_name}.srs {singbox_dir}/{rule_name}.json")
 
 def record_change_log(change_log, rule_type, rule_name, rules_set, prev_rules):
-    """记录规则变化量"""
+    """记录变更统计"""
     if prev_rules is not None:
         added   = sorted(rules_set - prev_rules)
         removed = sorted(prev_rules - rules_set)
@@ -229,7 +218,7 @@ def record_change_log(change_log, rule_type, rule_name, rules_set, prev_rules):
     }
 
 def generate_change_report(all_changes):
-    """生成 CHANGES.md 差异报告并写入输出目录及提交信息文件"""
+    """生成 CHANGES.md 报告及提交日志"""
     now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     lines = [f"# 规则变更记录\n\n**更新时间：** {now_str}\n\n---\n\n"]
     summary_parts = []
@@ -299,7 +288,6 @@ def generate_change_report(all_changes):
 # ==================== 3. 主处理流程 ====================
 
 def process_rules(rule_type, rules_dict):
-    """通用的规则处理引擎：下载 -> 解编 -> CIDR范围化简去重 -> 导出五种格式 -> 记录差异"""
     print(f"\n[*] 开始批量构建 [{rule_type.upper()}] 分流规则...")
     change_log = {}
 
@@ -324,7 +312,7 @@ def process_rules(rule_type, rules_dict):
             export_all_formats(rule_name, combined_rules, rule_type)
             record_change_log(change_log, rule_type, rule_name, set(combined_rules), prev_rules)
 
-            # 若为 china 规则，自动拆分为 cn-ip-v4 和 cn-ip-v6 导出的 TXT, YAML, JSON 等格式
+            # 若为 china 规则，自动拆分为 cn-ip-v4 和 cn-ip-v6
             if rule_name == "china":
                 print("  -> 自动导出独立分支规则: [cn-ip-v4] 与 [cn-ip-v6]...")
 

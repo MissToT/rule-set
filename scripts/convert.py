@@ -151,12 +151,12 @@ def export_bypass_txt_files(v4_collapsed, v6_collapsed, commit_msgs):
             "removed": removed
         }
 
-    v4_res = process_bypass_file("cn-ip-v4.txt", v4_collapsed)
-    v6_res = process_bypass_file("cn-ip-v6.txt", v6_collapsed)
+    v4_res = process_bypass_file("cn-ipv4.txt", v4_collapsed)
+    v6_res = process_bypass_file("cn-ipv6.txt", v6_collapsed)
 
     # 专门为 Bypass 独立生成纯净的 README.md
     lines = [f"# Bypass 规则变更记录\n\n**更新时间：** {time_str}\n\n---\n\n"]
-    for key, data in [("cn-ip-v4.txt", v4_res), ("cn-ip-v6.txt", v6_res)]:
+    for key, data in [("cn-ipv4.txt", v4_res), ("cn-ipv6.txt", v6_res)]:
         lines.append(f"## `{key}`\n\n")
         if data["prev_total"] is None:
             lines.append(f"> 首次生成，共 **{data['total']}** 条规则\n\n")

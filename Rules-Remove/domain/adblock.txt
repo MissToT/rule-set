@@ -1,1 +1,2 @@
-# 在此写入需要【移除】的 adblock (domain) 规则
+# 咸鱼广告域名屏蔽会导致功耗异常
++.px.ucweb.com

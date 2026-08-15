@@ -12,7 +12,6 @@ from datetime import datetime, timezone, timedelta
 RULES_CONFIG = {
     "domain": {
         "china": [
-            "https://github.com/MissToT/Picture/raw/Meta/Rules/domain/China.mrs",
             "https://github.com/QuixoticHeart/rule-set/raw/ruleset/meta/domain/cn.mrs",
             "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geosite/cn.mrs"
         ],

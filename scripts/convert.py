@@ -32,10 +32,6 @@ RULES_CONFIG = {
         ]
     },
     "ipcidr": {
-        "china": [
-            "https://github.com/QuixoticHeart/rule-set/raw/ruleset/meta/ipcidr/cn.mrs",
-            "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geoip/cn.mrs"
-        ],
         "proxy": [
             "https://github.com/QuixoticHeart/rule-set/raw/ruleset/meta/ipcidr/proxy.mrs"
         ]

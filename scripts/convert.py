@@ -341,7 +341,7 @@ def process_rules(rule_type, rules_dict, global_commit_msgs):
                     continue
                     
             v4_collapsed = sorted(ipaddress.collapse_addresses(v4_nets))
-            v6_collapsed = sorted(ipaddress.collapse_addresses(v6_collapsed))
+            v6_collapsed = sorted(ipaddress.collapse_addresses(v6_nets))
             
             merged_rules = set(str(n) for n in (v4_collapsed + v6_collapsed))
 

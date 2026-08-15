@@ -1,3 +1,0 @@
-+.oplist.org
-+.lsposed.org
-+.lsposed.zip

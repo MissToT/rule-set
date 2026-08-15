@@ -1,1 +1,18 @@
-# 在此写入需要【新增】的 taiwan (domain) 规则
+# Pubu
++.pubu.tw
++.pubu.com.tw
+pubu.api.useinsider.com
+# Readmoo
++.readmoo.com
+# Bookwalker
++.bookwalker.com.tw
+# 漫画柜
++.mhgui.com
++.hamreus.com
++.manhuagui.com
+# hanime1
++.hanime1.me
++.hanime1.com
++.hanimeone.me
++.javchu.com
+vdownload.hembed.com

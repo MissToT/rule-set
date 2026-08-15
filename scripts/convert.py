@@ -16,23 +16,19 @@ RULES_CONFIG = {
             "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geosite/cn.mrs"
         ],
         "proxy": [
-            "https://github.com/MissToT/Picture/raw/Meta/Rules/domain/Proxy.mrs",
             "https://github.com/QuixoticHeart/rule-set/raw/ruleset/meta/domain/proxy.mrs"
         ],
         "adblock": [
-            "https://github.com/privacy-protection-tools/anti-ad.github.io/raw/master/docs/mihomo.mrs",
-            "https://github.com/MissToT/Picture/raw/Meta/Rules/domain/reject.mrs"
+            "https://github.com/privacy-protection-tools/anti-ad.github.io/raw/master/docs/mihomo.mrs"
         ],
         "japan": [
             "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geosite/dlsite.mrs",
             "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geosite/dmm.mrs",
-            "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geosite/pixiv.mrs",
-            "https://github.com/MissToT/Picture/raw/Meta/Rules/domain/Japan.mrs"
+            "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geosite/pixiv.mrs"
         ],
         "taiwan": [
             "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geosite/bahamut.mrs",
-            "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geosite/manhuagui.mrs",
-            "https://github.com/MissToT/Picture/raw/Meta/Rules/domain/Taiwan.mrs"
+            "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geosite/manhuagui.mrs"
         ]
     },
     "ipcidr": {

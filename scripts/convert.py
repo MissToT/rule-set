@@ -290,7 +290,11 @@ def process_rules(rule_type, rules_dict, global_commit_msgs):
         if os.path.exists(action_dir):
             for filename in os.listdir(action_dir):
                 if filename.endswith(".txt"):
-                    all_rule_names.add(filename[:-4]) # 去掉 .txt 后缀作为规则名
+                    r_name = filename[:-4]
+                    add_file = os.path.join("Rules-Add", rule_type, filename)
+                    # 只有当它在 RULES_CONFIG 声明过，或者其 Add 文件不为空（有真实自定义规则）时才纳入
+                    if r_name in rules_dict or len(read_text_rules(add_file)) > 0:
+                        all_rule_names.add(r_name)
 
     for rule_name in sorted(all_rule_names):
         print(f"\n[+] 处理规则集: {rule_name}")
@@ -362,7 +366,7 @@ def process_rules(rule_type, rules_dict, global_commit_msgs):
             add_cnt = len(merged_rules)
             rm_cnt = 0
 
-        msg = f"{time_str} - 更新 {rule_type}/{rule_name}: 新增 {add_cnt} 条，移除 {rm_cnt} 条"
+        msg = f"{time_str} - 更新 {rule_type}/{rule_name}: 新增 {add_cnt} 条, 移除 {rm_cnt} 条"
         geo_dir = 'geoip' if rule_type == 'ipcidr' else 'geosite'
         
         global_commit_msgs[f"geo/{geo_dir}/{rule_name}.yaml"] = msg
@@ -381,7 +385,7 @@ def process_rules(rule_type, rules_dict, global_commit_msgs):
 
 def main():
     setup_binaries()
-    setup_custom_rule_dirs()  # 执行新增的文件夹创建方法
+    setup_custom_rule_dirs()
     os.makedirs("temp_workspace", exist_ok=True)
 
     all_changes = {}

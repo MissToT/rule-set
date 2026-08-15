@@ -85,6 +85,13 @@ def setup_binaries():
             shutil.copyfileobj(f_in, f_out)
     os.chmod("mihomo", 0o755)
 
+def setup_custom_rule_dirs():
+    """初始化自定义规则的文件夹结构"""
+    for action in ["Rules-Add", "Rules-Remove"]:
+        for r_type in ["domain", "ipcidr"]:
+            os.makedirs(os.path.join(action, r_type), exist_ok=True)
+    print("[*] 已检查并初始化自定义规则目录 (Rules-Add / Rules-Remove)")
+
 def download_file(url, filename):
     print(f"  -> 下载源: {url}")
     req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
@@ -118,7 +125,6 @@ def fetch_prev_rules(rule_type, rule_name):
     return rules
 
 def export_bypass_txt_files(v4_collapsed, v6_collapsed, commit_msgs):
-    """提取 IPv4 和 IPv6，去重后导出到独立的 bypass_out 目录生成极简分支"""
     os.makedirs("bypass_out", exist_ok=True)
     now = datetime.now(timezone(timedelta(hours=8)))
     time_str = f"{now.year}年{now.month}月{now.day}日{now.strftime('%H:%M:%S')}"
@@ -154,7 +160,6 @@ def export_bypass_txt_files(v4_collapsed, v6_collapsed, commit_msgs):
     v4_res = process_bypass_file("cn-ipv4.txt", v4_collapsed)
     v6_res = process_bypass_file("cn-ipv6.txt", v6_collapsed)
 
-    # 专门为 Bypass 独立生成纯净的 README.md
     lines = [f"# Bypass 规则变更记录\n\n**更新时间：** {time_str}\n\n---\n\n"]
     for key, data in [("cn-ipv4.txt", v4_res), ("cn-ipv6.txt", v6_res)]:
         lines.append(f"## `{key}`\n\n")
@@ -220,7 +225,6 @@ def export_four_formats(rule_name, rules_set, rule_type):
     os.system(f"./sing-box rule-set compile --output {singbox_dir}/{rule_name}.srs {singbox_dir}/{rule_name}.json")
 
 def generate_change_report(all_changes, commit_msgs):
-    """分发并隔离 Mihomo 和 Sing-box 的 Markdown 报告"""
     now = datetime.now(timezone(timedelta(hours=8)))
     time_str = f"{now.year}年{now.month}月{now.day}日{now.strftime('%H:%M:%S')}"
     
@@ -262,7 +266,6 @@ def generate_change_report(all_changes, commit_msgs):
         with open(os.path.join(out_dir, "README.md"), "w", encoding="utf-8") as f:
             f.write(report)
             
-    # 因为每个分支生成的 CHANGES 逻辑基本都在同一时间线，给根目录分配统一的提交信息
     commit_msgs["README.md"] = f"{time_str} - 更新 README.md"
 
 # ==================== 3. 主处理流程 ====================
@@ -287,7 +290,25 @@ def process_rules(rule_type, rules_dict, global_commit_msgs):
             os.system(f"./mihomo convert-ruleset {rule_type} mrs {temp_mrs} {temp_txt}")
             merged_rules |= read_text_rules(temp_txt)
 
-        # 无论是否是 bypass，只要是 ipcidr，全部过一次子网合并去重
+        # =================================================================
+        # 核心新增逻辑：处理自定义 Add 和 Remove 规则
+        # =================================================================
+        add_file = os.path.join("Rules-Add", rule_type, f"{rule_name}.txt")
+        remove_file = os.path.join("Rules-Remove", rule_type, f"{rule_name}.txt")
+
+        if os.path.exists(remove_file):
+            remove_set = read_text_rules(remove_file)
+            original_len = len(merged_rules)
+            merged_rules -= remove_set
+            print(f"  -> [自定义] 从 {remove_file} 移除了 {original_len - len(merged_rules)} 条规则")
+
+        if os.path.exists(add_file):
+            add_set = read_text_rules(add_file)
+            original_len = len(merged_rules)
+            merged_rules |= add_set
+            print(f"  -> [自定义] 从 {add_file} 新增了 {len(merged_rules) - original_len} 条规则")
+        # =================================================================
+
         if rule_type == "ipcidr":
             v4_nets = []
             v6_nets = []
@@ -307,10 +328,8 @@ def process_rules(rule_type, rules_dict, global_commit_msgs):
             v4_collapsed = sorted(ipaddress.collapse_addresses(v4_nets))
             v6_collapsed = sorted(ipaddress.collapse_addresses(v6_nets))
             
-            # 刷新合并规则池，这步保证后续四种格式导出时的完美去重
             merged_rules = set(str(n) for n in (v4_collapsed + v6_collapsed))
 
-            # 仅在遇到 china 时隔离执行 Bypass 脚本
             if rule_name == "china":
                 export_bypass_txt_files(v4_collapsed, v6_collapsed, global_commit_msgs)
 
@@ -322,13 +341,12 @@ def process_rules(rule_type, rules_dict, global_commit_msgs):
             removed = sorted(prev_rules - merged_rules)
             add_cnt = len(added)
             rm_cnt = len(removed)
-            print(f"  -> 差异：新增 {add_cnt} 条，移除 {rm_cnt} 条")
+            print(f"  -> 差异：总计新增 {add_cnt} 条，移除 {rm_cnt} 条")
         else:
             added, removed = [], []
             add_cnt = len(merged_rules)
             rm_cnt = 0
 
-        # 对标 CHANGES 的严格中文提交消息样式
         msg = f"{time_str} - 更新 {rule_type}/{rule_name}: 新增 {add_cnt} 条，移除 {rm_cnt} 条"
         geo_dir = 'geoip' if rule_type == 'ipcidr' else 'geosite'
         
@@ -348,6 +366,7 @@ def process_rules(rule_type, rules_dict, global_commit_msgs):
 
 def main():
     setup_binaries()
+    setup_custom_rule_dirs()  # 执行新增的文件夹创建方法
     os.makedirs("temp_workspace", exist_ok=True)
 
     all_changes = {}

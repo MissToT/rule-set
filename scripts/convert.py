@@ -79,17 +79,14 @@ def setup_binaries():
 def setup_custom_rule_dirs():
     """初始化自定义规则的文件夹结构，并自动根据 RULES_CONFIG 创建空文件"""
     for action in ["Rules-Add", "Rules-Remove"]:
-        # 遍历 RULES_CONFIG 中的分类 (domain, ipcidr) 和对应的规则名
         for rule_type, rules_dict in RULES_CONFIG.items():
             dir_path = os.path.join(action, rule_type)
             os.makedirs(dir_path, exist_ok=True)
             
             for rule_name in rules_dict.keys():
                 file_path = os.path.join(dir_path, f"{rule_name}.txt")
-                # 只有当文件不存在时才创建，防止覆盖已有内容
                 if not os.path.exists(file_path):
                     with open(file_path, 'w', encoding='utf-8') as f:
-                        # 写入一行注释，防止文件完全为空，同时提示用户
                         if action == "Rules-Add":
                             f.write(f"# 在此写入需要【新增】的 {rule_name} ({rule_type}) 规则\n")
                         else:
@@ -282,17 +279,13 @@ def process_rules(rule_type, rules_dict, global_commit_msgs):
     now = datetime.now(timezone(timedelta(hours=8)))
     time_str = f"{now.year}年{now.month}月{now.day}日{now.strftime('%H:%M:%S')}"
 
-    # 1. 收集 RULES_CONFIG 中的规则名
     all_rule_names = set(rules_dict.keys())
-    
-    # 2. 动态扫描 Rules-Add 和 Rules-Remove 目录下所有新增的 .txt 文件名
     for action_dir in [os.path.join("Rules-Add", rule_type), os.path.join("Rules-Remove", rule_type)]:
         if os.path.exists(action_dir):
             for filename in os.listdir(action_dir):
                 if filename.endswith(".txt"):
                     r_name = filename[:-4]
                     add_file = os.path.join("Rules-Add", rule_type, filename)
-                    # 只有当它在 RULES_CONFIG 声明过，或者其 Add 文件不为空（有真实自定义规则）时才纳入
                     if r_name in rules_dict or len(read_text_rules(add_file)) > 0:
                         all_rule_names.add(r_name)
 
@@ -302,8 +295,6 @@ def process_rules(rule_type, rules_dict, global_commit_msgs):
         prev_rules = fetch_prev_rules(rule_type, rule_name)
 
         merged_rules = set()
-        
-        # 获取该规则对应的在线 URL 列表（如果 RULES_CONFIG 里没有，则为空列表）
         urls = rules_dict.get(rule_name, [])
         for i, url in enumerate(urls):
             temp_mrs = f"temp_workspace/{rule_name}_{i}.mrs"
@@ -312,7 +303,6 @@ def process_rules(rule_type, rules_dict, global_commit_msgs):
             os.system(f"./mihomo convert-ruleset {rule_type} mrs {temp_mrs} {temp_txt}")
             merged_rules |= read_text_rules(temp_txt)
 
-        # 处理自定义 Add 和 Remove 规则
         add_file = os.path.join("Rules-Add", rule_type, f"{rule_name}.txt")
         remove_file = os.path.join("Rules-Remove", rule_type, f"{rule_name}.txt")
 
@@ -386,7 +376,12 @@ def process_rules(rule_type, rules_dict, global_commit_msgs):
 def main():
     setup_binaries()
     setup_custom_rule_dirs()
+    
+    # 提前创建好所需的输出目录，防止因规则缺失导致目录不存在而报错
     os.makedirs("temp_workspace", exist_ok=True)
+    os.makedirs("bypass_out", exist_ok=True)
+    os.makedirs("mihomo_out", exist_ok=True)
+    os.makedirs("singbox_out", exist_ok=True)
 
     all_changes = {}
     global_commit_msgs = {}

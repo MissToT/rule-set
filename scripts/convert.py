@@ -85,11 +85,25 @@ def setup_binaries():
     os.chmod("mihomo", 0o755)
 
 def setup_custom_rule_dirs():
-    """初始化自定义规则的文件夹结构"""
+    """初始化自定义规则的文件夹结构，并自动根据 RULES_CONFIG 创建空文件"""
     for action in ["Rules-Add", "Rules-Remove"]:
-        for r_type in ["domain", "ipcidr"]:
-            os.makedirs(os.path.join(action, r_type), exist_ok=True)
-    print("[*] 已检查并初始化自定义规则目录 (Rules-Add / Rules-Remove)")
+        # 遍历 RULES_CONFIG 中的分类 (domain, ipcidr) 和对应的规则名
+        for rule_type, rules_dict in RULES_CONFIG.items():
+            dir_path = os.path.join(action, rule_type)
+            os.makedirs(dir_path, exist_ok=True)
+            
+            for rule_name in rules_dict.keys():
+                file_path = os.path.join(dir_path, f"{rule_name}.txt")
+                # 只有当文件不存在时才创建，防止覆盖已有内容
+                if not os.path.exists(file_path):
+                    with open(file_path, 'w', encoding='utf-8') as f:
+                        # 写入一行注释，防止文件完全为空，同时提示用户
+                        if action == "Rules-Add":
+                            f.write(f"# 在此写入需要【新增】的 {rule_name} ({rule_type}) 规则\n")
+                        else:
+                            f.write(f"# 在此写入需要【移除】的 {rule_name} ({rule_type}) 规则\n")
+                            
+    print("[*] 已检查并初始化自定义规则目录及模板文件 (Rules-Add / Rules-Remove)")
 
 def download_file(url, filename):
     print(f"  -> 下载源: {url}")

@@ -286,12 +286,25 @@ def process_rules(rule_type, rules_dict, global_commit_msgs):
     now = datetime.now(timezone(timedelta(hours=8)))
     time_str = f"{now.year}年{now.month}月{now.day}日{now.strftime('%H:%M:%S')}"
 
-    for rule_name, urls in rules_dict.items():
+    # 1. 收集 RULES_CONFIG 中的规则名
+    all_rule_names = set(rules_dict.keys())
+    
+    # 2. 动态扫描 Rules-Add 和 Rules-Remove 目录下所有新增的 .txt 文件名
+    for action_dir in [os.path.join("Rules-Add", rule_type), os.path.join("Rules-Remove", rule_type)]:
+        if os.path.exists(action_dir):
+            for filename in os.listdir(action_dir):
+                if filename.endswith(".txt"):
+                    all_rule_names.add(filename[:-4]) # 去掉 .txt 后缀作为规则名
+
+    for rule_name in sorted(all_rule_names):
         print(f"\n[+] 处理规则集: {rule_name}")
 
         prev_rules = fetch_prev_rules(rule_type, rule_name)
 
         merged_rules = set()
+        
+        # 获取该规则对应的在线 URL 列表（如果 RULES_CONFIG 里没有，则为空列表）
+        urls = rules_dict.get(rule_name, [])
         for i, url in enumerate(urls):
             temp_mrs = f"temp_workspace/{rule_name}_{i}.mrs"
             temp_txt = f"temp_workspace/{rule_name}_{i}.txt"
@@ -299,9 +312,7 @@ def process_rules(rule_type, rules_dict, global_commit_msgs):
             os.system(f"./mihomo convert-ruleset {rule_type} mrs {temp_mrs} {temp_txt}")
             merged_rules |= read_text_rules(temp_txt)
 
-        # =================================================================
-        # 核心新增逻辑：处理自定义 Add 和 Remove 规则
-        # =================================================================
+        # 处理自定义 Add 和 Remove 规则
         add_file = os.path.join("Rules-Add", rule_type, f"{rule_name}.txt")
         remove_file = os.path.join("Rules-Remove", rule_type, f"{rule_name}.txt")
 
@@ -316,7 +327,6 @@ def process_rules(rule_type, rules_dict, global_commit_msgs):
             original_len = len(merged_rules)
             merged_rules |= add_set
             print(f"  -> [自定义] 从 {add_file} 新增了 {len(merged_rules) - original_len} 条规则")
-        # =================================================================
 
         if rule_type == "ipcidr":
             v4_nets = []
@@ -335,7 +345,7 @@ def process_rules(rule_type, rules_dict, global_commit_msgs):
                     continue
                     
             v4_collapsed = sorted(ipaddress.collapse_addresses(v4_nets))
-            v6_collapsed = sorted(ipaddress.collapse_addresses(v6_nets))
+            v6_collapsed = sorted(ipaddress.collapse_addresses(v6_collapsed))
             
             merged_rules = set(str(n) for n in (v4_collapsed + v6_collapsed))
 

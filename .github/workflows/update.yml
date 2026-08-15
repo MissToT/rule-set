@@ -45,11 +45,11 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
           # 追踪新创建的文件夹
-          git add Rules-Add/ Rules-Remove/
+          git add rules/add/ rules/remove/
           
           # 检查是否有新文件产生，如果有则提交并推送回主分支
           if ! git diff --cached --quiet; then
-            git commit -m "自动生成 Rules-Add 和 Rules-Remove 模板文件"
+            git commit -m "自动生成 rules/add 和 rules/remove 模板文件"
             git push
             echo "::notice::已自动在代码库中创建模板文件，请刷新网页查看"
           else

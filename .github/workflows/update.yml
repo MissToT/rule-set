@@ -39,6 +39,23 @@ jobs:
       - name: Execute Compilation Script
         run: python scripts/convert.py
 
+      - name: Push auto-generated rule templates to default branch
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # 追踪新创建的文件夹
+          git add Rules-Add/ Rules-Remove/
+          
+          # 检查是否有新文件产生，如果有则提交并推送回主分支
+          if ! git diff --cached --quiet; then
+            git commit -m "自动生成 Rules-Add 和 Rules-Remove 模板文件"
+            git push
+            echo "::notice::已自动在代码库中创建模板文件，请刷新网页查看"
+          else
+            echo "::notice::自定义规则模板文件已存在，无需更新默认分支"
+          fi
+
       - name: Deploy to mihomo Branch
         run: |
           REPO_URL="https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"

@@ -79,7 +79,6 @@ def setup_binaries():
     print("[*] 内核准备完毕并已赋权。")
 
 def setup_custom_rule_dirs():
-    # 仅负责初始化目录结构，绝对不执行任何自动删除本地文件的逻辑
     for action in ["add", "remove"]:
         for rule_type in ["domain", "ipcidr", "classical"]:
             dir_path = os.path.join("rules", action, rule_type)
@@ -445,7 +444,6 @@ def main():
 
     # 1. 处理 domain 和 ipcidr 常规规则
     for rule_type in ["domain", "ipcidr"]:
-        # 联合收集：config.json 中的规则 + 本地 add/remove 目录下的自定义规则文件
         rule_names = set(RULES_CONFIG.get(rule_type, {}).keys())
         for action in ["add", "remove"]:
             dir_path = os.path.join("rules", action, rule_type)
@@ -467,52 +465,75 @@ def main():
             merged_rules = set()
             merged_domain_regex = set()
 
-            urls = RULES_CONFIG.get(rule_type, {}).get(rule_name, [])
-            for i, url in enumerate(urls):
-                try:
-                    temp_dl = f"temp_workspace/{rule_name}_{i}.dl"
-                    temp_txt = f"temp_workspace/{rule_name}_{i}.txt"
-                    
-                    curl_download(url, temp_dl)
-                    
-                    url_lower = url.lower()
-                    if url_lower.endswith('.mrs'):
-                        ret = os.system(f"./mihomo convert-ruleset {rule_type} mrs {temp_dl} {temp_txt}")
-                        if ret != 0 or not os.path.exists(temp_txt):
-                            raise Exception("Mihomo 转换 mrs 失败")
-                    elif url_lower.endswith('.srs'):
-                        temp_json = f"temp_workspace/{rule_name}_{i}.json"
-                        ret = os.system(f"./sing-box rule-set decompile {temp_dl} --output {temp_json}")
-                        if ret != 0 or not os.path.exists(temp_json) or os.path.getsize(temp_json) == 0:
-                            raise Exception("Sing-box 反编译 srs 失败")
-                        temp_txt = temp_json
-                    else:
-                        shutil.copy(temp_dl, temp_txt)
-                    
-                    d_set, ip_set, dr_set = parse_mixed_rules_to_buckets(temp_txt)
-                    if rule_type == "ipcidr":
-                        merged_rules |= ip_set
-                    else:
-                        merged_rules |= d_set
-                        merged_domain_regex |= dr_set
+            # 解析规则配置：兼容旧版直接填写 list 和新版传入 dict 
+            rule_config = RULES_CONFIG.get(rule_type, {}).get(rule_name, [])
+            if isinstance(rule_config, dict):
+                add_urls = rule_config.get("add", [])
+                remove_urls = rule_config.get("remove", [])
+                enable_local = rule_config.get("local", True)
+            else:
+                # 兼容旧版本列表形式，默认开启 local 合并
+                add_urls = rule_config
+                remove_urls = []
+                enable_local = True
 
-                except Exception as e:
-                    print(f"[-] 警告：处理规则源跳过 | {url} -> {e}")
-                    continue
+            # 遍历并处理远程链接（先 add，后 remove）
+            for action_type, url_list in [("add", add_urls), ("remove", remove_urls)]:
+                for i, url in enumerate(url_list):
+                    try:
+                        temp_dl = f"temp_workspace/{rule_name}_{action_type}_{i}.dl"
+                        temp_txt = f"temp_workspace/{rule_name}_{action_type}_{i}.txt"
+                        
+                        curl_download(url, temp_dl)
+                        
+                        url_lower = url.lower()
+                        if url_lower.endswith('.mrs'):
+                            ret = os.system(f"./mihomo convert-ruleset {rule_type} mrs {temp_dl} {temp_txt}")
+                            if ret != 0 or not os.path.exists(temp_txt):
+                                raise Exception("Mihomo 转换 mrs 失败")
+                        elif url_lower.endswith('.srs'):
+                            temp_json = f"temp_workspace/{rule_name}_{action_type}_{i}.json"
+                            ret = os.system(f"./sing-box rule-set decompile {temp_dl} --output {temp_json}")
+                            if ret != 0 or not os.path.exists(temp_json) or os.path.getsize(temp_json) == 0:
+                                raise Exception("Sing-box 反编译 srs 失败")
+                            temp_txt = temp_json
+                        else:
+                            shutil.copy(temp_dl, temp_txt)
+                        
+                        d_set, ip_set, dr_set = parse_mixed_rules_to_buckets(temp_txt)
+                        
+                        if action_type == "add":
+                            if rule_type == "ipcidr":
+                                merged_rules |= ip_set
+                            else:
+                                merged_rules |= d_set
+                                merged_domain_regex |= dr_set
+                        else:  # remove
+                            if rule_type == "ipcidr":
+                                merged_rules -= ip_set
+                            else:
+                                merged_rules -= d_set
+                                merged_domain_regex -= dr_set
 
-            for action in ["remove", "add"]:
-                custom_file = os.path.join("rules", action, rule_type, f"{rule_name}.txt")
-                if os.path.exists(custom_file):
-                    d_set, ip_set, dr_set = parse_mixed_rules_to_buckets(custom_file)
-                    target_set = ip_set if rule_type == "ipcidr" else d_set
-                    if action == "remove":
-                        merged_rules -= target_set
-                        if rule_type != "ipcidr":
-                            merged_domain_regex -= dr_set
-                    else:
-                        merged_rules |= target_set
-                        if rule_type != "ipcidr":
-                            merged_domain_regex |= dr_set
+                    except Exception as e:
+                        print(f"[-] 警告：处理规则源跳过 | {url} -> {e}")
+                        continue
+
+            # 处理本地自定义规则（根据 local 字段开关决定）
+            if enable_local:
+                for action in ["remove", "add"]:
+                    custom_file = os.path.join("rules", action, rule_type, f"{rule_name}.txt")
+                    if os.path.exists(custom_file):
+                        d_set, ip_set, dr_set = parse_mixed_rules_to_buckets(custom_file)
+                        target_set = ip_set if rule_type == "ipcidr" else d_set
+                        if action == "remove":
+                            merged_rules -= target_set
+                            if rule_type != "ipcidr":
+                                merged_domain_regex -= dr_set
+                        else:
+                            merged_rules |= target_set
+                            if rule_type != "ipcidr":
+                                merged_domain_regex |= dr_set
 
             if rule_type == "ipcidr":
                 v4_nets, v6_nets = [], []
@@ -584,49 +605,69 @@ def main():
             mixed_ip_set = set()
             mixed_domain_regex_set = set()
 
-            urls = classical_dict.get(rule_name, [])
-            for i, url in enumerate(urls):
-                try:
-                    temp_dl = f"temp_workspace/classical_{rule_name}_{i}.dl"
-                    temp_txt = f"temp_workspace/classical_{rule_name}_{i}.txt"
-                    
-                    curl_download(url, temp_dl)
-                    
-                    url_lower = url.lower()
-                    if url_lower.endswith('.mrs'):
-                        ret = os.system(f"./mihomo convert-ruleset domain mrs {temp_dl} {temp_txt}")
-                        if ret != 0 or not os.path.exists(temp_txt):
-                            raise Exception("Mihomo 转换 mrs 失败")
-                    elif url_lower.endswith('.srs'):
-                        temp_json = f"temp_workspace/classical_{rule_name}_{i}.json"
-                        ret = os.system(f"./sing-box rule-set decompile {temp_dl} --output {temp_json}")
-                        if ret != 0 or not os.path.exists(temp_json) or os.path.getsize(temp_json) == 0:
-                            raise Exception("Sing-box 反编译 srs 失败")
-                        temp_txt = temp_json
-                    else:
-                        shutil.copy(temp_dl, temp_txt)
+            # 解析规则配置：兼容旧版直接填写 list 和新版传入 dict
+            rule_config = classical_dict.get(rule_name, [])
+            if isinstance(rule_config, dict):
+                add_urls = rule_config.get("add", [])
+                remove_urls = rule_config.get("remove", [])
+                enable_local = rule_config.get("local", True)
+            else:
+                add_urls = rule_config
+                remove_urls = []
+                enable_local = True
 
-                    d_set, ip_set, dr_set = parse_mixed_rules_to_buckets(temp_txt)
-                    mixed_domain_set |= d_set
-                    mixed_ip_set |= ip_set
-                    mixed_domain_regex_set |= dr_set
-                    
-                except Exception as e:
-                    print(f"[-] 警告：处理规则源跳过 | {url} -> {e}")
-                    continue
+            # 遍历并处理远程链接（先 add，后 remove）
+            for action_type, url_list in [("add", add_urls), ("remove", remove_urls)]:
+                for i, url in enumerate(url_list):
+                    try:
+                        temp_dl = f"temp_workspace/classical_{rule_name}_{action_type}_{i}.dl"
+                        temp_txt = f"temp_workspace/classical_{rule_name}_{action_type}_{i}.txt"
+                        
+                        curl_download(url, temp_dl)
+                        
+                        url_lower = url.lower()
+                        if url_lower.endswith('.mrs'):
+                            ret = os.system(f"./mihomo convert-ruleset domain mrs {temp_dl} {temp_txt}")
+                            if ret != 0 or not os.path.exists(temp_txt):
+                                raise Exception("Mihomo 转换 mrs 失败")
+                        elif url_lower.endswith('.srs'):
+                            temp_json = f"temp_workspace/classical_{rule_name}_{action_type}_{i}.json"
+                            ret = os.system(f"./sing-box rule-set decompile {temp_dl} --output {temp_json}")
+                            if ret != 0 or not os.path.exists(temp_json) or os.path.getsize(temp_json) == 0:
+                                raise Exception("Sing-box 反编译 srs 失败")
+                            temp_txt = temp_json
+                        else:
+                            shutil.copy(temp_dl, temp_txt)
 
-            for action in ["remove", "add"]:
-                custom_file = os.path.join("rules", action, "classical", f"{rule_name}.txt")
-                if os.path.exists(custom_file):
-                    d_set, ip_set, dr_set = parse_mixed_rules_to_buckets(custom_file)
-                    if action == "remove":
-                        mixed_domain_set -= d_set
-                        mixed_ip_set -= ip_set
-                        mixed_domain_regex_set -= dr_set
-                    else:
-                        mixed_domain_set |= d_set
-                        mixed_ip_set |= ip_set
-                        mixed_domain_regex_set |= dr_set
+                        d_set, ip_set, dr_set = parse_mixed_rules_to_buckets(temp_txt)
+                        
+                        if action_type == "add":
+                            mixed_domain_set |= d_set
+                            mixed_ip_set |= ip_set
+                            mixed_domain_regex_set |= dr_set
+                        else: # remove
+                            mixed_domain_set -= d_set
+                            mixed_ip_set -= ip_set
+                            mixed_domain_regex_set -= dr_set
+                        
+                    except Exception as e:
+                        print(f"[-] 警告：处理规则源跳过 | {url} -> {e}")
+                        continue
+
+            # 处理本地自定义规则（根据 local 字段开关决定）
+            if enable_local:
+                for action in ["remove", "add"]:
+                    custom_file = os.path.join("rules", action, "classical", f"{rule_name}.txt")
+                    if os.path.exists(custom_file):
+                        d_set, ip_set, dr_set = parse_mixed_rules_to_buckets(custom_file)
+                        if action == "remove":
+                            mixed_domain_set -= d_set
+                            mixed_ip_set -= ip_set
+                            mixed_domain_regex_set -= dr_set
+                        else:
+                            mixed_domain_set |= d_set
+                            mixed_ip_set |= ip_set
+                            mixed_domain_regex_set |= dr_set
 
             if mixed_domain_set or mixed_domain_regex_set:
                 export_four_formats(rule_name, mixed_domain_set, "domain", mixed_domain_regex_set)

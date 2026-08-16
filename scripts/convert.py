@@ -498,6 +498,45 @@ def generate_change_report(mihomo_changes, singbox_changes, commit_msgs):
             f.write("".join(lines))
     commit_msgs["README.md"] = f"{time_str} - 更新 README.md"
 
+def parse_rule_config(rule_config, global_enable_local, global_formats):
+    include_urls = []
+    exclude_urls = []
+    inline_inc = []
+    inline_exc = []
+    final_enable_local = global_enable_local
+    formats = global_formats
+
+    if isinstance(rule_config, dict):
+        final_enable_local = rule_config.get("enable_local", global_enable_local)
+        formats = rule_config.get("formats", global_formats)
+        
+        inc_val = rule_config.get("include", [])
+        if isinstance(inc_val, list):
+            include_urls = inc_val
+        elif isinstance(inc_val, dict):
+            include_urls = inc_val.get("urls", [])
+            inline_inc.extend(inc_val.get("inline", []))
+        
+        exc_val = rule_config.get("exclude", [])
+        if isinstance(exc_val, list):
+            exclude_urls = exc_val
+        elif isinstance(exc_val, dict):
+            exclude_urls = exc_val.get("urls", [])
+            inline_exc.extend(exc_val.get("inline", []))
+        
+        if "inline_include" in rule_config:
+            inline_inc.extend(rule_config.get("inline_include", []))
+        if "inline_exclude" in rule_config:
+            inline_exc.extend(rule_config.get("inline_exclude", []))
+            
+    elif isinstance(rule_config, list):
+        include_urls = rule_config
+        
+    inline_inc = list(dict.fromkeys(inline_inc))
+    inline_exc = list(dict.fromkeys(inline_exc))
+    
+    return include_urls, exclude_urls, final_enable_local, formats, inline_inc, inline_exc
+
 def main():
     setup_binaries()
     setup_custom_rule_dirs()
@@ -537,24 +576,9 @@ def main():
     print(f"\n[*] 开始第一阶段：下载与解析所有基础规则源...")
 
     for rule_type, rule_name, rule_config in all_rule_defs:
-        if isinstance(rule_config, dict):
-            include_urls = rule_config.get("include", [])
-            exclude_urls = rule_config.get("exclude", [])
-            final_enable_local = rule_config.get("enable_local", global_enable_local)
-            formats = rule_config.get("formats", global_formats)
-            inline_inc = rule_config.get("inline_include", [])
-            inline_exc = rule_config.get("inline_exclude", [])
-        elif isinstance(rule_config, list):
-            include_urls = rule_config
-            exclude_urls = []
-            final_enable_local = global_enable_local
-            formats = global_formats
-            inline_inc, inline_exc = [], []
-        else:
-            include_urls, exclude_urls = [], []
-            final_enable_local = global_enable_local
-            formats = global_formats
-            inline_inc, inline_exc = [], []
+        include_urls, exclude_urls, final_enable_local, formats, inline_inc, inline_exc = parse_rule_config(
+            rule_config, global_enable_local, global_formats
+        )
 
         if not include_urls and not exclude_urls and not final_enable_local and not inline_inc:
             continue
@@ -617,7 +641,6 @@ def main():
                         base_ip_set |= ip_set
                         base_domain_regex |= dr_set
 
-        # 核心修复：使用 (rule_type, rule_name) 组合键作为字典 Key，彻底隔离同名冲突
         cache_key = (rule_type, rule_name)
         rule_cache[cache_key] = {
             "type": rule_type,
@@ -637,11 +660,6 @@ def main():
             continue
         
         current = rule_cache[cache_key]
-        
-        if not isinstance(current["inline_include"], list):
-            print(f"[!] 警告: 规则 [{rule_type}/{rule_name}] 的 inline_include 不是列表格式！当前值: {current['inline_include']}")
-        if not isinstance(current["inline_exclude"], list):
-            print(f"[!] 警告: 规则 [{rule_type}/{rule_name}] 的 inline_exclude 不是列表格式！当前值: {current['inline_exclude']}")
 
         for target_name in current["inline_include"]:
             target_key = (rule_type, target_name)
@@ -670,7 +688,6 @@ def main():
     for rule_type, rule_name, rule_config in all_rule_defs:
         cache_key = (rule_type, rule_name)
         if cache_key not in rule_cache:
-            print(f"[Debug] 规则 [{rule_type}/{rule_name}] 不在 rule_cache 中，跳过导出。")
             continue
         
         data = rule_cache[cache_key]
@@ -680,10 +697,7 @@ def main():
             merged_rules = data["domain"]
             merged_regex = data["regex"]
             
-            print(f"[DEBUG] 规则 [{rule_type}/{rule_name}] (domain类型) 最终合并后 -> 域名/后缀数: {len(merged_rules)}, 正则数: {len(merged_regex)}")
-
             if not merged_rules and not merged_regex:
-                print(f"[-] 提示：规则 [{rule_type}/{rule_name}] 过滤后规则条数为 0，已跳过导出。")
                 continue
 
             geo_dir = "geosite"
@@ -714,11 +728,7 @@ def main():
 
         elif rule_type == "ipcidr":
             raw_ips = data["ip"]
-            
-            print(f"[DEBUG] 规则 [{rule_type}/{rule_name}] (ipcidr类型) 合并前原始IP数: {len(raw_ips)}")
-
             if not raw_ips:
-                print(f"[-] 提示：规则 [{rule_type}/{rule_name}] 过滤后IP条数为 0，已跳过导出。")
                 continue
 
             v4_nets, v6_nets = [], []

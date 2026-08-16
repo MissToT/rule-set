@@ -47,7 +47,6 @@ def curl_download(url, output):
     if ret != 0 or not os.path.exists(output) or os.path.getsize(output) == 0:
         raise Exception(f"下载文件失败: {normalized_url}")
     
-    # 检查是否误下载到了 CDN 拦截或报错的 HTML 网页
     try:
         with open(output, 'rb') as f:
             header_snippet = f.read(200).lower()
@@ -126,16 +125,31 @@ def parse_mixed_rules_to_buckets(filename):
             data = json.load(f)
             if isinstance(data, dict) and "rules" in data:
                 for rule_obj in data["rules"]:
-                    for d in rule_obj.get("domain", []):
+                    # 兼容处理：sing-box 规则字段可能是字符串也可能是列表
+                    domains = rule_obj.get("domain", [])
+                    if isinstance(domains, str): domains = [domains]
+                    for d in domains:
                         if d: domain_set.add(d)
-                    for ds in rule_obj.get("domain_suffix", []):
+
+                    suffixes = rule_obj.get("domain_suffix", [])
+                    if isinstance(suffixes, str): suffixes = [suffixes]
+                    for ds in suffixes:
                         if ds:
                             domain_set.add(f".{ds}" if not ds.startswith('.') else ds)
-                    for dk in rule_obj.get("domain_keyword", []):
+
+                    keywords = rule_obj.get("domain_keyword", [])
+                    if isinstance(keywords, str): keywords = [keywords]
+                    for dk in keywords:
                         if dk: domain_set.add(f"*{dk}*")
-                    for dr in rule_obj.get("domain_regex", []):
+
+                    regexes = rule_obj.get("domain_regex", [])
+                    if isinstance(regexes, str): regexes = [regexes]
+                    for dr in regexes:
                         if dr: domain_regex_set.add(dr)
-                    for ip in rule_obj.get("ip_cidr", []):
+
+                    ip_cidrs = rule_obj.get("ip_cidr", [])
+                    if isinstance(ip_cidrs, str): ip_cidrs = [ip_cidrs]
+                    for ip in ip_cidrs:
                         if ip:
                             try:
                                 net = ipaddress.ip_network(ip, strict=False)
@@ -435,7 +449,7 @@ def main():
                     temp_json = f"temp_workspace/{rule_name}_{i}.json"
                     ret = os.system(f"./sing-box rule-set decompile {temp_dl} --output {temp_json}")
                     if ret != 0 or not os.path.exists(temp_json) or os.path.getsize(temp_json) == 0:
-                        raise Exception(f"Sing-box 反编译 srs 失败（请确认核心是否正常下载）: {url}")
+                        raise Exception(f"Sing-box 反编译 srs 失败: {url}")
                     temp_txt = temp_json
                 else:
                     shutil.copy(temp_dl, temp_txt)
@@ -481,13 +495,11 @@ def main():
 
             geo_dir = 'geoip' if rule_type == 'ipcidr' else 'geosite'
             
-            # Mihomo 差异对比
             prev_mihomo_rules = load_prev_mihomo_rules(geo_dir, rule_name)
             mihomo_new_set = set(merged_rules)
             m_added = sorted(mihomo_new_set - prev_mihomo_rules) if prev_mihomo_rules is not None else []
             m_removed = sorted(prev_mihomo_rules - mihomo_new_set) if prev_mihomo_rules is not None else []
 
-            # Sing-box 差异对比
             prev_singbox_rules = load_prev_singbox_rules(geo_dir, rule_name)
             singbox_new_set = set(merged_rules)
             if rule_type != "ipcidr" and merged_domain_regex:
@@ -636,7 +648,7 @@ def main():
         json.dump(global_commit_msgs, f, ensure_ascii=False, indent=2)
 
     shutil.rmtree("temp_workspace", ignore_errors=True)
-    print("\n[√] 所有任务完成：已完美解决二进制反编译与容错问题！")
+    print("\n[√] 所有任务完成：已完美支持字符串与数组混排的上游规则！")
 
 if __name__ == "__main__":
     main()

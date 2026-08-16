@@ -80,6 +80,31 @@ def parse_mixed_rules_to_buckets(filename):
     if not os.path.exists(filename):
         return domain_set, ipcidr_set
 
+    # 1. 尝试作为 sing-box JSON 规则集解析
+    try:
+        with open(filename, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            if isinstance(data, dict) and "rules" in data:
+                for rule_obj in data["rules"]:
+                    for d in rule_obj.get("domain", []):
+                        if d: domain_set.add(d)
+                    for ds in rule_obj.get("domain_suffix", []):
+                        if ds:
+                            domain_set.add(f".{ds}" if not ds.startswith('.') else ds)
+                    for dk in rule_obj.get("domain_keyword", []):
+                        if dk: domain_set.add(f"*{dk}*")
+                    for ip in rule_obj.get("ip_cidr", []):
+                        if ip:
+                            try:
+                                net = ipaddress.ip_network(ip, strict=False)
+                                ipcidr_set.add(str(net))
+                            except ValueError:
+                                continue
+                return domain_set, ipcidr_set
+    except Exception:
+        pass
+
+    # 2. 文本逐行解析
     with open(filename, 'r', encoding='utf-8', errors='ignore') as f:
         for line in f:
             line = line.strip()
@@ -216,7 +241,7 @@ def export_bypass_txt_files(v4_collapsed, v6_collapsed, commit_msgs):
 
     with open(os.path.join("bypass_out", "README.md"), "w", encoding="utf-8") as f:
         f.write("".join(lines))
-    print(f"  -> 已生成 bypass 独立目录文件: IPv4 ({v4_res['total']}条), IPv6 ({v6_res['total']}条)[cite: 3, 4]")
+    print(f"  -> 已生成 bypass 独立目录文件: IPv4 ({v4_res['total']}条), IPv6 ({v6_res['total']}条)")
 
 def export_four_formats(rule_name, rules_set, rule_type):
     is_ip = (rule_type == "ipcidr")
@@ -336,6 +361,13 @@ def main():
                     ret = os.system(f"./mihomo convert-ruleset {rule_type} mrs {temp_dl} {temp_txt}")
                     if ret != 0 or not os.path.exists(temp_txt):
                         shutil.copy(temp_dl, temp_txt)
+                elif url.lower().endswith('.srs'):
+                    temp_json = f"temp_workspace/{rule_name}_{i}.json"
+                    ret = os.system(f"./sing-box rule-set decompile {temp_dl} --output {temp_json}")
+                    if ret == 0 and os.path.exists(temp_json):
+                        shutil.copy(temp_json, temp_txt)
+                    else:
+                        shutil.copy(temp_dl, temp_txt)
                 else:
                     shutil.copy(temp_dl, temp_txt)
                 
@@ -402,8 +434,19 @@ def main():
 
             for i, url in enumerate(urls):
                 temp_dl = f"temp_workspace/classical_{rule_name}_{i}.dl"
+                temp_txt = f"temp_workspace/classical_{rule_name}_{i}.txt"
                 download_file(url, temp_dl)
-                d_set, ip_set = parse_mixed_rules_to_buckets(temp_dl)
+                if url.lower().endswith('.srs'):
+                    temp_json = f"temp_workspace/classical_{rule_name}_{i}.json"
+                    ret = os.system(f"./sing-box rule-set decompile {temp_dl} --output {temp_json}")
+                    if ret == 0 and os.path.exists(temp_json):
+                        shutil.copy(temp_json, temp_txt)
+                    else:
+                        shutil.copy(temp_dl, temp_txt)
+                else:
+                    shutil.copy(temp_dl, temp_txt)
+
+                d_set, ip_set = parse_mixed_rules_to_buckets(temp_txt)
                 mixed_domain_set |= d_set
                 mixed_ip_set |= ip_set
 
@@ -464,7 +507,7 @@ def main():
         json.dump(global_commit_msgs, f, ensure_ascii=False, indent=2)
 
     shutil.rmtree("temp_workspace", ignore_errors=True)
-    print("\n[√] 所有任务、详细变更报告及通配符格式转换已全部完成！")
+    print("\n[√] 所有任务、sing-box JSON 上游规则解析及详细报告已全部完成！")
 
 if __name__ == "__main__":
     main()

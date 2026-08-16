@@ -74,10 +74,6 @@ def download_file(url, filename):
             f.write(response.read())
 
 def parse_mixed_rules_to_buckets(filename):
-    """
-    解析规则：
-    - 无前缀且不含点号的纯字符串（如 speedtest、ipv6-test），直接转为带通配符的格式（如 *speedtest*）。
-    """
     domain_set = set()
     ipcidr_set = set()
     
@@ -114,7 +110,6 @@ def parse_mixed_rules_to_buckets(filename):
                 elif pfx in ('DOMAIN', 'DOMAIN-SUFFIX', 'DOMAIN-KEYWORD'):
                     val = parts[1] if len(parts) > 1 else ''
                     if val:
-                        # 如果是 keyword，直接转为带有星号的通配符形式
                         if pfx == 'DOMAIN-KEYWORD':
                             domain_set.add(f"*{val}*")
                         else:
@@ -123,7 +118,6 @@ def parse_mixed_rules_to_buckets(filename):
                 else:
                     continue
 
-            # 尝试直接解析为 IP 网段
             try:
                 net = ipaddress.ip_network(line, strict=False)
                 ipcidr_set.add(str(net))
@@ -131,7 +125,6 @@ def parse_mixed_rules_to_buckets(filename):
             except ValueError:
                 pass
 
-            # 无前缀纯文本：不含点号则加星号变成通配符 *keyword*
             if line:
                 if '.' not in line:
                     domain_set.add(f"*{line}*")
@@ -139,6 +132,72 @@ def parse_mixed_rules_to_buckets(filename):
                     domain_set.add(line)
 
     return domain_set, ipcidr_set
+
+def export_bypass_txt_files(v4_collapsed, v6_collapsed, commit_msgs):
+    os.makedirs("bypass_out", exist_ok=True)
+    now = datetime.now(timezone(timedelta(hours=8)))
+    time_str = f"{now.year}年{now.month}月{now.day}日{now.strftime('%H:%M:%S')}"
+
+    def process_bypass_file(filename, collapsed_nets):
+        filepath = os.path.join("bypass_out", filename)
+        new_rules = set(str(n) for n in collapsed_nets)
+        
+        with open(filepath, "w", encoding="utf-8") as f:
+            for rule in sorted(new_rules):
+                f.write(f"{rule}\n")
+        
+        prev_path = os.path.join(PREV_BYPASS_DIR, filename)
+        prev_rules = None
+        if os.path.exists(prev_path):
+            with open(prev_path, "r", encoding="utf-8") as f:
+                prev_rules = set(line.strip() for line in f if line.strip())
+
+        added = sorted(new_rules - prev_rules) if prev_rules is not None else []
+        removed = sorted(prev_rules - new_rules) if prev_rules is not None else []
+        add_cnt = len(added) if prev_rules is not None else len(new_rules)
+        rm_cnt = len(removed) if prev_rules is not None else 0
+        
+        commit_msgs[filename] = f"{time_str} - 更新 {filename}: 新增 {add_cnt} 条，移除 {rm_cnt} 条"
+        
+        return {
+            "total": len(new_rules),
+            "prev_total": len(prev_rules) if prev_rules is not None else None,
+            "added": added,
+            "removed": removed
+        }
+
+    v4_res = process_bypass_file("cn-ipv4.txt", v4_collapsed)
+    v6_res = process_bypass_file("cn-ipv6.txt", v6_collapsed)
+
+    lines = [f"# Bypass 规则变更记录\n\n**更新时间：** {time_str}\n\n---\n\n"]
+    for key, data in [("cn-ipv4.txt", v4_res), ("cn-ipv6.txt", v6_res)]:
+        lines.append(f"## `{key}`\n\n")
+        if data["prev_total"] is None:
+            lines.append(f"> 首次生成，共 **{data['total']}** 条规则\n\n")
+        else:
+            diff = data["total"] - data["prev_total"]
+            sign = (f"+{diff}" if diff >= 0 else str(diff))
+            lines.append(f"- 规则总数：**{data['total']}**（{sign}）\n")
+
+            if data["added"]:
+                lines.append(f"\n<details><summary>✅ 新增 {len(data['added'])} 条（点击展开）</summary>\n\n```text\n")
+                for r in data["added"][:50]: lines.append(f"{r}\n")
+                if len(data["added"]) > 50: lines.append(f"... 等等\n")
+                lines.append("```\n</details>\n")
+
+            if data["removed"]:
+                lines.append(f"\n<details><summary>❌ 移除 {len(data['removed'])} 条（点击展开）</summary>\n\n```text\n")
+                for r in data["removed"][:50]: lines.append(f"{r}\n")
+                if len(data["removed"]) > 50: lines.append(f"... 等等\n")
+                lines.append("```\n</details>\n")
+
+            if not data["added"] and not data["removed"]:
+                lines.append("- 无变化\n")
+        lines.append("\n")
+
+    with open(os.path.join("bypass_out", "README.md"), "w", encoding="utf-8") as f:
+        f.write("".join(lines))
+    print(f"  -> 已生成 bypass 独立目录文件: IPv4 ({v4_res['total']}条), IPv6 ({v6_res['total']}条)[cite: 3, 4]")
 
 def export_four_formats(rule_name, rules_set, rule_type):
     is_ip = (rule_type == "ipcidr")
@@ -158,7 +217,6 @@ def export_four_formats(rule_name, rules_set, rule_type):
         else:
             domains, suffixes, keywords = [], [], []
             for r in sorted(rules_set):
-                # 检查是否是通配符形式 *xxx*
                 if r.startswith('*') and r.endswith('*'):
                     keywords.append(r[1:-1])
                 elif r.startswith('+.'):
@@ -200,7 +258,7 @@ def main():
     setup_custom_rule_dirs()
     
     os.makedirs("temp_workspace", exist_ok=True)
-    os.makedirs("bypass_out", exist_ok=True)  # 恢复 bypass_out 目录创建
+    os.makedirs("bypass_out", exist_ok=True)
     os.makedirs("mihomo_out", exist_ok=True)
     os.makedirs("singbox_out", exist_ok=True)
 
@@ -268,6 +326,10 @@ def main():
                 v6_collapsed = sorted(ipaddress.collapse_addresses(v6_nets))
                 merged_rules = set(str(n) for n in (v4_collapsed + v6_collapsed))
 
+                # 恢复：如果是 china 规则，则自动生成 bypass_out 独立文件
+                if rule_name == "china":
+                    export_bypass_txt_files(v4_collapsed, v6_collapsed, global_commit_msgs)
+
             export_four_formats(rule_name, merged_rules, rule_type)
 
             geo_dir = 'geoip' if rule_type == 'ipcidr' else 'geosite'
@@ -326,19 +388,12 @@ def main():
                 global_commit_msgs[f"geo/geoip/{rule_name}.srs"]  = msg
                 all_changes[f"ipcidr/{rule_name}"] = {"total": len(mixed_ip_set)}
 
-    # 3. 恢复 bypass_out 相关处理（如果本地有配置或需要独立生成 bypass 文件）
-    # 注：如果你有特定的 bypass 生成逻辑，可在此处补充，同时确保 bypass_out 目录被正确打包提交
-    print(f"\n[*] 正在检查 bypass_out 目录...")
-    if os.path.exists("bypass_out") and os.listdir("bypass_out"):
-        for f_name in os.listdir("bypass_out"):
-            global_commit_msgs[f"bypass_out/{f_name}"] = f"{time_str} - 更新 bypass 规则"
-
     generate_change_report(all_changes, global_commit_msgs)
     with open("commit_msgs.json", "w", encoding="utf-8") as f:
         json.dump(global_commit_msgs, f, ensure_ascii=False, indent=2)
 
     shutil.rmtree("temp_workspace", ignore_errors=True)
-    print("\n[√] 所有任务、bypass 目录及通配符格式转换已全部完成！")
+    print("\n[√] 所有任务、bypass_out 目录及通配符格式转换已全部完成！")
 
 if __name__ == "__main__":
     main()

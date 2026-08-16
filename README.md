@@ -1,38 +1,39 @@
-# Sing-box 规则变更记录
+# 🌐 Sing-box 规则集概览
 
-> **更新时间：** 2026年8月16日19:18:55
+> 自动化构建的多格式代理规则订阅源。
+> **更新时间：** 2026年8月16日19:21:57
 
-| 规则项 | 格式 | 规则总数 | 变化量 |
-| :--- | :--- | :---: | :---: |
-| `domain/adblock` | (.json / .srs) | **100386** | ✨ 首次生成 |
-| `domain/ai` | (.json / .srs) | **174** | ✨ 首次生成 |
-| `domain/china` | (.json / .srs) | **112774** | ✨ 首次生成 |
-| `domain/cloudflare` | (.json / .srs) | **76** | ✨ 首次生成 |
-| `domain/cloudflare-cn` | (.json / .srs) | **19** | ✨ 首次生成 |
-| `domain/ehentai` | (.json / .srs) | **8** | ✨ 首次生成 |
-| `domain/emby` | (.json / .srs) | **131** | ✨ 首次生成 |
-| `domain/emby-cn` | (.json / .srs) | **38** | ✨ 首次生成 |
-| `domain/fake-ip-filter` | (.json / .srs) | **145** | ✨ 首次生成 |
-| `domain/game-platforms-download` | (.json / .srs) | **491** | ✨ 首次生成 |
-| `domain/games` | (.json / .srs) | **863** | ✨ 首次生成 |
-| `domain/google` | (.json / .srs) | **1047** | ✨ 首次生成 |
-| `domain/googlefcm` | (.json / .srs) | **7** | ✨ 首次生成 |
-| `domain/japan` | (.json / .srs) | **40** | ✨ 首次生成 |
-| `domain/microsoft` | (.json / .srs) | **750** | ✨ 首次生成 |
-| `domain/microsoft-cn` | (.json / .srs) | **190** | ✨ 首次生成 |
-| `domain/mihoyo-cn` | (.json / .srs) | **17** | ✨ 首次生成 |
-| `domain/private` | (.json / .srs) | **131** | ✨ 首次生成 |
-| `domain/proxy` | (.json / .srs) | **29764** | ✨ 首次生成 |
-| `domain/taiwan` | (.json / .srs) | **18** | ✨ 首次生成 |
-| `domain/telegram` | (.json / .srs) | **21** | ✨ 首次生成 |
-| `domain/tiktok` | (.json / .srs) | **36** | ✨ 首次生成 |
-| `domain/twitter` | (.json / .srs) | **24** | ✨ 首次生成 |
-| `domain/youtube` | (.json / .srs) | **178** | ✨ 首次生成 |
-| `ipcidr/ai` | (.json / .srs) | **68** | ✨ 首次生成 |
-| `ipcidr/china` | (.json / .srs) | **18133** | ✨ 首次生成 |
-| `ipcidr/cloudflare` | (.json / .srs) | **608** | ✨ 首次生成 |
-| `ipcidr/google` | (.json / .srs) | **2948** | ✨ 首次生成 |
-| `ipcidr/private` | (.json / .srs) | **14** | ✨ 首次生成 |
-| `ipcidr/proxy` | (.json / .srs) | **112** | ✨ 首次生成 |
-| `ipcidr/telegram` | (.json / .srs) | **8** | ✨ 首次生成 |
-| `ipcidr/twitter` | (.json / .srs) | **17** | ✨ 首次生成 |
+| 规则分类 | 支持格式 | 规则数量 |
+| :--- | :--- | :---: |
+| `domain/adblock` | JSON / SRS | **100386** |
+| `domain/ai` | JSON / SRS | **174** |
+| `domain/china` | JSON / SRS | **112774** |
+| `domain/cloudflare` | JSON / SRS | **76** |
+| `domain/cloudflare-cn` | JSON / SRS | **19** |
+| `domain/ehentai` | JSON / SRS | **8** |
+| `domain/emby` | JSON / SRS | **131** |
+| `domain/emby-cn` | JSON / SRS | **38** |
+| `domain/fake-ip-filter` | JSON / SRS | **145** |
+| `domain/game-platforms-download` | JSON / SRS | **491** |
+| `domain/games` | JSON / SRS | **863** |
+| `domain/google` | JSON / SRS | **1047** |
+| `domain/googlefcm` | JSON / SRS | **7** |
+| `domain/japan` | JSON / SRS | **40** |
+| `domain/microsoft` | JSON / SRS | **750** |
+| `domain/microsoft-cn` | JSON / SRS | **190** |
+| `domain/mihoyo-cn` | JSON / SRS | **17** |
+| `domain/private` | JSON / SRS | **131** |
+| `domain/proxy` | JSON / SRS | **29764** |
+| `domain/taiwan` | JSON / SRS | **18** |
+| `domain/telegram` | JSON / SRS | **21** |
+| `domain/tiktok` | JSON / SRS | **36** |
+| `domain/twitter` | JSON / SRS | **24** |
+| `domain/youtube` | JSON / SRS | **178** |
+| `ipcidr/ai` | JSON / SRS | **68** |
+| `ipcidr/china` | JSON / SRS | **18133** |
+| `ipcidr/cloudflare` | JSON / SRS | **608** |
+| `ipcidr/google` | JSON / SRS | **2948** |
+| `ipcidr/private` | JSON / SRS | **14** |
+| `ipcidr/proxy` | JSON / SRS | **112** |
+| `ipcidr/telegram` | JSON / SRS | **8** |
+| `ipcidr/twitter` | JSON / SRS | **17** |

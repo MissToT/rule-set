@@ -76,8 +76,9 @@ def download_file(url, filename):
 
 def parse_mixed_rules_to_buckets(filename):
     """
-    全面兼容本地和上游的混合规则解析器：
-    支持 DOMAIN、DOMAIN-SUFFIX、DOMAIN-KEYWORD、IP-CIDR、IP-CIDR6 等，自动分类为域名集和IP集。
+    只提取有效的 5 种规则类型：
+    DOMAIN, DOMAIN-SUFFIX, DOMAIN-KEYWORD, IP-CIDR, IP-CIDR6
+    以及直接合法的纯 IP 网段和纯域名，其余全部忽略。
     """
     domain_set = set()
     ipcidr_set = set()
@@ -99,10 +100,12 @@ def parse_mixed_rules_to_buckets(filename):
             if line == 'payload:':
                 continue
 
+            # 处理带逗号的格式
             if ',' in line:
                 parts = [p.strip() for p in line.split(',')]
                 pfx = parts[0].upper()
-                if pfx in ('IP-CIDR', 'IP-CIDR6', 'GEOIP'):
+                
+                if pfx in ('IP-CIDR', 'IP-CIDR6'):
                     for p in parts[1:]:
                         try:
                             net = ipaddress.ip_network(p, strict=False)
@@ -117,14 +120,10 @@ def parse_mixed_rules_to_buckets(filename):
                         domain_set.add(val)
                         continue
                 else:
-                    try:
-                        net = ipaddress.ip_network(parts[0], strict=False)
-                        ipcidr_set.add(str(net))
-                        continue
-                    except ValueError:
-                        domain_set.add(parts[0])
-                        continue
+                    # 如果前缀不在允许列表内（如 PROCESS-NAME 等），直接跳过
+                    continue
 
+            # 尝试直接解析为 IP 网段
             try:
                 net = ipaddress.ip_network(line, strict=False)
                 ipcidr_set.add(str(net))
@@ -132,6 +131,7 @@ def parse_mixed_rules_to_buckets(filename):
             except ValueError:
                 pass
 
+            # 如果没有前缀也没有逗号，且能当作普通文本域名的，加入域名集
             if line:
                 domain_set.add(line)
 
@@ -248,7 +248,7 @@ def main():
     now = datetime.now(timezone(timedelta(hours=8)))
     time_str = f"{now.year}年{now.month}月{now.day}日{now.strftime('%H:%M:%S')}"
 
-    # 1. 处理 domain 和 ipcidr 规则
+    # 1. 处理 domain 和 ipcidr 常规规则
     for rule_type in ["domain", "ipcidr"]:
         rules_dict = RULES_CONFIG.get(rule_type, {})
         print(f"\n[*] 开始批量构建 [{rule_type.upper()}] 分流规则...")
@@ -284,7 +284,6 @@ def main():
                 else:
                     merged_rules |= d_set
 
-            # 本地自定义增删（自动支持 IP-CIDR、DOMAIN 等格式识别）
             for action in ["remove", "add"]:
                 custom_file = os.path.join("rules", action, rule_type, f"{rule_name}.txt")
                 if os.path.exists(custom_file):
@@ -322,7 +321,7 @@ def main():
 
             all_changes[f"{rule_type}/{rule_name}"] = {"total": len(merged_rules)}
 
-    # 2. 处理 classical 混合格式：自动提取并分离
+    # 2. 处理 classical 混合格式：自动提取并直接放到对应名字的域名/IP规则集中，不加额外后缀
     classical_dict = RULES_CONFIG.get("classical", {})
     if classical_dict:
         print(f"\n[*] 开始处理 [CLASSICAL] 混合规则自动分离...")
@@ -349,14 +348,25 @@ def main():
                         mixed_ip_set |= ip_set
 
             if mixed_domain_set:
-                export_four_formats(f"{rule_name}_domain", mixed_domain_set, "domain")
-                all_changes[f"domain/{rule_name}_domain"] = {"total": len(mixed_domain_set)}
+                export_four_formats(rule_name, mixed_domain_set, "domain")
+                msg = f"{time_str} - 更新 domain/{rule_name}: 共 {len(mixed_domain_set)} 条"
+                global_commit_msgs[f"geo/geosite/{rule_name}.yaml"] = msg
+                global_commit_msgs[f"geo/geosite/{rule_name}.mrs"]  = msg
+                global_commit_msgs[f"geo/geosite/{rule_name}.json"] = msg
+                global_commit_msgs[f"geo/geosite/{rule_name}.srs"]  = msg
+                all_changes[f"domain/{rule_name}"] = {"total": len(mixed_domain_set)}
+
             if mixed_ip_set:
                 v4_nets = [ipaddress.ip_network(x, strict=False) for x in mixed_ip_set if ipaddress.ip_network(x, strict=False).version == 4]
                 v4_collapsed = sorted(ipaddress.collapse_addresses(v4_nets))
                 mixed_ip_set = set(str(n) for n in v4_collapsed)
-                export_four_formats(f"{rule_name}_ipcidr", mixed_ip_set, "ipcidr")
-                all_changes[f"ipcidr/{rule_name}_ipcidr"] = {"total": len(mixed_ip_set)}
+                export_four_formats(rule_name, mixed_ip_set, "ipcidr")
+                msg = f"{time_str} - 更新 ipcidr/{rule_name}: 共 {len(mixed_ip_set)} 条"
+                global_commit_msgs[f"geo/geoip/{rule_name}.yaml"] = msg
+                global_commit_msgs[f"geo/geoip/{rule_name}.mrs"]  = msg
+                global_commit_msgs[f"geo/geoip/{rule_name}.json"] = msg
+                global_commit_msgs[f"geo/geoip/{rule_name}.srs"]  = msg
+                all_changes[f"ipcidr/{rule_name}"] = {"total": len(mixed_ip_set)}
 
     generate_change_report(all_changes, global_commit_msgs)
     with open("commit_msgs.json", "w", encoding="utf-8") as f:

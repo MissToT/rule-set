@@ -1,6 +1,6 @@
 # Mihomo 规则变更记录
 
-**更新时间：** 2026年8月16日18:47:27
+**更新时间：** 2026年8月16日18:50:20
 
 ---
 
@@ -176,7 +176,24 @@ xigua.yuntv.de
 ## `domain/microsoft` (.yaml / .mrs)
 
 - 规则总数：**750**（+0）
-- 无变化
+
+<details><summary>✅ 新增 3 条（点击展开）</summary>
+
+```text
+*1drv*
+*onedrive*
+*skydrive*
+```
+</details>
+
+<details><summary>❌ 移除 3 条（点击展开）</summary>
+
+```text
+**1drv**
+**onedrive**
+**skydrive**
+```
+</details>
 
 ## `domain/microsoft-cn` (.yaml / .mrs)
 
@@ -196,7 +213,100 @@ xigua.yuntv.de
 ## `domain/proxy` (.yaml / .mrs)
 
 - 规则总数：**29629**（+0）
-- 无变化
+
+<details><summary>✅ 新增 41 条（点击展开）</summary>
+
+```text
+*1drv*
+*1e100*
+*abema*
+*amazon*
+*appledaily*
+*avoddashs*
+*avtb*
+*bbcfmt*
+*beetalk*
+*binance*
+*blogspot*
+*browserleaks*
+*discord*
+*dlercloud*
+*dropbox*
+*facebook*
+*fbcdn*
+*gmail*
+*google*
+*huobi*
+*instagram*
+*jav*
+*metamask*
+*okx*
+*onedrive*
+*paypal*
+*pinterest*
+*porn*
+*sci-hub*
+*skydrive*
+*spotify*
+*telegram*
+*tiktok*
+*ttvnw*
+*twimg*
+*twitter*
+*uk-live*
+*voddazn*
+*whatsapp*
+*wikileaks*
+*youtube*
+```
+</details>
+
+<details><summary>❌ 移除 41 条（点击展开）</summary>
+
+```text
+**1drv**
+**1e100**
+**abema**
+**amazon**
+**appledaily**
+**avoddashs**
+**avtb**
+**bbcfmt**
+**beetalk**
+**binance**
+**blogspot**
+**browserleaks**
+**discord**
+**dlercloud**
+**dropbox**
+**facebook**
+**fbcdn**
+**gmail**
+**google**
+**huobi**
+**instagram**
+**jav**
+**metamask**
+**okx**
+**onedrive**
+**paypal**
+**pinterest**
+**porn**
+**sci-hub**
+**skydrive**
+**spotify**
+**telegram**
+**tiktok**
+**ttvnw**
+**twimg**
+**twitter**
+**uk-live**
+**voddazn**
+**whatsapp**
+**wikileaks**
+**youtube**
+```
+</details>
 
 ## `domain/taiwan` (.yaml / .mrs)
 

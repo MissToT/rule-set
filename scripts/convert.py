@@ -21,7 +21,6 @@ PREV_SINGBOX_DIR = "prev_singbox"
 PREV_BYPASS_DIR = "prev_bypass"
 
 def normalize_url(url):
-    """自动将 GitHub blob 网页链接转换为 raw 直链，防止下载到 HTML 源码"""
     if "github.com" in url and "/blob/" in url:
         url = url.replace("github.com", "raw.githubusercontent.com").replace("/blob/", "/")
     return url
@@ -40,9 +39,8 @@ def get_latest_stable_asset_url(repo, pattern):
     return None
 
 def curl_download(url, output):
-    """使用 curl 稳定下载文件"""
     normalized_url = normalize_url(url)
-    cmd = f"curl -L -s -A 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36' -o {output} '{normalized_url}'"
+    cmd = f"curl -L -s -A 'Mozilla/5.0' -o {output} '{normalized_url}'"
     ret = os.system(cmd)
     if ret != 0 or not os.path.exists(output) or os.path.getsize(output) == 0:
         raise Exception(f"下载过程异常或文件为空")
@@ -94,9 +92,8 @@ def setup_custom_rule_dirs():
                             file_path = os.path.join(dir_path, filename)
                             try:
                                 os.remove(file_path)
-                                print(f"[*] 已清理 config.json 中已删除规则的本地残留文件: {file_path}")
-                            except Exception as e:
-                                print(f"[-] 清理文件 {file_path} 失败: {e}")
+                            except Exception:
+                                pass
 
     for action in ["add", "remove"]:
         for rule_type in ["domain", "ipcidr", "classical"]:
@@ -109,7 +106,7 @@ def setup_custom_rule_dirs():
                     with open(file_path, 'w', encoding='utf-8') as f:
                         op = "新增" if action == "add" else "移除"
                         f.write(f"# 在此写入需要【{op}】的 {rule_name} ({rule_type}) 规则\n")
-    print("[*] 已同步并初始化自定义规则目录 (rules/add / rules/remove)")
+    print("[*] 已同步并初始化自定义规则目录")
 
 def parse_mixed_rules_to_buckets(filename):
     domain_set = set()
@@ -119,17 +116,15 @@ def parse_mixed_rules_to_buckets(filename):
     if not os.path.exists(filename) or os.path.getsize(filename) == 0:
         return domain_set, ipcidr_set, domain_regex_set
 
-    # 安全防护：检查是否为二进制文件
     try:
         with open(filename, 'rb') as f:
             chunk = f.read(512)
             if b'\x00' in chunk or sum(1 for b in chunk if b < 32 and b not in (9, 10, 13)) > 20:
-                print(f"[-] 警告: 发现文件 {filename} 包含二进制数据，跳过文本解析。")
+                print(f"[-] 警告: 文件 {filename} 包含二进制数据，跳过解析。")
                 return domain_set, ipcidr_set, domain_regex_set
     except Exception:
         pass
 
-    # 1. 尝试作为 sing-box JSON 解析
     try:
         with open(filename, 'r', encoding='utf-8') as f:
             data = json.load(f)
@@ -170,7 +165,6 @@ def parse_mixed_rules_to_buckets(filename):
     except Exception:
         pass
 
-    # 2. 文本逐行解析
     with open(filename, 'r', encoding='utf-8', errors='ignore') as f:
         for line in f:
             line = line.strip()
@@ -242,37 +236,76 @@ def parse_mixed_rules_to_buckets(filename):
     return domain_set, ipcidr_set, domain_regex_set
 
 def load_prev_mihomo_rules(geo_subfolder, rule_name):
+    """【强化】Mihomo 历史规则加载：支持自动探测反编译 MRS 及扁平目录"""
     prev_yaml = os.path.join(PREV_MIHOMO_DIR, "geo", geo_subfolder, f"{rule_name}.yaml")
-    if os.path.exists(prev_yaml):
-        rules = set()
-        try:
-            with open(prev_yaml, "r", encoding="utf-8") as f:
-                for line in f:
-                    line = line.strip()
-                    if line.startswith("- "):
-                        val = line[2:].strip()
-                        if val.startswith("'") and val.endswith("'"): val = val[1:-1]
-                        if val.startswith('"') and val.endswith('"'): val = val[1:-1]
-                        if val:
-                            if val.startswith('.') and not val.startswith('+.'):
-                                val = f"+.{val.lstrip('.')}"
-                            rules.add(val)
-            return rules
-        except Exception:
-            pass
+    prev_mrs = os.path.join(PREV_MIHOMO_DIR, "geo", geo_subfolder, f"{rule_name}.mrs")
+    
+    target_yaml = prev_yaml
+    rule_type = "ipcidr" if geo_subfolder == "geoip" else "domain"
+    
+    # 1. 标准路径下只有 mrs 没有 yaml，进行反编译
+    if not os.path.exists(target_yaml) and os.path.exists(prev_mrs):
+        os.system(f"./mihomo convert-ruleset {rule_type} mrs {prev_mrs} {target_yaml} >/dev/null 2>&1")
+        
+    # 2. 如果标准路径依然找不到，尝试在根目录寻找扁平结构文件
+    if not os.path.exists(target_yaml):
+        fb_yaml = os.path.join(PREV_MIHOMO_DIR, f"{rule_name}.yaml")
+        fb_mrs = os.path.join(PREV_MIHOMO_DIR, f"{rule_name}.mrs")
+        if not os.path.exists(fb_yaml) and os.path.exists(fb_mrs):
+            os.system(f"./mihomo convert-ruleset {rule_type} mrs {fb_mrs} {fb_yaml} >/dev/null 2>&1")
+        if os.path.exists(fb_yaml):
+            target_yaml = fb_yaml
+        else:
+            return None # 确实没有历史记录
+
+    rules = set()
+    try:
+        with open(target_yaml, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line.startswith("- "):
+                    val = line[2:].strip()
+                    if val.startswith("'") and val.endswith("'"): val = val[1:-1]
+                    if val.startswith('"') and val.endswith('"'): val = val[1:-1]
+                    if val:
+                        if val.startswith('.') and not val.startswith('+.'):
+                            val = f"+.{val.lstrip('.')}"
+                        rules.add(val)
+        return rules
+    except Exception as e:
+        print(f"[-] 警告：读取 Mihomo 历史记录异常 {target_yaml}: {e}")
     return None
 
 def load_prev_singbox_rules(geo_subfolder, rule_name):
+    """【强化】Sing-box 历史规则加载：支持自动探测反编译 SRS 及扁平目录"""
     prev_json = os.path.join(PREV_SINGBOX_DIR, "geo", geo_subfolder, f"{rule_name}.json")
-    if os.path.exists(prev_json):
-        try:
-            d_set, ip_set, dr_set = parse_mixed_rules_to_buckets(prev_json)
-            if geo_subfolder == "geoip":
-                return ip_set
-            else:
-                return d_set | {f"REGEX:{r}" for r in dr_set}
-        except Exception:
-            pass
+    prev_srs = os.path.join(PREV_SINGBOX_DIR, "geo", geo_subfolder, f"{rule_name}.srs")
+    
+    target_json = prev_json
+    
+    # 1. 标准路径下只有 srs 没有 json，调用 Sing-box 内核进行静默反编译提取规则
+    if not os.path.exists(target_json) and os.path.exists(prev_srs):
+        os.system(f"./sing-box rule-set decompile {prev_srs} --output {target_json} >/dev/null 2>&1")
+        
+    # 2. 尝试备用根目录
+    if not os.path.exists(target_json):
+        fb_json = os.path.join(PREV_SINGBOX_DIR, f"{rule_name}.json")
+        fb_srs = os.path.join(PREV_SINGBOX_DIR, f"{rule_name}.srs")
+        if not os.path.exists(fb_json) and os.path.exists(fb_srs):
+            os.system(f"./sing-box rule-set decompile {fb_srs} --output {fb_json} >/dev/null 2>&1")
+        if os.path.exists(fb_json):
+            target_json = fb_json
+        else:
+            return None # 确实没有历史记录
+
+    try:
+        d_set, ip_set, dr_set = parse_mixed_rules_to_buckets(target_json)
+        if geo_subfolder == "geoip":
+            return ip_set
+        else:
+            return d_set | {f"REGEX:{r}" for r in dr_set}
+    except Exception as e:
+        print(f"[-] 警告：读取 Sing-box 历史记录异常 {target_json}: {e}")
     return None
 
 def export_bypass_txt_files(v4_collapsed, v6_collapsed, commit_msgs):
@@ -457,7 +490,6 @@ def main():
                     temp_dl = f"temp_workspace/{rule_name}_{i}.dl"
                     temp_txt = f"temp_workspace/{rule_name}_{i}.txt"
                     
-                    # 下载文件，如果失败会抛出异常跳转到 except
                     curl_download(url, temp_dl)
                     
                     url_lower = url.lower()
@@ -483,7 +515,7 @@ def main():
 
                 except Exception as e:
                     print(f"[-] 警告：处理规则源跳过 | {url} -> {e}")
-                    continue  # 核心：发生任何错误都不中断程序，继续处理下一个链接
+                    continue
 
             for action in ["remove", "add"]:
                 custom_file = os.path.join("rules", action, rule_type, f"{rule_name}.txt")
@@ -588,7 +620,7 @@ def main():
                     
                 except Exception as e:
                     print(f"[-] 警告：处理规则源跳过 | {url} -> {e}")
-                    continue  # 同样地，这里如果某条混合规则出问题，直接跳过并继续
+                    continue
 
             for action in ["remove", "add"]:
                 custom_file = os.path.join("rules", action, "classical", f"{rule_name}.txt")
@@ -678,7 +710,7 @@ def main():
         json.dump(global_commit_msgs, f, ensure_ascii=False, indent=2)
 
     shutil.rmtree("temp_workspace", ignore_errors=True)
-    print("\n[√] 所有任务完成：已支持错误捕获与容错跳过！")
+    print("\n[√] 所有任务完成！")
 
 if __name__ == "__main__":
     main()

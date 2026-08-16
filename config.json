@@ -1,7 +1,7 @@
 {
   "domain": {
     "adblock": [
-      "https://raw.githubusercontent.com/privacy-protection-tools/anti-ad.github.io/master/docs/anti-ad-sing-box.srs"
+      "https://anti-ad.net/mihomo.mrs"
     ],
     "japan": [
       "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/dlsite.srs",

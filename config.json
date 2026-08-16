@@ -7,7 +7,7 @@
     "china": {
       "enable_local": true,
       "formats": [ "MRS", "SRS" ],
-      "inline_include": ["emby-cn"],
+      "inline_include": [ "emby-cn" ],
       "inline_exclude": [],
       "include": [
         "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/cn.srs",

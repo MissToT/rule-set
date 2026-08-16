@@ -76,9 +76,13 @@ def download_file(url, filename):
 
 def parse_mixed_rules_to_buckets(filename):
     """
-    只提取有效的 5 种规则类型：
-    DOMAIN, DOMAIN-SUFFIX, DOMAIN-KEYWORD, IP-CIDR, IP-CIDR6
-    以及直接合法的纯 IP 网段和纯域名，其余全部忽略。
+    精准解析：
+    - 显式指定的 DOMAIN, DOMAIN-SUFFIX, DOMAIN-KEYWORD, IP-CIDR, IP-CIDR6 原样提取。
+    - 对于没有前缀的纯文本行：
+      * 如果能解析为 IP，则归入 ipcidr。
+      * 如果不包含点号 '.' 或者明显是纯关键词的（如 speedtest、ookla），自动加上关键字格式或作为关键字处理；
+        （在 mihomo/sing-box 语法中，如果写成纯文本且无点号， Mihomo 默认常常当 keyword 或完整 domain，
+         但按照你的实际需求，无前缀纯字符串应直接作为 DOMAIN-KEYWORD 处理，或者带上 DOMAIN-KEYWORD 前缀输出）。
     """
     domain_set = set()
     ipcidr_set = set()
@@ -117,10 +121,13 @@ def parse_mixed_rules_to_buckets(filename):
                 elif pfx in ('DOMAIN', 'DOMAIN-SUFFIX', 'DOMAIN-KEYWORD'):
                     val = parts[1] if len(parts) > 1 else ''
                     if val:
-                        domain_set.add(val)
+                        # 核心修改：如果是 DOMAIN-KEYWORD，或者用户输入了这类没有点号的，保留其语义
+                        if pfx == 'DOMAIN-KEYWORD':
+                            domain_set.add(f"DOMAIN-KEYWORD,{val}")
+                        else:
+                            domain_set.add(line) # 或者是标准输出
                         continue
                 else:
-                    # 如果前缀不在允许列表内（如 PROCESS-NAME 等），直接跳过
                     continue
 
             # 尝试直接解析为 IP 网段
@@ -131,64 +138,15 @@ def parse_mixed_rules_to_buckets(filename):
             except ValueError:
                 pass
 
-            # 如果没有前缀也没有逗号，且能当作普通文本域名的，加入域名集
+            # 如果没有前缀、没有逗号，且是一行纯文本：
+            # 如果不包含 '.' 且像 speedtest/ookla 这种，直接存为 DOMAIN-KEYWORD 格式以便精准识别
             if line:
-                domain_set.add(line)
+                if '.' not in line:
+                    domain_set.add(f"DOMAIN-KEYWORD,{line}")
+                else:
+                    domain_set.add(line)
 
     return domain_set, ipcidr_set
-
-def fetch_prev_rules(rule_type, rule_name):
-    subdir = "geoip" if rule_type == "ipcidr" else "geosite"
-    yaml_path = os.path.join(PREV_SNAPSHOT_DIR, "geo", subdir, f"{rule_name}.yaml")
-    if not os.path.exists(yaml_path):
-        return None
-    rules = set()
-    with open(yaml_path, 'r', encoding='utf-8') as f:
-        for line in f:
-            s = line.strip()
-            if s.startswith("- '") and s.endswith("'"):
-                rules.add(s[3:-1])
-            elif s.startswith('- "') and s.endswith('"'):
-                rules.add(s[3:-1])
-            elif s.startswith("- ") and not s.startswith("- '"):
-                val = s[2:]
-                if val != 'payload:':
-                    rules.add(val)
-    return rules
-
-def export_bypass_txt_files(v4_collapsed, v6_collapsed, commit_msgs):
-    os.makedirs("bypass_out", exist_ok=True)
-    now = datetime.now(timezone(timedelta(hours=8)))
-    time_str = f"{now.year}年{now.month}月{now.day}日{now.strftime('%H:%M:%S')}"
-
-    def process_bypass_file(filename, collapsed_nets):
-        filepath = os.path.join("bypass_out", filename)
-        new_rules = set(str(n) for n in collapsed_nets)
-        with open(filepath, "w", encoding="utf-8") as f:
-            for rule in sorted(new_rules):
-                f.write(f"{rule}\n")
-        
-        prev_path = os.path.join(PREV_BYPASS_DIR, filename)
-        prev_rules = None
-        if os.path.exists(prev_path):
-            with open(prev_path, "r", encoding="utf-8") as f:
-                prev_rules = set(line.strip() for line in f if line.strip())
-
-        added = sorted(new_rules - prev_rules) if prev_rules is not None else []
-        removed = sorted(prev_rules - new_rules) if prev_rules is not None else []
-        add_cnt = len(added) if prev_rules is not None else len(new_rules)
-        rm_cnt = len(removed) if prev_rules is not None else 0
-        commit_msgs[filename] = f"{time_str} - 更新 {filename}: 新增 {add_cnt} 条，移除 {rm_cnt} 条"
-        return {"total": len(new_rules)}
-
-    v4_res = process_bypass_file("cn-ipv4.txt", v4_collapsed)
-    v6_res = process_bypass_file("cn-ipv6.txt", v6_collapsed)
-
-    lines = [f"# Bypass 规则变更记录\n\n**更新时间：** {time_str}\n\n---\n\n"]
-    for key, data in [("cn-ipv4.txt", v4_res), ("cn-ipv6.txt", v6_res)]:
-        lines.append(f"## `{key}`\n- 规则总数：**{data['total']}**\n\n")
-    with open(os.path.join("bypass_out", "README.md"), "w", encoding="utf-8") as f:
-        f.write("".join(lines))
 
 def export_four_formats(rule_name, rules_set, rule_type):
     is_ip = (rule_type == "ipcidr")
@@ -200,18 +158,38 @@ def export_four_formats(rule_name, rules_set, rule_type):
     with open(f"{mihomo_dir}/{rule_name}.yaml", 'w', encoding='utf-8') as f:
         f.write("payload:\n")
         for rule in sorted(rules_set):
-            f.write(f"  - '{rule}'\n")
+            # 如果带有逗号（如 DOMAIN-KEYWORD,xxx），yaml 输出时需要正确带上或按 Mihomo 规范格式化
+            if ',' in rule:
+                f.write(f"  - '{rule}'\n")
+            else:
+                f.write(f"  - '{rule}'\n")
 
     with open(f"{singbox_dir}/{rule_name}.json", 'w', encoding='utf-8') as f:
         if is_ip:
             json.dump({"version": 2, "rules": [{"ip_cidr": sorted(list(rules_set))}]}, f, indent=2, ensure_ascii=False)
         else:
-            domains, suffixes = [], []
+            domains, suffixes, keywords = [], [], []
             for r in sorted(rules_set):
-                if r.startswith('+.'): suffixes.append(r[2:])
-                elif r.startswith('.'): suffixes.append(r[1:])
-                else: domains.append(r)
-            json.dump({"version": 2, "rules": [{"domain": domains, "domain_suffix": suffixes}]}, f, indent=2, ensure_ascii=False)
+                if ',' in r:
+                    pfx, val = r.split(',', 1)
+                    pfx = pfx.strip().upper()
+                    val = val.strip()
+                    if pfx == 'DOMAIN-KEYWORD':
+                        keywords.append(val)
+                    elif pfx == 'DOMAIN-SUFFIX':
+                        suffixes.append(val)
+                    elif pfx == 'DOMAIN':
+                        domains.append(val)
+                else:
+                    if r.startswith('+.'): suffixes.append(r[2:])
+                    elif r.startswith('.'): suffixes.append(r[1:])
+                    else: domains.append(r)
+            
+            rule_obj = {}
+            if domains: rule_obj["domain"] = domains
+            if suffixes: rule_obj["domain_suffix"] = suffixes
+            if keywords: rule_obj["domain_keyword"] = keywords
+            json.dump({"version": 2, "rules": [rule_obj]}, f, indent=2, ensure_ascii=False)
 
     temp_txt_path = f"temp_workspace/merged_{rule_name}_{rule_type}.txt"
     with open(temp_txt_path, 'w', encoding='utf-8') as f:
@@ -306,9 +284,6 @@ def main():
                 v4_collapsed = sorted(ipaddress.collapse_addresses(v4_nets))
                 v6_collapsed = sorted(ipaddress.collapse_addresses(v6_nets))
                 merged_rules = set(str(n) for n in (v4_collapsed + v6_collapsed))
-
-                if rule_name == "china":
-                    export_bypass_txt_files(v4_collapsed, v6_collapsed, global_commit_msgs)
 
             export_four_formats(rule_name, merged_rules, rule_type)
 

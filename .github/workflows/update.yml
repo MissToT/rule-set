@@ -51,12 +51,11 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
-          # 追踪新创建的文件夹
-          git add rules/include/ rules/exclude/
+          # 追踪生成的规则模板文件
+          git add rules/
           
-          # 检查是否有新文件产生，如果有则提交并推送回主分支
           if ! git diff --cached --quiet; then
-            git commit -m "自动生成 rules/include 和 rules/exclude 模板文件"
+            git commit -m "自动生成各规则的本地 include/exclude 覆写模板文件"
             git push
             echo "::notice::已自动在代码库中创建模板文件，请刷新网页查看"
           else

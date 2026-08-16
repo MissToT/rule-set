@@ -1,7 +1,14 @@
 {
   "domain": {
+    "china": [
+      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/cn.srs",
+      "https://github.com/QuixoticHeart/rule-set/blob/ruleset/singbox/version2/cn.srs"
+    ],
     "adblock": [
       "https://anti-ad.net/mihomo.mrs"
+    ],
+    "fake-ip-filter": [
+      "https://github.com/QuixoticHeart/rule-set/blob/ruleset/singbox/version2/fake-ip-filter.srs"
     ],
     "japan": [
       "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/dlsite.srs",
@@ -13,22 +20,18 @@
       "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/manhuagui.srs"
     ]
   },
-  "ipcidr": {},
-  "classical": {
+  "ipcidr": {
     "china": [
       "https://github.com/QuixoticHeart/rule-set/blob/ruleset/singbox/version2/cncidr.srs",
-      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geoip/cn.srs",
-      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/cn.srs",
-      "https://github.com/QuixoticHeart/rule-set/blob/ruleset/singbox/version2/cn.srs"
-    ],
+      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geoip/cn.srs"
+    ]
+  },
+  "classical": {
     "proxy": [
       "https://github.com/QuixoticHeart/rule-set/blob/ruleset/singbox/version2/proxy.srs"
     ],
     "google": [
       "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/google.srs"
-    ],
-    "fake-ip-filter": [
-      "https://github.com/QuixoticHeart/rule-set/blob/ruleset/singbox/version2/fake-ip-filter.srs"
     ]
   }
 }

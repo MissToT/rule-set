@@ -1,6 +1,6 @@
 {
   "settings": {
-    "enable_local": true
+    "enable_local": false
   },
   "domain": {
     "china": {
@@ -16,6 +16,18 @@
       "include": [
         "https://anti-ad.net/mihomo.mrs"
       ],
+      "exclude": []
+    },
+    "emby": {
+      "enable_local": true,
+      "include": [
+        "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/category-emby.srs"
+      ],
+      "exclude": []
+    },
+    "emby-cn": {
+      "enable_local": true,
+      "include": [],
       "exclude": []
     },
     "fake-ip-filter": {

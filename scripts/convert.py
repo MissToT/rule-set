@@ -39,11 +39,31 @@ def get_latest_stable_asset_url(repo, pattern):
         print(f"[-] 获取 {repo} 最新稳定版本失败: {e}")
     return None
 
+def curl_download(url, output):
+    """使用 curl 稳定下载文件"""
+    normalized_url = normalize_url(url)
+    cmd = f"curl -L -s -A 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36' -o {output} '{normalized_url}'"
+    ret = os.system(cmd)
+    if ret != 0 or not os.path.exists(output) or os.path.getsize(output) == 0:
+        raise Exception(f"下载文件失败: {normalized_url}")
+    
+    # 检查是否误下载到了 CDN 拦截或报错的 HTML 网页
+    try:
+        with open(output, 'rb') as f:
+            header_snippet = f.read(200).lower()
+            if b'<html' in header_snippet or b'<!doctype' in header_snippet:
+                raise Exception(f"下载内容为 HTML 网页（触发防爬/CDN拦截），链接无效: {normalized_url}")
+    except Exception as e:
+        if "HTML 网页" in str(e):
+            raise e
+        pass
+
 def setup_binaries():
     print("[*] 正在准备编译内核...")
     sb_url = get_latest_stable_asset_url("SagerNet/sing-box", r"linux-amd64.*\.tar\.gz") or \
              "https://github.com/SagerNet/sing-box/releases/download/v1.13.14/sing-box-1.13.14-linux-amd64.tar.gz"
-    urllib.request.urlretrieve(sb_url, "sing-box.tar.gz")
+    
+    curl_download(sb_url, "sing-box.tar.gz")
     with tarfile.open("sing-box.tar.gz", "r:gz") as tar:
         for member in tar.getmembers():
             if member.name.endswith("/sing-box"):
@@ -53,11 +73,13 @@ def setup_binaries():
 
     mihomo_url = get_latest_stable_asset_url("MetaCubeX/mihomo", r"linux-amd64.*\.gz") or \
                  "https://github.com/MetaCubeX/mihomo/releases/download/v1.19.27/mihomo-linux-amd64-v1.19.27.gz"
-    urllib.request.urlretrieve(mihomo_url, "mihomo.gz")
+    
+    curl_download(mihomo_url, "mihomo.gz")
     with gzip.open("mihomo.gz", "rb") as f_in:
         with open("mihomo", "wb") as f_out:
             shutil.copyfileobj(f_in, f_out)
     os.chmod("mihomo", 0o755)
+    print("[*] 内核准备完毕并已赋权。")
 
 def setup_custom_rule_dirs():
     for action in ["add", "remove"]:
@@ -89,26 +111,6 @@ def setup_custom_rule_dirs():
                         op = "新增" if action == "add" else "移除"
                         f.write(f"# 在此写入需要【{op}】的 {rule_name} ({rule_type}) 规则\n")
     print("[*] 已同步并初始化自定义规则目录 (rules/add / rules/remove)")
-
-def download_file(url, filename):
-    normalized_url = normalize_url(url)
-    print(f"  -> 下载源: {normalized_url}")
-    # 使用 curl 代替 urllib，完美支持主流浏览器 UA、TLS 指纹与重定向，彻底解决防爬拦截问题
-    cmd = f"curl -L -s -A 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36' -o {filename} '{normalized_url}'"
-    ret = os.system(cmd)
-    if ret != 0 or not os.path.exists(filename) or os.path.getsize(filename) == 0:
-        raise Exception(f"下载文件失败: {normalized_url}")
-    
-    # 检查是否误下载到了 CDN 拦截或报错的 HTML 网页
-    try:
-        with open(filename, 'rb') as f:
-            header_snippet = f.read(200).lower()
-            if b'<html' in header_snippet or b'<!doctype' in header_snippet:
-                raise Exception(f"下载内容为 HTML 网页（触发防爬/CDN拦截），链接无效: {normalized_url}")
-    except Exception as e:
-        if "HTML 网页" in str(e):
-            raise e
-        pass
 
 def parse_mixed_rules_to_buckets(filename):
     domain_set = set()
@@ -320,7 +322,7 @@ def export_four_formats(rule_name, rules_set, rule_type, domain_regex_set=None):
         for rule in sorted(rules_set):
             f.write(f"  - '{rule}'\n")
 
-    # Sing-box 导出：包含 DOMAIN-REGEX (写入 domain_regex 字段)
+    # Sing-box 导出：包含 DOMAIN-REGEX
     with open(f"{singbox_dir}/{rule_name}.json", 'w', encoding='utf-8') as f:
         if is_ip:
             json.dump({"version": 2, "rules": [{"ip_cidr": sorted(list(rules_set))}]}, f, indent=2, ensure_ascii=False)
@@ -422,20 +424,19 @@ def main():
             for i, url in enumerate(urls):
                 temp_dl = f"temp_workspace/{rule_name}_{i}.dl"
                 temp_txt = f"temp_workspace/{rule_name}_{i}.txt"
-                download_file(url, temp_dl)
+                curl_download(url, temp_dl)
                 
                 url_lower = url.lower()
                 if url_lower.endswith('.mrs'):
                     ret = os.system(f"./mihomo convert-ruleset {rule_type} mrs {temp_dl} {temp_txt}")
                     if ret != 0 or not os.path.exists(temp_txt):
-                        shutil.copy(temp_dl, temp_txt)
+                        raise Exception(f"Mihomo 转换 mrs 失败: {url}")
                 elif url_lower.endswith('.srs'):
                     temp_json = f"temp_workspace/{rule_name}_{i}.json"
                     ret = os.system(f"./sing-box rule-set decompile {temp_dl} --output {temp_json}")
-                    if ret == 0 and os.path.exists(temp_json):
-                        temp_txt = temp_json
-                    else:
-                        shutil.copy(temp_dl, temp_txt)
+                    if ret != 0 or not os.path.exists(temp_json) or os.path.getsize(temp_json) == 0:
+                        raise Exception(f"Sing-box 反编译 srs 失败（请确认核心是否正常下载）: {url}")
+                    temp_txt = temp_json
                 else:
                     shutil.copy(temp_dl, temp_txt)
                 
@@ -486,7 +487,7 @@ def main():
             m_added = sorted(mihomo_new_set - prev_mihomo_rules) if prev_mihomo_rules is not None else []
             m_removed = sorted(prev_mihomo_rules - mihomo_new_set) if prev_mihomo_rules is not None else []
 
-            # Sing-box 差异对比（独立基于 prev_singbox 的 .json 文件，包含 regex）
+            # Sing-box 差异对比
             prev_singbox_rules = load_prev_singbox_rules(geo_dir, rule_name)
             singbox_new_set = set(merged_rules)
             if rule_type != "ipcidr" and merged_domain_regex:
@@ -526,20 +527,19 @@ def main():
             for i, url in enumerate(urls):
                 temp_dl = f"temp_workspace/classical_{rule_name}_{i}.dl"
                 temp_txt = f"temp_workspace/classical_{rule_name}_{i}.txt"
-                download_file(url, temp_dl)
+                curl_download(url, temp_dl)
                 
                 url_lower = url.lower()
                 if url_lower.endswith('.mrs'):
                     ret = os.system(f"./mihomo convert-ruleset domain mrs {temp_dl} {temp_txt}")
                     if ret != 0 or not os.path.exists(temp_txt):
-                        shutil.copy(temp_dl, temp_txt)
+                        raise Exception(f"Mihomo 转换 mrs 失败: {url}")
                 elif url_lower.endswith('.srs'):
                     temp_json = f"temp_workspace/classical_{rule_name}_{i}.json"
                     ret = os.system(f"./sing-box rule-set decompile {temp_dl} --output {temp_json}")
-                    if ret == 0 and os.path.exists(temp_json):
-                        temp_txt = temp_json
-                    else:
-                        shutil.copy(temp_dl, temp_txt)
+                    if ret != 0 or not os.path.exists(temp_json) or os.path.getsize(temp_json) == 0:
+                        raise Exception(f"Sing-box 反编译 srs 失败: {url}")
+                    temp_txt = temp_json
                 else:
                     shutil.copy(temp_dl, temp_txt)
 
@@ -636,7 +636,7 @@ def main():
         json.dump(global_commit_msgs, f, ensure_ascii=False, indent=2)
 
     shutil.rmtree("temp_workspace", ignore_errors=True)
-    print("\n[√] 所有任务完成：已完美解决防爬拦截与 SRS 乱码问题！")
+    print("\n[√] 所有任务完成：已完美解决二进制反编译与容错问题！")
 
 if __name__ == "__main__":
     main()

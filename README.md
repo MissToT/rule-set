@@ -1,6 +1,6 @@
 # Mihomo 代理规则集
 
-最后更新: 2026-08-17 00:48:27 (UTC+8)
+最后更新: 2026-08-17 01:00:00 (UTC+8)
 
 ## GeoSite 域名规则
 
@@ -16,7 +16,7 @@
 | emby-cn | [MRS](geo/geosite/emby-cn.mrs) | 38 |
 | fake-ip-filter | [MRS](geo/geosite/fake-ip-filter.mrs) / [YAML](geo/geosite/fake-ip-filter.yaml) | 113 |
 | game-platforms-download | [MRS](geo/geosite/game-platforms-download.mrs) / [YAML](geo/geosite/game-platforms-download.yaml) | 491 |
-| games | [MRS](geo/geosite/games.mrs) / [YAML](geo/geosite/games.yaml) | 860 |
+| games | [MRS](geo/geosite/games.mrs) / [YAML](geo/geosite/games.yaml) | 1,338 |
 | google | [MRS](geo/geosite/google.mrs) / [YAML](geo/geosite/google.yaml) | 1,045 |
 | googlefcm | [MRS](geo/geosite/googlefcm.mrs) / [YAML](geo/geosite/googlefcm.yaml) | 7 |
 | japan | [MRS](geo/geosite/japan.mrs) / [YAML](geo/geosite/japan.yaml) | 40 |

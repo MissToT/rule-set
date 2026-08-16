@@ -1,12 +1,12 @@
 # Github加速镜像
 gh-proxy.com
 # Pixiv加速镜像
-i.pixiv.re
+#i.pixiv.re
 +.pixiv.re
 # 再漫画
 +.zaimanhua.com
 # 图床
-p.sda1.dev
+#p.sda1.dev
 # 网易云
 +.netease.im
 # 守候订阅域名

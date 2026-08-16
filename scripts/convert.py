@@ -235,28 +235,29 @@ def parse_mixed_rules_to_buckets(filename):
 
     return domain_set, ipcidr_set, domain_regex_set
 
+def find_file(root_dir, filename):
+    """【新增】递归爆破查找文件，彻底解决 GitHub Actions 路径层级嵌套导致的找不到文件问题"""
+    if not os.path.exists(root_dir):
+        return None
+    for root, dirs, files in os.walk(root_dir):
+        if filename in files:
+            return os.path.join(root, filename)
+    return None
+
 def load_prev_mihomo_rules(geo_subfolder, rule_name):
-    """【强化】Mihomo 历史规则加载：支持自动探测反编译 MRS 及扁平目录"""
-    prev_yaml = os.path.join(PREV_MIHOMO_DIR, "geo", geo_subfolder, f"{rule_name}.yaml")
-    prev_mrs = os.path.join(PREV_MIHOMO_DIR, "geo", geo_subfolder, f"{rule_name}.mrs")
-    
-    target_yaml = prev_yaml
-    rule_type = "ipcidr" if geo_subfolder == "geoip" else "domain"
-    
-    # 1. 标准路径下只有 mrs 没有 yaml，进行反编译
-    if not os.path.exists(target_yaml) and os.path.exists(prev_mrs):
-        os.system(f"./mihomo convert-ruleset {rule_type} mrs {prev_mrs} {target_yaml} >/dev/null 2>&1")
-        
-    # 2. 如果标准路径依然找不到，尝试在根目录寻找扁平结构文件
-    if not os.path.exists(target_yaml):
-        fb_yaml = os.path.join(PREV_MIHOMO_DIR, f"{rule_name}.yaml")
-        fb_mrs = os.path.join(PREV_MIHOMO_DIR, f"{rule_name}.mrs")
-        if not os.path.exists(fb_yaml) and os.path.exists(fb_mrs):
-            os.system(f"./mihomo convert-ruleset {rule_type} mrs {fb_mrs} {fb_yaml} >/dev/null 2>&1")
-        if os.path.exists(fb_yaml):
-            target_yaml = fb_yaml
-        else:
-            return None # 确实没有历史记录
+    """【强化】Mihomo 历史规则加载：支持递归查找、自动反编译 MRS 及详细日志"""
+    target_yaml = find_file(PREV_MIHOMO_DIR, f"{rule_name}.yaml")
+    target_mrs = find_file(PREV_MIHOMO_DIR, f"{rule_name}.mrs")
+
+    if not target_yaml and not target_mrs:
+        return None
+
+    if not target_yaml and target_mrs:
+        target_yaml = os.path.join("temp_workspace", f"{rule_name}_mihomo_decompile.yaml")
+        rule_type = "ipcidr" if geo_subfolder == "geoip" else "domain"
+        ret = os.system(f"./mihomo convert-ruleset {rule_type} mrs {target_mrs} {target_yaml}")
+        if ret != 0 or not os.path.exists(target_yaml):
+            return None
 
     rules = set()
     try:
@@ -273,30 +274,27 @@ def load_prev_mihomo_rules(geo_subfolder, rule_name):
                         rules.add(val)
         return rules
     except Exception as e:
-        print(f"[-] 警告：读取 Mihomo 历史记录异常 {target_yaml}: {e}")
+        print(f"[-] 读取 Mihomo 历史记录异常 {target_yaml}: {e}")
     return None
 
 def load_prev_singbox_rules(geo_subfolder, rule_name):
-    """【强化】Sing-box 历史规则加载：支持自动探测反编译 SRS 及扁平目录"""
-    prev_json = os.path.join(PREV_SINGBOX_DIR, "geo", geo_subfolder, f"{rule_name}.json")
-    prev_srs = os.path.join(PREV_SINGBOX_DIR, "geo", geo_subfolder, f"{rule_name}.srs")
-    
-    target_json = prev_json
-    
-    # 1. 标准路径下只有 srs 没有 json，调用 Sing-box 内核进行静默反编译提取规则
-    if not os.path.exists(target_json) and os.path.exists(prev_srs):
-        os.system(f"./sing-box rule-set decompile {prev_srs} --output {target_json} >/dev/null 2>&1")
-        
-    # 2. 尝试备用根目录
-    if not os.path.exists(target_json):
-        fb_json = os.path.join(PREV_SINGBOX_DIR, f"{rule_name}.json")
-        fb_srs = os.path.join(PREV_SINGBOX_DIR, f"{rule_name}.srs")
-        if not os.path.exists(fb_json) and os.path.exists(fb_srs):
-            os.system(f"./sing-box rule-set decompile {fb_srs} --output {fb_json} >/dev/null 2>&1")
-        if os.path.exists(fb_json):
-            target_json = fb_json
-        else:
-            return None # 确实没有历史记录
+    """【强化】Sing-box 历史规则加载：支持递归查找、自动反编译 SRS 及详细日志"""
+    target_json = find_file(PREV_SINGBOX_DIR, f"{rule_name}.json")
+    target_srs = find_file(PREV_SINGBOX_DIR, f"{rule_name}.srs")
+
+    if not target_json and not target_srs:
+        print(f"[-] 未能在 {PREV_SINGBOX_DIR} 目录中找到历史文件: {rule_name}.json / .srs")
+        return None
+
+    if not target_json and target_srs:
+        print(f"  -> 发现历史 SRS 文件: {target_srs}，正在自动反编译...")
+        target_json = os.path.join("temp_workspace", f"{rule_name}_singbox_decompile.json")
+        ret = os.system(f"./sing-box rule-set decompile {target_srs} --output {target_json}")
+        if ret != 0 or not os.path.exists(target_json):
+            ret = os.system(f"./sing-box rule-set decompile {target_srs} > {target_json}")
+            if ret != 0 or not os.path.exists(target_json):
+                print(f"[-] 严重: Sing-box 反编译历史 SRS 失败！")
+                return None
 
     try:
         d_set, ip_set, dr_set = parse_mixed_rules_to_buckets(target_json)
@@ -305,7 +303,7 @@ def load_prev_singbox_rules(geo_subfolder, rule_name):
         else:
             return d_set | {f"REGEX:{r}" for r in dr_set}
     except Exception as e:
-        print(f"[-] 警告：读取 Sing-box 历史记录异常 {target_json}: {e}")
+        print(f"[-] 解析 Sing-box 历史记录异常 {target_json}: {e}")
     return None
 
 def export_bypass_txt_files(v4_collapsed, v6_collapsed, commit_msgs):

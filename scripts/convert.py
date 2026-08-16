@@ -53,6 +53,25 @@ def setup_binaries():
     os.chmod("mihomo", 0o755)
 
 def setup_custom_rule_dirs():
+    # 1. 先清理 config.json 中已删除规则对应的本地残留文件
+    for action in ["add", "remove"]:
+        for rule_type in ["domain", "ipcidr", "classical"]:
+            rules_dict = RULES_CONFIG.get(rule_type, {})
+            dir_path = os.path.join("rules", action, rule_type)
+            if os.path.exists(dir_path):
+                valid_names = set(rules_dict.keys())
+                for filename in os.listdir(dir_path):
+                    if filename.endswith(".txt"):
+                        rule_name = filename[:-4]
+                        if rule_name not in valid_names:
+                            file_path = os.path.join(dir_path, filename)
+                            try:
+                                os.remove(file_path)
+                                print(f"[*] 已清理 config.json 中已删除规则的本地残留文件: {file_path}")
+                            except Exception as e:
+                                print(f"[-] 清理文件 {file_path} 失败: {e}")
+
+    # 2. 检查并补全当前 config.json 中存在的规则文件
     for action in ["add", "remove"]:
         for rule_type in ["domain", "ipcidr", "classical"]:
             rules_dict = RULES_CONFIG.get(rule_type, {})
@@ -64,7 +83,7 @@ def setup_custom_rule_dirs():
                     with open(file_path, 'w', encoding='utf-8') as f:
                         op = "新增" if action == "add" else "移除"
                         f.write(f"# 在此写入需要【{op}】的 {rule_name} ({rule_type}) 规则\n")
-    print("[*] 已初始化自定义规则目录 (rules/add / rules/remove)")
+    print("[*] 已同步并初始化自定义规则目录 (rules/add / rules/remove)")
 
 def download_file(url, filename):
     print(f"  -> 下载源: {url}")
@@ -339,13 +358,8 @@ def main():
         rules_dict = RULES_CONFIG.get(rule_type, {})
         print(f"\n[*] 开始批量构建 [{rule_type.upper()}] 分流规则...")
 
+        # 仅遍历当前 config.json 中实际存在的规则名称（不再去残留目录扫描已删除的）
         all_rule_names = set(rules_dict.keys())
-        for action in ["add", "remove"]:
-            action_dir = os.path.join("rules", action, rule_type)
-            if os.path.exists(action_dir):
-                for filename in os.listdir(action_dir):
-                    if filename.endswith(".txt"):
-                        all_rule_names.add(filename[:-4])
 
         for rule_name in sorted(all_rule_names):
             print(f"\n[+] 处理规则集: {rule_name}")
@@ -507,7 +521,7 @@ def main():
         json.dump(global_commit_msgs, f, ensure_ascii=False, indent=2)
 
     shutil.rmtree("temp_workspace", ignore_errors=True)
-    print("\n[√] 所有任务、sing-box JSON 上游规则解析及详细报告已全部完成！")
+    print("\n[√] 所有任务、残留规则清理及配置同步已全部完成！")
 
 if __name__ == "__main__":
     main()

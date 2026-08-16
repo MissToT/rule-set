@@ -110,7 +110,6 @@ def parse_mixed_rules_to_buckets(filename):
     except Exception:
         pass
 
-    # 优先尝试作为 JSON 格式解析（如 sing-box 源码规则集 JSON）
     try:
         with open(filename, 'r', encoding='utf-8') as f:
             data = json.load(f)
@@ -153,7 +152,6 @@ def parse_mixed_rules_to_buckets(filename):
     except Exception:
         pass
 
-    # 逐行文本解析
     with open(filename, 'r', encoding='utf-8', errors='ignore') as f:
         for line in f:
             line = line.strip()
@@ -392,7 +390,6 @@ def export_rule_files(rule_name, rules_set, rule_type, formats, domain_regex_set
                     f.write(f"  - '{rule}'\n")
             temp_yaml_created = True
         
-        # 修正：Mihomo convert-ruleset 格式应为 yaml 而非 text
         os.system(f"./mihomo convert-ruleset {rule_type} yaml {yaml_path} {mihomo_files['mrs']}")
         
         if temp_yaml_created and "yaml" not in fmt_lower:
@@ -569,8 +566,8 @@ def main():
         for action_type, url_list in [("include", include_urls), ("exclude", exclude_urls)]:
             for i, url in enumerate(url_list):
                 try:
-                    temp_dl = f"temp_workspace/{rule_name}_{action_type}_{i}.dl"
-                    temp_txt = f"temp_workspace/{rule_name}_{action_type}_{i}.txt"
+                    temp_dl = f"temp_workspace/{rule_type}_{rule_name}_{action_type}_{i}.dl"
+                    temp_txt = f"temp_workspace/{rule_type}_{rule_name}_{action_type}_{i}.txt"
                     
                     curl_download(url, temp_dl)
                     
@@ -581,7 +578,7 @@ def main():
                         if ret != 0 or not os.path.exists(temp_txt):
                             raise Exception("Mihomo 转换 mrs 失败")
                     elif url_lower.endswith('.srs'):
-                        temp_json = f"temp_workspace/{rule_name}_{action_type}_{i}.json"
+                        temp_json = f"temp_workspace/{rule_type}_{rule_name}_{action_type}_{i}.json"
                         ret = os.system(f"./sing-box rule-set decompile {temp_dl} --output {temp_json}")
                         if ret != 0 or not os.path.exists(temp_json) or os.path.getsize(temp_json) == 0:
                             raise Exception("Sing-box 反编译 srs 失败")
@@ -591,7 +588,7 @@ def main():
                     
                     d_set, ip_set, dr_set = parse_mixed_rules_to_buckets(temp_txt)
                     
-                    print(f"[DEBUG] 规则 [{rule_name}] ({action_type} 源: {url}) -> 域名:{len(d_set)}, IP:{len(ip_set)}, 正则:{len(dr_set)}")
+                    print(f"[DEBUG] 规则 [{rule_type}/{rule_name}] ({action_type} 源: {url}) -> 域名:{len(d_set)}, IP:{len(ip_set)}, 正则:{len(dr_set)}")
                     
                     if action_type == "include":
                         base_domain_set |= d_set
@@ -602,7 +599,7 @@ def main():
                         base_ip_set -= ip_set
                         base_domain_regex -= dr_set
                 except Exception as e:
-                    print(f"[-] 警告：处理规则源跳过 [{rule_name}] | {url} -> {e}")
+                    print(f"[-] 警告：处理规则源跳过 [{rule_type}/{rule_name}] | {url} -> {e}")
                     continue
 
         if final_enable_local:
@@ -610,7 +607,7 @@ def main():
                 custom_file = os.path.join("rules", action, rule_type, f"{rule_name}.txt")
                 if os.path.exists(custom_file):
                     d_set, ip_set, dr_set = parse_mixed_rules_to_buckets(custom_file)
-                    print(f"[DEBUG] 规则 [{rule_name}] (本地覆写 {action}: {custom_file}) -> 域名:{len(d_set)}, IP:{len(ip_set)}, 正则:{len(dr_set)}")
+                    print(f"[DEBUG] 规则 [{rule_type}/{rule_name}] (本地覆写 {action}: {custom_file}) -> 域名:{len(d_set)}, IP:{len(ip_set)}, 正则:{len(dr_set)}")
                     if action == "exclude":
                         base_domain_set -= d_set
                         base_ip_set -= ip_set
@@ -620,7 +617,9 @@ def main():
                         base_ip_set |= ip_set
                         base_domain_regex |= dr_set
 
-        rule_cache[rule_name] = {
+        # 核心修复：使用 (rule_type, rule_name) 组合键作为字典 Key，彻底隔离同名冲突
+        cache_key = (rule_type, rule_name)
+        rule_cache[cache_key] = {
             "type": rule_type,
             "domain": base_domain_set,
             "ip": base_ip_set,
@@ -633,54 +632,58 @@ def main():
     print(f"\n[*] 开始第二阶段：解析内联引用 (inline_include / inline_exclude)...")
 
     for rule_type, rule_name, rule_config in all_rule_defs:
-        if rule_name not in rule_cache:
+        cache_key = (rule_type, rule_name)
+        if cache_key not in rule_cache:
             continue
         
-        current = rule_cache[rule_name]
+        current = rule_cache[cache_key]
         
         if not isinstance(current["inline_include"], list):
-            print(f"[!] 警告: 规则 [{rule_name}] 的 inline_include 不是列表格式！当前值: {current['inline_include']}")
+            print(f"[!] 警告: 规则 [{rule_type}/{rule_name}] 的 inline_include 不是列表格式！当前值: {current['inline_include']}")
         if not isinstance(current["inline_exclude"], list):
-            print(f"[!] 警告: 规则 [{rule_name}] 的 inline_exclude 不是列表格式！当前值: {current['inline_exclude']}")
+            print(f"[!] 警告: 规则 [{rule_type}/{rule_name}] 的 inline_exclude 不是列表格式！当前值: {current['inline_exclude']}")
 
         for target_name in current["inline_include"]:
-            if target_name in rule_cache:
-                target_data = rule_cache[target_name]
-                print(f"[Debug] 规则 [{rule_name}] 正在 inline_include 目标 [{target_name}] (包含域:{len(target_data['domain'])}, IP:{len(target_data['ip'])})")
+            target_key = (rule_type, target_name)
+            if target_key in rule_cache:
+                target_data = rule_cache[target_key]
+                print(f"[Debug] 规则 [{rule_type}/{rule_name}] 正在 inline_include 目标 [{target_name}] (包含域:{len(target_data['domain'])}, IP:{len(target_data['ip'])})")
                 current["domain"] |= target_data["domain"]
                 current["ip"] |= target_data["ip"]
                 current["regex"] |= target_data["regex"]
             else:
-                print(f"[!] 警告: 规则 [{rule_name}] 尝试引用目标 [{target_name}]，但在 rule_cache 中未找到该规则！(请检查拼写或是否在 config.json 中定义)")
+                print(f"[!] 警告: 规则 [{rule_type}/{rule_name}] 尝试引用目标 [{target_name}]，但在 rule_cache 中未找到同类型的该规则！")
 
         for target_name in current["inline_exclude"]:
-            if target_name in rule_cache:
-                target_data = rule_cache[target_name]
-                print(f"[Debug] 规则 [{rule_name}] 正在 inline_exclude 目标 [{target_name}]")
+            target_key = (rule_type, target_name)
+            if target_key in rule_cache:
+                target_data = rule_cache[target_key]
+                print(f"[Debug] 规则 [{rule_type}/{rule_name}] 正在 inline_exclude 目标 [{target_name}]")
                 current["domain"] -= target_data["domain"]
                 current["ip"] -= target_data["ip"]
                 current["regex"] -= target_data["regex"]
             else:
-                print(f"[!] 警告: 规则 [{rule_name}] 尝试排除目标 [{target_name}]，但在 rule_cache 中未找到该规则！")
+                print(f"[!] 警告: 规则 [{rule_type}/{rule_name}] 尝试排除目标 [{target_name}]，但在 rule_cache 中未找到同类型的该规则！")
 
     print(f"\n[*] 开始第三阶段：优化CIDR并导出最终多格式规则文件...")
 
     for rule_type, rule_name, rule_config in all_rule_defs:
-        if rule_name not in rule_cache:
-            print(f"[Debug] 规则 [{rule_name}] 不在 rule_cache 中，跳过导出。")
+        cache_key = (rule_type, rule_name)
+        if cache_key not in rule_cache:
+            print(f"[Debug] 规则 [{rule_type}/{rule_name}] 不在 rule_cache 中，跳过导出。")
             continue
         
-        data = rule_cache[rule_name]
+        data = rule_cache[cache_key]
         formats = data["formats"]
 
         if rule_type == "domain":
             merged_rules = data["domain"]
             merged_regex = data["regex"]
             
-            print(f"[DEBUG] 规则 [{rule_name}] (domain类型) 最终合并后 -> 域名/后缀数: {len(merged_rules)}, 正则数: {len(merged_regex)}")
+            print(f"[DEBUG] 规则 [{rule_type}/{rule_name}] (domain类型) 最终合并后 -> 域名/后缀数: {len(merged_rules)}, 正则数: {len(merged_regex)}")
 
             if not merged_rules and not merged_regex:
-                print(f"[-] 提示：规则 [{rule_name}] 过滤后规则条数为 0，已跳过导出。")
+                print(f"[-] 提示：规则 [{rule_type}/{rule_name}] 过滤后规则条数为 0，已跳过导出。")
                 continue
 
             geo_dir = "geosite"
@@ -712,10 +715,10 @@ def main():
         elif rule_type == "ipcidr":
             raw_ips = data["ip"]
             
-            print(f"[DEBUG] 规则 [{rule_name}] (ipcidr类型) 合并前原始IP数: {len(raw_ips)}")
+            print(f"[DEBUG] 规则 [{rule_type}/{rule_name}] (ipcidr类型) 合并前原始IP数: {len(raw_ips)}")
 
             if not raw_ips:
-                print(f"[-] 提示：规则 [{rule_name}] 过滤后IP条数为 0，已跳过导出。")
+                print(f"[-] 提示：规则 [{rule_type}/{rule_name}] 过滤后IP条数为 0，已跳过导出。")
                 continue
 
             v4_nets, v6_nets = [], []

@@ -1,37 +1,34 @@
 {
   "domain": {
-    "china": [
-      "https://github.com/QuixoticHeart/rule-set/raw/ruleset/meta/domain/cn.mrs",
-      "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geosite/cn.mrs"
-    ],
-    "proxy": [
-      "https://github.com/QuixoticHeart/rule-set/raw/ruleset/meta/domain/proxy.mrs"
-    ],
     "adblock": [
-      "https://github.com/privacy-protection-tools/anti-ad.github.io/raw/master/docs/mihomo.mrs"
+      "https://anti-ad.net/anti-ad-sing-box.srs"
     ],
     "japan": [
-      "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geosite/dlsite.mrs",
-      "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geosite/dmm.mrs",
-      "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geosite/pixiv.mrs"
+      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/dlsite.srs",
+      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/dmm.srs",
+      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/pixiv.srs"
     ],
     "taiwan": [
-      "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geosite/bahamut.mrs",
-      "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geosite/manhuagui.mrs"
+      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/bahamut.srs",
+      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/manhuagui.srs"
     ]
   },
-  "ipcidr": {
+  "ipcidr": {},
+  "classical": {
     "china": [
-      "https://github.com/QuixoticHeart/rule-set/raw/ruleset/meta/ipcidr/cn.mrs",
-      "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geoip/cn.mrs"
+      "https://github.com/QuixoticHeart/rule-set/blob/ruleset/singbox/version2/cncidr.srs",
+      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geoip/cn.srs",
+      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/cn.srs",
+      "https://github.com/QuixoticHeart/rule-set/blob/ruleset/singbox/version2/cn.srs"
     ],
     "proxy": [
-      "https://github.com/QuixoticHeart/rule-set/raw/ruleset/meta/ipcidr/proxy.mrs"
-    ]
-  },
-  "classical": {
+      "https://github.com/QuixoticHeart/rule-set/blob/ruleset/singbox/version2/proxy.srs"
+    ],
     "google": [
       "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/google.srs"
+    ],
+    "fake-ip-filter": [
+      "https://github.com/QuixoticHeart/rule-set/blob/ruleset/singbox/version2/fake-ip-filter.srs"
     ]
   }
 }

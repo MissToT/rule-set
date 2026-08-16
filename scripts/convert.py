@@ -8,7 +8,6 @@ import shutil
 import ipaddress
 from datetime import datetime, timezone, timedelta
 
-# 加载独立配置文件
 def load_config():
     if os.path.exists("config.json"):
         with open("config.json", "r", encoding="utf-8") as f:
@@ -76,13 +75,10 @@ def download_file(url, filename):
 
 def parse_mixed_rules_to_buckets(filename):
     """
-    精准解析：
-    - 显式指定的 DOMAIN, DOMAIN-SUFFIX, DOMAIN-KEYWORD, IP-CIDR, IP-CIDR6 原样提取。
-    - 对于没有前缀的纯文本行：
-      * 如果能解析为 IP，则归入 ipcidr。
-      * 如果不包含点号 '.' 或者明显是纯关键词的（如 speedtest、ookla），自动加上关键字格式或作为关键字处理；
-        （在 mihomo/sing-box 语法中，如果写成纯文本且无点号， Mihomo 默认常常当 keyword 或完整 domain，
-         但按照你的实际需求，无前缀纯字符串应直接作为 DOMAIN-KEYWORD 处理，或者带上 DOMAIN-KEYWORD 前缀输出）。
+    解析规则，只保留有效的 DOMAIN, DOMAIN-SUFFIX, DOMAIN-KEYWORD, IP-CIDR, IP-CIDR6。
+    对于无前缀的纯文本：
+    - 如果是 IP，归入 ipcidr。
+    - 如果是不包含点号的关键字或纯字符串，自动转换为带通配符的形式（如 *keyword* 或匹配语法）。
     """
     domain_set = set()
     ipcidr_set = set()
@@ -104,7 +100,6 @@ def parse_mixed_rules_to_buckets(filename):
             if line == 'payload:':
                 continue
 
-            # 处理带逗号的格式
             if ',' in line:
                 parts = [p.strip() for p in line.split(',')]
                 pfx = parts[0].upper()
@@ -121,11 +116,8 @@ def parse_mixed_rules_to_buckets(filename):
                 elif pfx in ('DOMAIN', 'DOMAIN-SUFFIX', 'DOMAIN-KEYWORD'):
                     val = parts[1] if len(parts) > 1 else ''
                     if val:
-                        # 核心修改：如果是 DOMAIN-KEYWORD，或者用户输入了这类没有点号的，保留其语义
-                        if pfx == 'DOMAIN-KEYWORD':
-                            domain_set.add(f"DOMAIN-KEYWORD,{val}")
-                        else:
-                            domain_set.add(line) # 或者是标准输出
+                        # 如果原本是 DOMAIN-KEYWORD，可以用通配符形式表达或保留标准格式
+                        domain_set.add(line)
                         continue
                 else:
                     continue
@@ -138,8 +130,7 @@ def parse_mixed_rules_to_buckets(filename):
             except ValueError:
                 pass
 
-            # 如果没有前缀、没有逗号，且是一行纯文本：
-            # 如果不包含 '.' 且像 speedtest/ookla 这种，直接存为 DOMAIN-KEYWORD 格式以便精准识别
+            # 无前缀纯文本：如果没有点号，转换为通配符关键字形式
             if line:
                 if '.' not in line:
                     domain_set.add(f"DOMAIN-KEYWORD,{line}")
@@ -158,11 +149,7 @@ def export_four_formats(rule_name, rules_set, rule_type):
     with open(f"{mihomo_dir}/{rule_name}.yaml", 'w', encoding='utf-8') as f:
         f.write("payload:\n")
         for rule in sorted(rules_set):
-            # 如果带有逗号（如 DOMAIN-KEYWORD,xxx），yaml 输出时需要正确带上或按 Mihomo 规范格式化
-            if ',' in rule:
-                f.write(f"  - '{rule}'\n")
-            else:
-                f.write(f"  - '{rule}'\n")
+            f.write(f"  - '{rule}'\n")
 
     with open(f"{singbox_dir}/{rule_name}.json", 'w', encoding='utf-8') as f:
         if is_ip:
@@ -226,7 +213,6 @@ def main():
     now = datetime.now(timezone(timedelta(hours=8)))
     time_str = f"{now.year}年{now.month}月{now.day}日{now.strftime('%H:%M:%S')}"
 
-    # 1. 处理 domain 和 ipcidr 常规规则
     for rule_type in ["domain", "ipcidr"]:
         rules_dict = RULES_CONFIG.get(rule_type, {})
         print(f"\n[*] 开始批量构建 [{rule_type.upper()}] 分流规则...")
@@ -296,7 +282,6 @@ def main():
 
             all_changes[f"{rule_type}/{rule_name}"] = {"total": len(merged_rules)}
 
-    # 2. 处理 classical 混合格式：自动提取并直接放到对应名字的域名/IP规则集中，不加额外后缀
     classical_dict = RULES_CONFIG.get("classical", {})
     if classical_dict:
         print(f"\n[*] 开始处理 [CLASSICAL] 混合规则自动分离...")

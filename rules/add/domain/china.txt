@@ -10,4 +10,4 @@ p.sda1.dev
 # 网易云
 +.netease.im
 # 守候订阅域名
-sub1.sntp.me
+#sub1.sntp.me

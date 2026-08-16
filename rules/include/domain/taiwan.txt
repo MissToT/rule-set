@@ -1,2 +1,18 @@
-# 自定义本地 domain 覆写规则 (include): taiwan
-# 每行一条规则，支持 Mihomo / Sing-box 格式
+# Pubu
++.pubu.tw
++.pubu.com.tw
+pubu.api.useinsider.com
+# Readmoo
++.readmoo.com
+# Bookwalker
++.bookwalker.com.tw
+# 漫画柜
++.mhgui.com
++.hamreus.com
++.manhuagui.com
+# hanime1
++.hanime1.me
++.hanime1.com
++.hanimeone.me
++.javchu.com
+vdownload.hembed.com

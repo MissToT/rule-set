@@ -450,16 +450,13 @@ def export_rule_files(rule_name, rules_set, rule_type, formats, domain_regex_set
             if os.path.exists(json_path):
                 os.remove(json_path)
 
-    # 自动清理未包含在当前 formats 中的旧格式文件
     for ext, path in mihomo_files.items():
         if ext not in fmt_lower and os.path.exists(path):
             os.remove(path)
-            print(f"[*] 已自动清理废弃格式文件: {path}")
 
     for ext, path in singbox_files.items():
         if ext not in fmt_lower and os.path.exists(path):
             os.remove(path)
-            print(f"[*] 已自动清理废弃格式文件: {path}")
 
 def generate_change_report(mihomo_changes, singbox_changes, commit_msgs):
     now = datetime.now(timezone(timedelta(hours=8)))
@@ -636,24 +633,37 @@ def main():
         
         current = rule_cache[rule_name]
         
+        # 调试输出：检查 inline 配置格式是否正确
+        if not isinstance(current["inline_include"], list):
+            print(f"[!] 警告: 规则 [{rule_name}] 的 inline_include 不是列表格式！当前值: {current['inline_include']}")
+        if not isinstance(current["inline_exclude"], list):
+            print(f"[!] 警告: 规则 [{rule_name}] 的 inline_exclude 不是列表格式！当前值: {current['inline_exclude']}")
+
         for target_name in current["inline_include"]:
             if target_name in rule_cache:
                 target_data = rule_cache[target_name]
+                print(f"[Debug] 规则 [{rule_name}] 正在 inline_include 目标 [{target_name}] (包含域:{len(target_data['domain'])}, IP:{len(target_data['ip'])})")
                 current["domain"] |= target_data["domain"]
                 current["ip"] |= target_data["ip"]
                 current["regex"] |= target_data["regex"]
+            else:
+                print(f"[!] 警告: 规则 [{rule_name}] 尝试引用目标 [{target_name}]，但在 rule_cache 中未找到该规则！(请检查拼写或是否在 config.json 中定义)")
 
         for target_name in current["inline_exclude"]:
             if target_name in rule_cache:
                 target_data = rule_cache[target_name]
+                print(f"[Debug] 规则 [{rule_name}] 正在 inline_exclude 目标 [{target_name}]")
                 current["domain"] -= target_data["domain"]
                 current["ip"] -= target_data["ip"]
                 current["regex"] -= target_data["regex"]
+            else:
+                print(f"[!] 警告: 规则 [{rule_name}] 尝试排除目标 [{target_name}]，但在 rule_cache 中未找到该规则！")
 
     print(f"\n[*] 开始第三阶段：优化CIDR并导出最终多格式规则文件...")
 
     for rule_type, rule_name, rule_config in all_rule_defs:
         if rule_name not in rule_cache:
+            print(f"[Debug] 规则 [{rule_name}] 不在 rule_cache 中，跳过导出。")
             continue
         
         data = rule_cache[rule_name]

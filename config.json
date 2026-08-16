@@ -42,7 +42,7 @@
         ]
       },
       "exclude": {
-        "inline": [],
+        "inline": ["emby-cn"],
         "urls": []
       }
     },
@@ -168,7 +168,7 @@
         ]
       },
       "exclude": {
-        "inline": [],
+        "inline": ["cloudflare-cn"],
         "urls": []
       }
     },
@@ -194,7 +194,7 @@
         ]
       },
       "exclude": {
-        "inline": [],
+        "inline": ["microsoft-cn"],
         "urls": []
       }
     },
@@ -247,7 +247,7 @@
         ]
       },
       "exclude": {
-        "inline": [],
+        "inline": ["mihoyo-cn"],
         "urls": []
       }
     },
@@ -260,7 +260,7 @@
         ]
       },
       "exclude": {
-        "inline": [],
+        "inline": ["mihoyo-cn"],
         "urls": []
       }
     },

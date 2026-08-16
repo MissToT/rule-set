@@ -1,7 +1,7 @@
 # 🛡️ Sing-box 代理规则集
 
 > 自动化构建的多格式代理规则订阅源。
-> **更新时间：** 2026年8月16日19:26:33
+> **更新时间：** 2026年8月16日19:32:43
 
 ## 📂 GeoSite 域名规则
 
@@ -9,7 +9,7 @@
 | :--- | :--- | :---: |
 | `adblock` | [SRS](geo/geosite/adblock.srs) · [JSON](geo/geosite/adblock.json) | **100386** |
 | `ai` | [SRS](geo/geosite/ai.srs) · [JSON](geo/geosite/ai.json) | **174** |
-| `china` | [SRS](geo/geosite/china.srs) · [JSON](geo/geosite/china.json) | **112774** |
+| `china` | [SRS](geo/geosite/china.srs) | **112774** |
 | `cloudflare` | [SRS](geo/geosite/cloudflare.srs) · [JSON](geo/geosite/cloudflare.json) | **76** |
 | `cloudflare-cn` | [SRS](geo/geosite/cloudflare-cn.srs) · [JSON](geo/geosite/cloudflare-cn.json) | **19** |
 | `ehentai` | [SRS](geo/geosite/ehentai.srs) · [JSON](geo/geosite/ehentai.json) | **8** |

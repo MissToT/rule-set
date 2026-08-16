@@ -589,6 +589,9 @@ def main():
                     
                     d_set, ip_set, dr_set = parse_mixed_rules_to_buckets(temp_txt)
                     
+                    # [DEBUG] 打印单个源解析出的条数
+                    print(f"[DEBUG] 规则 [{rule_name}] ({action_type} 源: {url}) -> 域名:{len(d_set)}, IP:{len(ip_set)}, 正则:{len(dr_set)}")
+                    
                     if action_type == "include":
                         base_domain_set |= d_set
                         base_ip_set |= ip_set
@@ -606,6 +609,8 @@ def main():
                 custom_file = os.path.join("rules", action, rule_type, f"{rule_name}.txt")
                 if os.path.exists(custom_file):
                     d_set, ip_set, dr_set = parse_mixed_rules_to_buckets(custom_file)
+                    # [DEBUG] 打印本地覆写规则条数
+                    print(f"[DEBUG] 规则 [{rule_name}] (本地覆写 {action}: {custom_file}) -> 域名:{len(d_set)}, IP:{len(ip_set)}, 正则:{len(dr_set)}")
                     if action == "exclude":
                         base_domain_set -= d_set
                         base_ip_set -= ip_set
@@ -633,7 +638,6 @@ def main():
         
         current = rule_cache[rule_name]
         
-        # 调试输出：检查 inline 配置格式是否正确
         if not isinstance(current["inline_include"], list):
             print(f"[!] 警告: 规则 [{rule_name}] 的 inline_include 不是列表格式！当前值: {current['inline_include']}")
         if not isinstance(current["inline_exclude"], list):
@@ -672,6 +676,10 @@ def main():
         if rule_type == "domain":
             merged_rules = data["domain"]
             merged_regex = data["regex"]
+            
+            # [DEBUG] 打印 domain 类型合并后的最终条数
+            print(f"[DEBUG] 规则 [{rule_name}] (domain类型) 最终合并后 -> 域名/后缀数: {len(merged_rules)}, 正则数: {len(merged_regex)}")
+
             if not merged_rules and not merged_regex:
                 print(f"[-] 提示：规则 [{rule_name}] 过滤后规则条数为 0，已跳过导出。")
                 continue
@@ -704,6 +712,10 @@ def main():
 
         elif rule_type == "ipcidr":
             raw_ips = data["ip"]
+            
+            # [DEBUG] 打印 ipcidr 类型合并前的原始IP数
+            print(f"[DEBUG] 规则 [{rule_name}] (ipcidr类型) 合并前原始IP数: {len(raw_ips)}")
+
             if not raw_ips:
                 print(f"[-] 提示：规则 [{rule_name}] 过滤后IP条数为 0，已跳过导出。")
                 continue

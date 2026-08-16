@@ -361,30 +361,44 @@ def export_rule_files(rule_name, rules_set, rule_type, formats, domain_regex_set
     os.makedirs(mihomo_dir,  exist_ok=True)
     os.makedirs(singbox_dir, exist_ok=True)
 
-    # 规范化 formats 转换为小写
     fmt_lower = [f.lower() for f in formats]
 
+    mihomo_files = {
+        "yaml": f"{mihomo_dir}/{rule_name}.yaml",
+        "mrs": f"{mihomo_dir}/{rule_name}.mrs"
+    }
+    singbox_files = {
+        "json": f"{singbox_dir}/{rule_name}.json",
+        "srs": f"{singbox_dir}/{rule_name}.srs"
+    }
+
     if "yaml" in fmt_lower:
-        with open(f"{mihomo_dir}/{rule_name}.yaml", 'w', encoding='utf-8') as f:
+        with open(mihomo_files["yaml"], 'w', encoding='utf-8') as f:
             f.write("payload:\n")
             for rule in sorted(rules_set):
                 f.write(f"  - '{rule}'\n")
 
     if "mrs" in fmt_lower:
-        # mrs 转换需要依赖 yaml 文件
-        yaml_path = f"{mihomo_dir}/{rule_name}.yaml"
+        yaml_path = mihomo_files["yaml"]
+        temp_yaml_created = False
         if not os.path.exists(yaml_path):
             with open(yaml_path, 'w', encoding='utf-8') as f:
                 f.write("payload:\n")
                 for rule in sorted(rules_set):
                     f.write(f"  - '{rule}'\n")
+            temp_yaml_created = True
+        
         temp_txt_path = f"temp_workspace/merged_{rule_name}_{rule_type}.txt"
         with open(temp_txt_path, 'w', encoding='utf-8') as f:
             f.write("\n".join(sorted(rules_set)))
-        os.system(f"./mihomo convert-ruleset {rule_type} text {temp_txt_path} {mihomo_dir}/{rule_name}.mrs")
+        os.system(f"./mihomo convert-ruleset {rule_type} text {temp_txt_path} {mihomo_files['mrs']}")
+        
+        if temp_yaml_created and "yaml" not in fmt_lower:
+            if os.path.exists(yaml_path):
+                os.remove(yaml_path)
 
     if "json" in fmt_lower:
-        with open(f"{singbox_dir}/{rule_name}.json", 'w', encoding='utf-8') as f:
+        with open(singbox_files["json"], 'w', encoding='utf-8') as f:
             if is_ip:
                 json.dump({"version": 2, "rules": [{"ip_cidr": sorted(list(rules_set))}]}, f, indent=2, ensure_ascii=False)
             else:
@@ -408,7 +422,8 @@ def export_rule_files(rule_name, rules_set, rule_type, formats, domain_regex_set
                 json.dump({"version": 2, "rules": [rule_obj]}, f, indent=2, ensure_ascii=False)
 
     if "srs" in fmt_lower:
-        json_path = f"{singbox_dir}/{rule_name}.json"
+        json_path = singbox_files["json"]
+        temp_json_created = False
         if not os.path.exists(json_path):
             if is_ip:
                 with open(json_path, 'w', encoding='utf-8') as f:
@@ -427,7 +442,24 @@ def export_rule_files(rule_name, rules_set, rule_type, formats, domain_regex_set
                 if domain_regex_set: rule_obj["domain_regex"] = sorted(list(domain_regex_set))
                 with open(json_path, 'w', encoding='utf-8') as f:
                     json.dump({"version": 2, "rules": [rule_obj]}, f, indent=2, ensure_ascii=False)
-        os.system(f"./sing-box rule-set compile --output {singbox_dir}/{rule_name}.srs {singbox_dir}/{rule_name}.json")
+            temp_json_created = True
+
+        os.system(f"./sing-box rule-set compile --output {singbox_files['srs']} {singbox_files['json']}")
+
+        if temp_json_created and "json" not in fmt_lower:
+            if os.path.exists(json_path):
+                os.remove(json_path)
+
+    # 自动清理未包含在当前 formats 中的旧格式文件
+    for ext, path in mihomo_files.items():
+        if ext not in fmt_lower and os.path.exists(path):
+            os.remove(path)
+            print(f"[*] 已自动清理废弃格式文件: {path}")
+
+    for ext, path in singbox_files.items():
+        if ext not in fmt_lower and os.path.exists(path):
+            os.remove(path)
+            print(f"[*] 已自动清理废弃格式文件: {path}")
 
 def generate_change_report(mihomo_changes, singbox_changes, commit_msgs):
     now = datetime.now(timezone(timedelta(hours=8)))
@@ -489,12 +521,8 @@ def main():
     global_enable_local = settings.get("enable_local", True)
     global_formats = settings.get("formats", ["mrs", "yaml", "srs", "json"])
 
-    # 缓存所有解析好的原始规则集，用于后续 inline 引用
-    # 结构: rule_cache[rule_name] = {"type": type, "domain": set, "ip": set, "regex": set, "formats": list}
     rule_cache = {}
-
-    # 预先收集所有规则名称（来自配置及本地目录）
-    all_rule_defs = [] # 存储元组 (rule_type, rule_name, rule_config)
+    all_rule_defs = []
     
     for rule_type in ["domain", "ipcidr", "classical"]:
         type_dict = RULES_CONFIG.get(rule_type, {})
@@ -512,7 +540,6 @@ def main():
 
     print(f"\n[*] 开始第一阶段：下载与解析所有基础规则源...")
 
-    # 第一阶段：先解析并缓存每个规则的基础内容（远程 + 本地）
     for rule_type, rule_name, rule_config in all_rule_defs:
         if isinstance(rule_config, dict):
             include_urls = rule_config.get("include", [])
@@ -540,7 +567,6 @@ def main():
         base_ip_set = set()
         base_domain_regex = set()
 
-        # 处理远程链接
         for action_type, url_list in [("include", include_urls), ("exclude", exclude_urls)]:
             for i, url in enumerate(url_list):
                 try:
@@ -575,10 +601,9 @@ def main():
                         base_ip_set -= ip_set
                         base_domain_regex -= dr_set
                 except Exception as e:
-                    print(f"[-] 警告：处理规则源跳过 | {url} -> {e}")
+                    print(f"[-] 警告：处理规则源跳过 [{rule_name}] | {url} -> {e}")
                     continue
 
-        # 处理本地自定义规则
         if final_enable_local:
             for action in ["exclude", "include"]:
                 custom_file = os.path.join("rules", action, rule_type, f"{rule_name}.txt")
@@ -603,16 +628,14 @@ def main():
             "inline_exclude": inline_exc
         }
 
-    print(f"\n[*] 开始第二阶段：解析内联引用 (inline_include / inline_exclude) 并生成最终规则...")
+    print(f"\n[*] 开始第二阶段：解析内联引用 (inline_include / inline_exclude)...")
 
-    # 第二阶段：处理 inline 引用
     for rule_type, rule_name, rule_config in all_rule_defs:
         if rule_name not in rule_cache:
             continue
         
         current = rule_cache[rule_name]
         
-        # 递归或直接合并 inline_include
         for target_name in current["inline_include"]:
             if target_name in rule_cache:
                 target_data = rule_cache[target_name]
@@ -620,7 +643,6 @@ def main():
                 current["ip"] |= target_data["ip"]
                 current["regex"] |= target_data["regex"]
 
-        # 处理 inline_exclude
         for target_name in current["inline_exclude"]:
             if target_name in rule_cache:
                 target_data = rule_cache[target_name]
@@ -630,7 +652,6 @@ def main():
 
     print(f"\n[*] 开始第三阶段：优化CIDR并导出最终多格式规则文件...")
 
-    # 第三阶段：执行 CIDR 压缩整理、历史记录比对并根据 formats 导出文件
     for rule_type, rule_name, rule_config in all_rule_defs:
         if rule_name not in rule_cache:
             continue
@@ -642,6 +663,7 @@ def main():
             merged_rules = data["domain"]
             merged_regex = data["regex"]
             if not merged_rules and not merged_regex:
+                print(f"[-] 提示：规则 [{rule_name}] 过滤后规则条数为 0，已跳过导出。")
                 continue
 
             geo_dir = "geosite"
@@ -673,6 +695,7 @@ def main():
         elif rule_type == "ipcidr":
             raw_ips = data["ip"]
             if not raw_ips:
+                print(f"[-] 提示：规则 [{rule_name}] 过滤后IP条数为 0，已跳过导出。")
                 continue
 
             v4_nets, v6_nets = [], []

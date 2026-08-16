@@ -232,31 +232,17 @@ def find_file(root_dir, filename):
 
 def load_historical_rules(base_dir, geo_subfolder, rule_name, tool_type):
     sub_path = os.path.join(base_dir, "geo", geo_subfolder)
-    
-    # 优先从精准快照 .txt 中读取（彻底避免反编译造成的格式损耗与误报）
-    target_txt = find_file(sub_path, f"{rule_name}.txt")
-    if target_txt and os.path.exists(target_txt):
-        try:
-            rules = set()
-            with open(target_txt, "r", encoding="utf-8") as f:
-                for line in f:
-                    line = line.strip()
-                    if line and not line.startswith("#"):
-                        rules.add(line)
-            return rules
-        except Exception:
-            pass
-
-    # 兜底：如果历史分支暂无快照文件，则回退到原有的内核反编译方式
     if tool_type == "mihomo":
         target_yaml = find_file(sub_path, f"{rule_name}.yaml")
         target_mrs = find_file(sub_path, f"{rule_name}.mrs")
         if not target_yaml and not target_mrs:
             return None
         if not target_yaml and target_mrs:
-            target_yaml = os.path.join("temp_workspace", f"{rule_name}_mihomo_hist_dec.yaml")
+            # 修复：加上 geo_subfolder 区分前缀，防止同名规则（如 domain/china 和 ipcidr/china）冲突覆盖
+            target_yaml = os.path.join("temp_workspace", f"{geo_subfolder}_{rule_name}_mihomo_hist_dec.yaml")
             rule_type_str = "ipcidr" if geo_subfolder == "geoip" else "domain"
-            os.system(f"./mihomo convert-ruleset {rule_type_str} mrs {target_mrs} {target_yaml}")
+            # 修复：将错误的 "mrs" 目标格式修正为 "yaml"
+            os.system(f"./mihomo convert-ruleset {rule_type_str} yaml {target_mrs} {target_yaml}")
         rules = set()
         if os.path.exists(target_yaml):
             try:
@@ -281,7 +267,8 @@ def load_historical_rules(base_dir, geo_subfolder, rule_name, tool_type):
         if not target_json and not target_srs:
             return None
         if not target_json and target_srs:
-            target_json = os.path.join("temp_workspace", f"{rule_name}_singbox_hist_dec.json")
+            # 修复：加上 geo_subfolder 区分前缀，防止同名规则冲突覆盖
+            target_json = os.path.join("temp_workspace", f"{geo_subfolder}_{rule_name}_singbox_hist_dec.json")
             ret = os.system(f"./sing-box rule-set decompile {target_srs} --output {target_json}")
             if ret != 0 or not os.path.exists(target_json):
                 os.system(f"./sing-box rule-set decompile {target_srs} > {target_json}")
@@ -378,21 +365,6 @@ def export_rule_files(rule_name, rules_set, rule_type, formats, domain_regex_set
     singbox_dir = f"singbox_out/geo/{'geoip' if is_ip else 'geosite'}"
     os.makedirs(mihomo_dir,  exist_ok=True)
     os.makedirs(singbox_dir, exist_ok=True)
-
-    # 保存高精度纯文本规则快照（.txt），用于历史比对，彻底解决反编译带来的误差
-    mihomo_snapshot = set(rules_set)
-    if not is_ip and domain_regex_set:
-        mihomo_snapshot |= {f"REGEX:{r}" for r in domain_regex_set}
-    with open(f"{mihomo_dir}/{rule_name}.txt", "w", encoding="utf-8") as f:
-        for r in sorted(mihomo_snapshot):
-            f.write(f"{r}\n")
-
-    singbox_snapshot = set(rules_set)
-    if not is_ip and domain_regex_set:
-        singbox_snapshot |= {f"REGEX:{r}" for r in domain_regex_set}
-    with open(f"{singbox_dir}/{rule_name}.txt", "w", encoding="utf-8") as f:
-        for r in sorted(singbox_snapshot):
-            f.write(f"{r}\n")
 
     fmt_lower = [f.lower() for f in formats]
 
@@ -643,6 +615,8 @@ def main():
                     
                     d_set, ip_set, dr_set = parse_mixed_rules_to_buckets(temp_txt)
                     
+                    print(f"[DEBUG] 规则 [{rule_type}/{rule_name}] ({action_type} 源: {url}) -> 域名:{len(d_set)}, IP:{len(ip_set)}, 正则:{len(dr_set)}")
+                    
                     if action_type == "include":
                         base_domain_set |= d_set
                         base_ip_set |= ip_set
@@ -660,6 +634,7 @@ def main():
                 custom_file = os.path.join("rules", action, rule_type, f"{rule_name}.txt")
                 if os.path.exists(custom_file):
                     d_set, ip_set, dr_set = parse_mixed_rules_to_buckets(custom_file)
+                    print(f"[DEBUG] 规则 [{rule_type}/{rule_name}] (本地覆写 {action}: {custom_file}) -> 域名:{len(d_set)}, IP:{len(ip_set)}, 正则:{len(dr_set)}")
                     if action == "exclude":
                         base_domain_set -= d_set
                         base_ip_set -= ip_set
@@ -693,17 +668,23 @@ def main():
             target_key = (rule_type, target_name)
             if target_key in rule_cache:
                 target_data = rule_cache[target_key]
+                print(f"[Debug] 规则 [{rule_type}/{rule_name}] 正在 inline_include 目标 [{target_name}] (包含域:{len(target_data['domain'])}, IP:{len(target_data['ip'])})")
                 current["domain"] |= target_data["domain"]
                 current["ip"] |= target_data["ip"]
                 current["regex"] |= target_data["regex"]
+            else:
+                print(f"[!] 警告: 规则 [{rule_type}/{rule_name}] 尝试引用目标 [{target_name}]，但在 rule_cache 中未找到同类型的该规则！")
 
         for target_name in current["inline_exclude"]:
             target_key = (rule_type, target_name)
             if target_key in rule_cache:
                 target_data = rule_cache[target_key]
+                print(f"[Debug] 规则 [{rule_type}/{rule_name}] 正在 inline_exclude 目标 [{target_name}]")
                 current["domain"] -= target_data["domain"]
                 current["ip"] -= target_data["ip"]
                 current["regex"] -= target_data["regex"]
+            else:
+                print(f"[!] 警告: 规则 [{rule_type}/{rule_name}] 尝试排除目标 [{target_name}]，但在 rule_cache 中未找到同类型的该规则！")
 
     print(f"\n[*] 开始第三阶段：优化CIDR并导出最终多格式规则文件...")
 
@@ -729,8 +710,6 @@ def main():
             export_rule_files(rule_name, merged_rules, "domain", formats, merged_regex)
 
             mihomo_new_set = set(merged_rules)
-            if merged_regex:
-                mihomo_new_set |= {f"REGEX:{r}" for r in merged_regex}
             m_added = sorted(mihomo_new_set - prev_mihomo) if prev_mihomo is not None else []
             m_removed = sorted(prev_mihomo - mihomo_new_set) if prev_mihomo is not None else []
 
@@ -806,8 +785,6 @@ def main():
                 export_rule_files(rule_name, mixed_domain_set, "domain", formats, mixed_regex_set)
 
                 mihomo_new_set = set(mixed_domain_set)
-                if mixed_regex_set:
-                    mihomo_new_set |= {f"REGEX:{r}" for r in mixed_regex_set}
                 m_added = sorted(mihomo_new_set - prev_mihomo_d) if prev_mihomo_d is not None else []
                 m_removed = sorted(prev_mihomo_d - mihomo_new_set) if prev_mihomo_d is not None else []
 

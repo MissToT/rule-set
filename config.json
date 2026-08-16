@@ -6,7 +6,9 @@
         "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/cn.srs",
         "https://github.com/QuixoticHeart/rule-set/blob/ruleset/singbox/version2/cn.srs"
       ],
-      "remove": []
+      "remove": [
+        "https://github.com/QuixoticHeart/rule-set/blob/ruleset/singbox/version2/cn.srs"
+      ]
     },
     "adblock": {
       "local": false,

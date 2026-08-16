@@ -1,6 +1,6 @@
 # Mihomo 代理规则集
 
-最后更新: 2026-08-17 00:40:49 (UTC+8)
+最后更新: 2026-08-17 00:48:27 (UTC+8)
 
 ## GeoSite 域名规则
 
@@ -9,7 +9,7 @@
 | adblock | [MRS](geo/geosite/adblock.mrs) / [YAML](geo/geosite/adblock.yaml) | 100,386 |
 | ai | [MRS](geo/geosite/ai.mrs) / [YAML](geo/geosite/ai.yaml) | 173 |
 | china | [MRS](geo/geosite/china.mrs) / [YAML](geo/geosite/china.yaml) | 112,774 |
-| cloudflare | [MRS](geo/geosite/cloudflare.mrs) / [YAML](geo/geosite/cloudflare.yaml) | 76 |
+| cloudflare | [MRS](geo/geosite/cloudflare.mrs) / [YAML](geo/geosite/cloudflare.yaml) | 57 |
 | cloudflare-cn | [MRS](geo/geosite/cloudflare-cn.mrs) / [YAML](geo/geosite/cloudflare-cn.yaml) | 19 |
 | ehentai | [MRS](geo/geosite/ehentai.mrs) / [YAML](geo/geosite/ehentai.yaml) | 8 |
 | emby | [MRS](geo/geosite/emby.mrs) | 131 |
@@ -20,7 +20,7 @@
 | google | [MRS](geo/geosite/google.mrs) / [YAML](geo/geosite/google.yaml) | 1,045 |
 | googlefcm | [MRS](geo/geosite/googlefcm.mrs) / [YAML](geo/geosite/googlefcm.yaml) | 7 |
 | japan | [MRS](geo/geosite/japan.mrs) / [YAML](geo/geosite/japan.yaml) | 40 |
-| microsoft | [MRS](geo/geosite/microsoft.mrs) / [YAML](geo/geosite/microsoft.yaml) | 750 |
+| microsoft | [MRS](geo/geosite/microsoft.mrs) / [YAML](geo/geosite/microsoft.yaml) | 560 |
 | microsoft-cn | [MRS](geo/geosite/microsoft-cn.mrs) / [YAML](geo/geosite/microsoft-cn.yaml) | 190 |
 | mihoyo-cn | [MRS](geo/geosite/mihoyo-cn.mrs) / [YAML](geo/geosite/mihoyo-cn.yaml) | 16 |
 | private | [MRS](geo/geosite/private.mrs) / [YAML](geo/geosite/private.yaml) | 130 |

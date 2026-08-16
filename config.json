@@ -6,12 +6,10 @@
         "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/cn.srs",
         "https://github.com/QuixoticHeart/rule-set/blob/ruleset/singbox/version2/cn.srs"
       ],
-      "remove": [
-        "https://github.com/QuixoticHeart/rule-set/blob/ruleset/singbox/version2/cn.srs"
-      ]
+      "remove": []
     },
     "adblock": {
-      "local": false,
+      "local": true,
       "add": [
         "https://anti-ad.net/mihomo.mrs"
       ],

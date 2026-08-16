@@ -241,7 +241,7 @@
     "games": {
       "enable_local": true,
       "include": {
-        "inline": [],
+        "inline": ["game-platforms-download"],
         "urls": [
           "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/category-games-!cn.srs"
         ]

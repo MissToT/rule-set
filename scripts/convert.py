@@ -53,7 +53,6 @@ def setup_binaries():
     os.chmod("mihomo", 0o755)
 
 def setup_custom_rule_dirs():
-    # 1. 先清理 config.json 中已删除规则对应的本地残留文件
     for action in ["add", "remove"]:
         for rule_type in ["domain", "ipcidr", "classical"]:
             rules_dict = RULES_CONFIG.get(rule_type, {})
@@ -71,7 +70,6 @@ def setup_custom_rule_dirs():
                             except Exception as e:
                                 print(f"[-] 清理文件 {file_path} 失败: {e}")
 
-    # 2. 检查并补全当前 config.json 中存在的规则文件
     for action in ["add", "remove"]:
         for rule_type in ["domain", "ipcidr", "classical"]:
             rules_dict = RULES_CONFIG.get(rule_type, {})
@@ -95,9 +93,10 @@ def download_file(url, filename):
 def parse_mixed_rules_to_buckets(filename):
     domain_set = set()
     ipcidr_set = set()
+    domain_regex_set = set()
     
     if not os.path.exists(filename):
-        return domain_set, ipcidr_set
+        return domain_set, ipcidr_set, domain_regex_set
 
     # 1. 尝试作为 sing-box JSON 规则集解析
     try:
@@ -112,6 +111,8 @@ def parse_mixed_rules_to_buckets(filename):
                             domain_set.add(f".{ds}" if not ds.startswith('.') else ds)
                     for dk in rule_obj.get("domain_keyword", []):
                         if dk: domain_set.add(f"*{dk}*")
+                    for dr in rule_obj.get("domain_regex", []):
+                        if dr: domain_regex_set.add(dr)
                     for ip in rule_obj.get("ip_cidr", []):
                         if ip:
                             try:
@@ -119,7 +120,7 @@ def parse_mixed_rules_to_buckets(filename):
                                 ipcidr_set.add(str(net))
                             except ValueError:
                                 continue
-                return domain_set, ipcidr_set
+                return domain_set, ipcidr_set, domain_regex_set
     except Exception:
         pass
 
@@ -141,25 +142,34 @@ def parse_mixed_rules_to_buckets(filename):
             if ',' in line:
                 parts = [p.strip() for p in line.split(',')]
                 pfx = parts[0].upper()
-                
-                if pfx in ('IP-CIDR', 'IP-CIDR6'):
-                    for p in parts[1:]:
-                        try:
-                            net = ipaddress.ip_network(p, strict=False)
-                            ipcidr_set.add(str(net))
-                            break
-                        except ValueError:
-                            continue
-                    continue
-                elif pfx in ('DOMAIN', 'DOMAIN-SUFFIX', 'DOMAIN-KEYWORD'):
-                    val = parts[1] if len(parts) > 1 else ''
-                    if val:
-                        if pfx == 'DOMAIN-KEYWORD':
-                            domain_set.add(f"*{val}*")
-                        else:
-                            domain_set.add(val)
+            elif ':' in line:
+                parts = [p.strip() for p in line.split(':')]
+                pfx = parts[0].upper()
+            else:
+                parts = [line]
+                pfx = ""
+
+            if pfx in ('IP-CIDR', 'IP-CIDR6'):
+                for p in parts[1:]:
+                    try:
+                        net = ipaddress.ip_network(p, strict=False)
+                        ipcidr_set.add(str(net))
+                        break
+                    except ValueError:
                         continue
-                else:
+                continue
+            elif pfx == 'DOMAIN-REGEX':
+                val = parts[1] if len(parts) > 1 else ''
+                if val:
+                    domain_regex_set.add(val)
+                    continue
+            elif pfx in ('DOMAIN', 'DOMAIN-SUFFIX', 'DOMAIN-KEYWORD'):
+                val = parts[1] if len(parts) > 1 else ''
+                if val:
+                    if pfx == 'DOMAIN-KEYWORD':
+                        domain_set.add(f"*{val}*")
+                    else:
+                        domain_set.add(val)
                     continue
 
             try:
@@ -175,7 +185,7 @@ def parse_mixed_rules_to_buckets(filename):
                 else:
                     domain_set.add(line)
 
-    return domain_set, ipcidr_set
+    return domain_set, ipcidr_set, domain_regex_set
 
 def load_prev_rules_from_yaml(geo_subfolder, rule_name):
     prev_yaml = os.path.join(PREV_SNAPSHOT_DIR, "geo", geo_subfolder, f"{rule_name}.yaml")
@@ -262,18 +272,22 @@ def export_bypass_txt_files(v4_collapsed, v6_collapsed, commit_msgs):
         f.write("".join(lines))
     print(f"  -> 已生成 bypass 独立目录文件: IPv4 ({v4_res['total']}条), IPv6 ({v6_res['total']}条)")
 
-def export_four_formats(rule_name, rules_set, rule_type):
+def export_four_formats(rule_name, rules_set, rule_type, domain_regex_set=None):
+    if domain_regex_set is None:
+        domain_regex_set = set()
     is_ip = (rule_type == "ipcidr")
     mihomo_dir  = f"mihomo_out/geo/{'geoip' if is_ip else 'geosite'}"
     singbox_dir = f"singbox_out/geo/{'geoip' if is_ip else 'geosite'}"
     os.makedirs(mihomo_dir,  exist_ok=True)
     os.makedirs(singbox_dir, exist_ok=True)
 
+    # Mihomo 导出：不包含 DOMAIN-REGEX
     with open(f"{mihomo_dir}/{rule_name}.yaml", 'w', encoding='utf-8') as f:
         f.write("payload:\n")
         for rule in sorted(rules_set):
             f.write(f"  - '{rule}'\n")
 
+    # Sing-box 导出：包含 DOMAIN-REGEX (写入 domain_regex 字段)
     with open(f"{singbox_dir}/{rule_name}.json", 'w', encoding='utf-8') as f:
         if is_ip:
             json.dump({"version": 2, "rules": [{"ip_cidr": sorted(list(rules_set))}]}, f, indent=2, ensure_ascii=False)
@@ -293,6 +307,8 @@ def export_four_formats(rule_name, rules_set, rule_type):
             if domains: rule_obj["domain"] = domains
             if suffixes: rule_obj["domain_suffix"] = suffixes
             if keywords: rule_obj["domain_keyword"] = keywords
+            if domain_regex_set: rule_obj["domain_regex"] = sorted(list(domain_regex_set))
+            
             json.dump({"version": 2, "rules": [rule_obj]}, f, indent=2, ensure_ascii=False)
 
     temp_txt_path = f"temp_workspace/merged_{rule_name}_{rule_type}.txt"
@@ -358,12 +374,12 @@ def main():
         rules_dict = RULES_CONFIG.get(rule_type, {})
         print(f"\n[*] 开始批量构建 [{rule_type.upper()}] 分流规则...")
 
-        # 仅遍历当前 config.json 中实际存在的规则名称（不再去残留目录扫描已删除的）
         all_rule_names = set(rules_dict.keys())
 
         for rule_name in sorted(all_rule_names):
             print(f"\n[+] 处理规则集: {rule_name}")
             merged_rules = set()
+            merged_domain_regex = set()
 
             urls = rules_dict.get(rule_name, [])
             for i, url in enumerate(urls):
@@ -371,35 +387,42 @@ def main():
                 temp_txt = f"temp_workspace/{rule_name}_{i}.txt"
                 download_file(url, temp_dl)
                 
-                if url.lower().endswith('.mrs'):
+                url_lower = url.lower()
+                if url_lower.endswith('.mrs'):
                     ret = os.system(f"./mihomo convert-ruleset {rule_type} mrs {temp_dl} {temp_txt}")
                     if ret != 0 or not os.path.exists(temp_txt):
                         shutil.copy(temp_dl, temp_txt)
-                elif url.lower().endswith('.srs'):
+                elif url_lower.endswith('.srs'):
+                    # 保留 .srs 转成 .json 的功能（通过 decompile 反编译）
                     temp_json = f"temp_workspace/{rule_name}_{i}.json"
-                    ret = os.system(f"./sing-box rule-set decompile {temp_dl} --output {temp_json}")
+                    ret = os.system(f"./sing-box rule-set decompile {temp_dl} -o {temp_json}")
                     if ret == 0 and os.path.exists(temp_json):
-                        shutil.copy(temp_json, temp_txt)
+                        temp_txt = temp_json
                     else:
                         shutil.copy(temp_dl, temp_txt)
                 else:
                     shutil.copy(temp_dl, temp_txt)
                 
-                d_set, ip_set = parse_mixed_rules_to_buckets(temp_txt)
+                d_set, ip_set, dr_set = parse_mixed_rules_to_buckets(temp_txt)
                 if rule_type == "ipcidr":
                     merged_rules |= ip_set
                 else:
                     merged_rules |= d_set
+                    merged_domain_regex |= dr_set
 
             for action in ["remove", "add"]:
                 custom_file = os.path.join("rules", action, rule_type, f"{rule_name}.txt")
                 if os.path.exists(custom_file):
-                    d_set, ip_set = parse_mixed_rules_to_buckets(custom_file)
+                    d_set, ip_set, dr_set = parse_mixed_rules_to_buckets(custom_file)
                     target_set = ip_set if rule_type == "ipcidr" else d_set
                     if action == "remove":
                         merged_rules -= target_set
+                        if rule_type != "ipcidr":
+                            merged_domain_regex -= dr_set
                     else:
                         merged_rules |= target_set
+                        if rule_type != "ipcidr":
+                            merged_domain_regex |= dr_set
 
             if rule_type == "ipcidr":
                 v4_nets, v6_nets = [], []
@@ -417,7 +440,7 @@ def main():
                 if rule_name == "china":
                     export_bypass_txt_files(v4_collapsed, v6_collapsed, global_commit_msgs)
 
-            export_four_formats(rule_name, merged_rules, rule_type)
+            export_four_formats(rule_name, merged_rules, rule_type, merged_domain_regex if rule_type != "ipcidr" else None)
 
             geo_dir = 'geoip' if rule_type == 'ipcidr' else 'geosite'
             prev_rules = load_prev_rules_from_yaml(geo_dir, rule_name)
@@ -445,38 +468,48 @@ def main():
         for rule_name, urls in classical_dict.items():
             mixed_domain_set = set()
             mixed_ip_set = set()
+            mixed_domain_regex_set = set()
 
             for i, url in enumerate(urls):
                 temp_dl = f"temp_workspace/classical_{rule_name}_{i}.dl"
                 temp_txt = f"temp_workspace/classical_{rule_name}_{i}.txt"
                 download_file(url, temp_dl)
-                if url.lower().endswith('.srs'):
+                
+                url_lower = url.lower()
+                if url_lower.endswith('.mrs'):
+                    ret = os.system(f"./mihomo convert-ruleset domain mrs {temp_dl} {temp_txt}")
+                    if ret != 0 or not os.path.exists(temp_txt):
+                        shutil.copy(temp_dl, temp_txt)
+                elif url_lower.endswith('.srs'):
                     temp_json = f"temp_workspace/classical_{rule_name}_{i}.json"
-                    ret = os.system(f"./sing-box rule-set decompile {temp_dl} --output {temp_json}")
+                    ret = os.system(f"./sing-box rule-set decompile {temp_dl} -o {temp_json}")
                     if ret == 0 and os.path.exists(temp_json):
-                        shutil.copy(temp_json, temp_txt)
+                        temp_txt = temp_json
                     else:
                         shutil.copy(temp_dl, temp_txt)
                 else:
                     shutil.copy(temp_dl, temp_txt)
 
-                d_set, ip_set = parse_mixed_rules_to_buckets(temp_txt)
+                d_set, ip_set, dr_set = parse_mixed_rules_to_buckets(temp_txt)
                 mixed_domain_set |= d_set
                 mixed_ip_set |= ip_set
+                mixed_domain_regex_set |= dr_set
 
             for action in ["remove", "add"]:
                 custom_file = os.path.join("rules", action, "classical", f"{rule_name}.txt")
                 if os.path.exists(custom_file):
-                    d_set, ip_set = parse_mixed_rules_to_buckets(custom_file)
+                    d_set, ip_set, dr_set = parse_mixed_rules_to_buckets(custom_file)
                     if action == "remove":
                         mixed_domain_set -= d_set
                         mixed_ip_set -= ip_set
+                        mixed_domain_regex_set -= dr_set
                     else:
                         mixed_domain_set |= d_set
                         mixed_ip_set |= ip_set
+                        mixed_domain_regex_set |= dr_set
 
-            if mixed_domain_set:
-                export_four_formats(rule_name, mixed_domain_set, "domain")
+            if mixed_domain_set or mixed_domain_regex_set:
+                export_four_formats(rule_name, mixed_domain_set, "domain", mixed_domain_regex_set)
                 prev_rules = load_prev_rules_from_yaml("geosite", rule_name)
                 new_rules_set = set(mixed_domain_set)
                 added = sorted(new_rules_set - prev_rules) if prev_rules is not None else []
@@ -521,7 +554,7 @@ def main():
         json.dump(global_commit_msgs, f, ensure_ascii=False, indent=2)
 
     shutil.rmtree("temp_workspace", ignore_errors=True)
-    print("\n[√] 所有任务、残留规则清理及配置同步已全部完成！")
+    print("\n[√] 所有任务完成：已保留 .srs 转 .json 功能，同时 DOMAIN-REGEX 仅写入 Sing-box 规则！")
 
 if __name__ == "__main__":
     main()

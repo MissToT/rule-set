@@ -79,34 +79,12 @@ def setup_binaries():
     print("[*] 内核准备完毕并已赋权。")
 
 def setup_custom_rule_dirs():
+    # 仅负责初始化目录结构，绝对不执行任何自动删除本地文件的逻辑
     for action in ["add", "remove"]:
         for rule_type in ["domain", "ipcidr", "classical"]:
-            rules_dict = RULES_CONFIG.get(rule_type, {})
-            dir_path = os.path.join("rules", action, rule_type)
-            if os.path.exists(dir_path):
-                valid_names = set(rules_dict.keys())
-                for filename in os.listdir(dir_path):
-                    if filename.endswith(".txt"):
-                        rule_name = filename[:-4]
-                        if rule_name not in valid_names:
-                            file_path = os.path.join(dir_path, filename)
-                            try:
-                                os.remove(file_path)
-                            except Exception:
-                                pass
-
-    for action in ["add", "remove"]:
-        for rule_type in ["domain", "ipcidr", "classical"]:
-            rules_dict = RULES_CONFIG.get(rule_type, {})
             dir_path = os.path.join("rules", action, rule_type)
             os.makedirs(dir_path, exist_ok=True)
-            for rule_name in rules_dict.keys():
-                file_path = os.path.join(dir_path, f"{rule_name}.txt")
-                if not os.path.exists(file_path):
-                    with open(file_path, 'w', encoding='utf-8') as f:
-                        op = "新增" if action == "add" else "移除"
-                        f.write(f"# 在此写入需要【{op}】的 {rule_name} ({rule_type}) 规则\n")
-    print("[*] 已同步并初始化自定义规则目录")
+    print("[*] 已初始化自定义规则目录（已取消自动清理）")
 
 def parse_mixed_rules_to_buckets(filename):
     domain_set = set()
@@ -294,7 +272,6 @@ def load_historical_rules(base_dir, geo_subfolder, rule_name, tool_type):
     return None
 
 def get_prev_rules(geo_dir, rule_name, tool_type):
-    # 优先从输出目录（workflow 签出的旧文件）读取，其次从备份目录读取
     out_dir = "mihomo_out" if tool_type == "mihomo" else "singbox_out"
     res = load_historical_rules(out_dir, geo_dir, rule_name, tool_type)
     if res is not None:
@@ -316,7 +293,6 @@ def export_bypass_txt_files(v4_collapsed, v6_collapsed, commit_msgs):
                 f.write(f"{rule}\n")
         
         prev_path = os.path.join(PREV_BYPASS_DIR, filename) if 'PREV_BYPASS_DIR' in globals() else os.path.join("bypass_out", filename)
-        # 尝试从同级或旧目录获取
         prev_rules = None
         if os.path.exists(prev_path):
             with open(prev_path, "r", encoding="utf-8") as f:
@@ -469,22 +445,29 @@ def main():
 
     # 1. 处理 domain 和 ipcidr 常规规则
     for rule_type in ["domain", "ipcidr"]:
-        rules_dict = RULES_CONFIG.get(rule_type, {})
-        if not rules_dict: continue
+        # 联合收集：config.json 中的规则 + 本地 add/remove 目录下的自定义规则文件
+        rule_names = set(RULES_CONFIG.get(rule_type, {}).keys())
+        for action in ["add", "remove"]:
+            dir_path = os.path.join("rules", action, rule_type)
+            if os.path.exists(dir_path):
+                for filename in os.listdir(dir_path):
+                    if filename.endswith(".txt"):
+                        rule_names.add(filename[:-4])
+
+        if not rule_names: continue
         print(f"\n[*] 开始批量构建 [{rule_type.upper()}] 分流规则...")
 
-        for rule_name in sorted(rules_dict.keys()):
+        for rule_name in sorted(rule_names):
             print(f"\n[+] 处理规则集: {rule_name}")
             geo_dir = 'geoip' if rule_type == 'ipcidr' else 'geosite'
 
-            # 【核心修复】：必须在覆盖文件之前，提前把旧规则读入内存！
             prev_mihomo_rules = get_prev_rules(geo_dir, rule_name, "mihomo")
             prev_singbox_rules = get_prev_rules(geo_dir, rule_name, "singbox")
 
             merged_rules = set()
             merged_domain_regex = set()
 
-            urls = rules_dict.get(rule_name, [])
+            urls = RULES_CONFIG.get(rule_type, {}).get(rule_name, [])
             for i, url in enumerate(urls):
                 try:
                     temp_dl = f"temp_workspace/{rule_name}_{i}.dl"
@@ -547,7 +530,6 @@ def main():
                 if rule_name == "china":
                     export_bypass_txt_files(v4_collapsed, v6_collapsed, global_commit_msgs)
 
-            # 导出新文件（此处会覆盖旧文件）
             export_four_formats(rule_name, merged_rules, rule_type, merged_domain_regex if rule_type != "ipcidr" else None)
 
             mihomo_new_set = set(merged_rules)
@@ -582,10 +564,17 @@ def main():
 
     # 2. 处理 classical 混合格式
     classical_dict = RULES_CONFIG.get("classical", {})
-    if classical_dict:
+    classical_names = set(classical_dict.keys())
+    for action in ["add", "remove"]:
+        dir_path = os.path.join("rules", action, "classical")
+        if os.path.exists(dir_path):
+            for filename in os.listdir(dir_path):
+                if filename.endswith(".txt"):
+                    classical_names.add(filename[:-4])
+
+    if classical_names:
         print(f"\n[*] 开始处理 [CLASSICAL] 混合规则自动分离...")
-        for rule_name, urls in classical_dict.items():
-            # 【核心修复】：在覆盖前提前读取旧规则
+        for rule_name in sorted(classical_names):
             prev_mihomo_domain_rules = get_prev_rules("geosite", rule_name, "mihomo")
             prev_singbox_domain_rules = get_prev_rules("geosite", rule_name, "singbox")
             prev_mihomo_ip_rules = get_prev_rules("geoip", rule_name, "mihomo")
@@ -595,6 +584,7 @@ def main():
             mixed_ip_set = set()
             mixed_domain_regex_set = set()
 
+            urls = classical_dict.get(rule_name, [])
             for i, url in enumerate(urls):
                 try:
                     temp_dl = f"temp_workspace/classical_{rule_name}_{i}.dl"

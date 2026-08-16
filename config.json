@@ -30,8 +30,8 @@
     ]
   },
   "classical": {
-    "googlefcm": [
-      "https://raw.githubusercontent.com/QuixoticHeart/rule-set/refs/heads/ruleset/singbox/version2/googlefcm.json"
+    "google": [
+      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/google.srs"
     ]
   }
 }

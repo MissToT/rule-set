@@ -79,12 +79,22 @@ def setup_binaries():
     print("[*] 内核准备完毕并已赋权。")
 
 def setup_custom_rule_dirs():
-    # 变更为 include 和 exclude 目录
+    # 自动根据 config.json 中的规则名称，在 include 和 exclude 目录下生成对应的 .txt 模板文件
     for action in ["include", "exclude"]:
         for rule_type in ["domain", "ipcidr", "classical"]:
             dir_path = os.path.join("rules", action, rule_type)
             os.makedirs(dir_path, exist_ok=True)
-    print("[*] 已初始化自定义规则目录（新路径为 rules/include 和 rules/exclude）")
+            
+            # 获取当前类型下在 config.json 中定义的所有规则名称
+            rule_names = RULES_CONFIG.get(rule_type, {}).keys()
+            for rule_name in rule_names:
+                file_path = os.path.join(dir_path, f"{rule_name}.txt")
+                if not os.path.exists(file_path):
+                    with open(file_path, "w", encoding="utf-8") as f:
+                        f.write(f"# 自定义本地 {rule_type} 覆写规则 ({action}): {rule_name}\n")
+                        f.write(f"# 每行一条规则，支持 Mihomo / Sing-box 格式\n")
+                        
+    print("[*] 已自动为所有规则生成对应的本地覆写（include/exclude）模板文件。")
 
 def parse_mixed_rules_to_buckets(filename):
     domain_set = set()

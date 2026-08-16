@@ -16,10 +16,6 @@ def load_config():
 
 RULES_CONFIG = load_config()
 
-PREV_MIHOMO_DIR = "prev_mihomo"
-PREV_SINGBOX_DIR = "prev_singbox"
-PREV_BYPASS_DIR = "prev_bypass"
-
 def normalize_url(url):
     if "github.com" in url and "/blob/" in url:
         url = url.replace("github.com", "raw.githubusercontent.com").replace("/blob/", "/")
@@ -249,11 +245,11 @@ def export_bypass_txt_files(v4_collapsed, v6_collapsed, commit_msgs):
         "# 🚀 IP 绕过规则概览\n\n",
         "> 持续更新中国大陆 IP CIDR 优化分流列表。\n",
         f"> **更新时间：** {time_str}\n\n",
-        "| 规则文件 | 规则数量 |\n",
-        "| :--- | :---: |\n"
+        "| 规则文件 | 下载地址 | 规则数量 |\n",
+        "| :--- | :--- | :---: |\n"
     ]
     for key, data in [("cn-ipv4.txt", v4_res), ("cn-ipv6.txt", v6_res)]:
-        lines.append(f"| `{key}` | **{data['total']}** |\n")
+        lines.append(f"| `{key}` | [TXT]({key}) | **{data['total']}** |\n")
 
     with open(os.path.join("bypass_out", "README.md"), "w", encoding="utf-8") as f:
         f.write("".join(lines))
@@ -361,30 +357,71 @@ def export_rule_files(rule_name, rules_set, rule_type, formats, domain_regex_set
         if ext not in fmt_lower and os.path.exists(path):
             os.remove(path)
 
-def generate_change_report(mihomo_changes, singbox_changes, commit_msgs):
+def generate_change_report(mihomo_items, singbox_items, commit_msgs):
     now = datetime.now(timezone(timedelta(hours=8)))
     time_str = f"{now.year}年{now.month}月{now.day}日{now.strftime('%H:%M:%S')}"
     
-    configs = [
-        ("Mihomo", "mihomo_out", "YAML / MRS", mihomo_changes), 
-        ("Sing-box", "singbox_out", "JSON / SRS", singbox_changes)
-    ]
-    for branch, out_dir, ext, changes_data in configs:
+    def build_markdown_report(title, items, client_type):
         lines = [
-            f"# 🌐 {branch} 规则集概览\n\n",
+            f"# 🛡️ {title} 代理规则集\n\n",
             f"> 自动化构建的多格式代理规则订阅源。\n",
-            f"> **更新时间：** {time_str}\n\n",
-            "| 规则分类 | 支持格式 | 规则数量 |\n",
-            "| :--- | :--- | :---: |\n"
+            f"> **更新时间：** {time_str}\n\n"
         ]
-        for key in sorted(changes_data.keys()):
-            data = changes_data[key]
-            lines.append(f"| `{key}` | {ext} | **{data['total']}** |\n")
+        
+        geosite_items = [x for x in items if x['category'] == 'geosite']
+        geoip_items = [x for x in items if x['category'] == 'geoip']
+        
+        if geosite_items:
+            lines.append("## 📂 GeoSite 域名规则\n\n")
+            lines.append("| 规则名称 | 下载地址与格式 | 规则数量 |\n")
+            lines.append("| :--- | :--- | :---: |\n")
+            for item in sorted(geosite_items, key=lambda x: x['name']):
+                name = item['name']
+                total = item['total']
+                active_formats = [f.lower() for f in item['formats'] if f.lower() in ('yaml', 'mrs', 'json', 'srs')]
+                
+                if client_type == 'mihomo':
+                    valid = [f for f in active_formats if f in ('yaml', 'mrs')]
+                    links = [f"[{f.upper()}](geo/geosite/{name}.{f})" for f in valid]
+                else:
+                    valid = [f for f in active_formats if f in ('json', 'srs')]
+                    links = [f"[{f.upper()}](geo/geosite/{name}.{f})" for f in valid]
+                
+                link_str = " · ".join(links) if links else "无"
+                lines.append(f"| `{name}` | {link_str} | **{total}** |\n")
+            lines.append("\n")
+            
+        if geoip_items:
+            lines.append("## 📂 GeoIP IP 规则\n\n")
+            lines.append("| 规则名称 | 下载地址与格式 | 规则数量 |\n")
+            lines.append("| :--- | :--- | :---: |\n")
+            for item in sorted(geoip_items, key=lambda x: x['name']):
+                name = item['name']
+                total = item['total']
+                active_formats = [f.lower() for f in item['formats'] if f.lower() in ('yaml', 'mrs', 'json', 'srs')]
+                
+                if client_type == 'mihomo':
+                    valid = [f for f in active_formats if f in ('yaml', 'mrs')]
+                    links = [f"[{f.upper()}](geo/geoip/{name}.{f})" for f in valid]
+                else:
+                    valid = [f for f in active_formats if f in ('json', 'srs')]
+                    links = [f"[{f.upper()}](geo/geoip/{name}.{f})" for f in valid]
+                
+                link_str = " · ".join(links) if links else "无"
+                lines.append(f"| `{name}` | {link_str} | **{total}** |\n")
+            lines.append("\n")
+            
+        return "".join(lines)
 
-        os.makedirs(out_dir, exist_ok=True)
-        with open(os.path.join(out_dir, "README.md"), "w", encoding="utf-8") as f:
-            f.write("".join(lines))
-    commit_msgs["README.md"] = f"{time_str} - 更新 README.md"
+    os.makedirs("mihomo_out", exist_ok=True)
+    with open(os.path.join("mihomo_out", "README.md"), "w", encoding="utf-8") as f:
+        f.write(build_markdown_report("Mihomo", mihomo_items, "mihomo"))
+
+    os.makedirs("singbox_out", exist_ok=True)
+    with open(os.path.join("singbox_out", "README.md"), "w", encoding="utf-8") as f:
+        f.write(build_markdown_report("Sing-box", singbox_items, "singbox"))
+        
+    commit_msgs["README.md"] = f"{time_str} - 更新 README.md 概览页面"
 
 def parse_rule_config(rule_config, global_enable_local, global_formats):
     include_urls = []
@@ -434,8 +471,8 @@ def main():
     os.makedirs("mihomo_out", exist_ok=True)
     os.makedirs("singbox_out", exist_ok=True)
 
-    mihomo_changes = {}
-    singbox_changes = {}
+    mihomo_items = []
+    singbox_items = []
     global_commit_msgs = {}
     now = datetime.now(timezone(timedelta(hours=8)))
     time_str = f"{now.year}年{now.month}月{now.day}日{now.strftime('%H:%M:%S')}"
@@ -581,20 +618,19 @@ def main():
 
             export_rule_files(rule_name, merged_rules, "domain", formats, merged_regex)
 
-            mihomo_new_set = set(merged_rules)
-            singbox_new_set = set(merged_rules)
+            singbox_total_set = set(merged_rules)
             if merged_regex:
-                singbox_new_set |= {f"REGEX:{r}" for r in merged_regex}
+                singbox_total_set |= {f"REGEX:{r}" for r in merged_regex}
 
-            msg = f"{time_str} - 更新 domain/{rule_name}: 共 {len(singbox_new_set)} 条"
+            msg = f"{time_str} - 更新 domain/{rule_name}: 共 {len(singbox_total_set)} 条"
             for fmt in [f.lower() for f in formats]:
                 if fmt == "yaml": global_commit_msgs[f"geo/geosite/{rule_name}.yaml"] = msg
                 elif fmt == "mrs": global_commit_msgs[f"geo/geosite/{rule_name}.mrs"] = msg
                 elif fmt == "json": global_commit_msgs[f"geo/geosite/{rule_name}.json"] = msg
                 elif fmt == "srs": global_commit_msgs[f"geo/geosite/{rule_name}.srs"] = msg
 
-            mihomo_changes[f"domain/{rule_name}"] = {"total": len(mihomo_new_set)}
-            singbox_changes[f"domain/{rule_name}"] = {"total": len(singbox_new_set)}
+            mihomo_items.append({"category": "geosite", "name": rule_name, "formats": formats, "total": len(merged_rules)})
+            singbox_items.append({"category": "geosite", "name": rule_name, "formats": formats, "total": len(singbox_total_set)})
 
         elif rule_type == "ipcidr":
             raw_ips = data["ip"]
@@ -618,18 +654,15 @@ def main():
 
             export_rule_files(rule_name, merged_rules, "ipcidr", formats)
 
-            mihomo_new_set = set(merged_rules)
-            singbox_new_set = set(merged_rules)
-
-            msg = f"{time_str} - 更新 ipcidr/{rule_name}: 共 {len(singbox_new_set)} 条"
+            msg = f"{time_str} - 更新 ipcidr/{rule_name}: 共 {len(merged_rules)} 条"
             for fmt in [f.lower() for f in formats]:
                 if fmt == "yaml": global_commit_msgs[f"geo/geoip/{rule_name}.yaml"] = msg
                 elif fmt == "mrs": global_commit_msgs[f"geo/geoip/{rule_name}.mrs"] = msg
                 elif fmt == "json": global_commit_msgs[f"geo/geoip/{rule_name}.json"] = msg
                 elif fmt == "srs": global_commit_msgs[f"geo/geoip/{rule_name}.srs"] = msg
 
-            mihomo_changes[f"ipcidr/{rule_name}"] = {"total": len(mihomo_new_set)}
-            singbox_changes[f"ipcidr/{rule_name}"] = {"total": len(singbox_new_set)}
+            mihomo_items.append({"category": "geoip", "name": rule_name, "formats": formats, "total": len(merged_rules)})
+            singbox_items.append({"category": "geoip", "name": rule_name, "formats": formats, "total": len(merged_rules)})
 
         elif rule_type == "classical":
             mixed_domain_set = data["domain"]
@@ -639,20 +672,19 @@ def main():
             if mixed_domain_set or mixed_regex_set:
                 export_rule_files(rule_name, mixed_domain_set, "domain", formats, mixed_regex_set)
 
-                mihomo_new_set = set(mixed_domain_set)
-                singbox_new_set = set(mixed_domain_set)
+                singbox_domain_set = set(mixed_domain_set)
                 if mixed_regex_set:
-                    singbox_new_set |= {f"REGEX:{r}" for r in mixed_regex_set}
+                    singbox_domain_set |= {f"REGEX:{r}" for r in mixed_regex_set}
 
-                msg = f"{time_str} - 更新 domain/{rule_name}: 共 {len(singbox_new_set)} 条"
+                msg = f"{time_str} - 更新 domain/{rule_name}: 共 {len(singbox_domain_set)} 条"
                 for fmt in [f.lower() for f in formats]:
                     if fmt == "yaml": global_commit_msgs[f"geo/geosite/{rule_name}.yaml"] = msg
                     elif fmt == "mrs": global_commit_msgs[f"geo/geosite/{rule_name}.mrs"] = msg
                     elif fmt == "json": global_commit_msgs[f"geo/geosite/{rule_name}.json"] = msg
                     elif fmt == "srs": global_commit_msgs[f"geo/geosite/{rule_name}.srs"] = msg
 
-                mihomo_changes[f"domain/{rule_name}"] = {"total": len(mihomo_new_set)}
-                singbox_changes[f"domain/{rule_name}"] = {"total": len(singbox_new_set)}
+                mihomo_items.append({"category": "geosite", "name": rule_name, "formats": formats, "total": len(mixed_domain_set)})
+                singbox_items.append({"category": "geosite", "name": rule_name, "formats": formats, "total": len(singbox_domain_set)})
 
             if mixed_ip_set:
                 v4_nets = [ipaddress.ip_network(x, strict=False) for x in mixed_ip_set if ipaddress.ip_network(x, strict=False).version == 4]
@@ -661,20 +693,17 @@ def main():
 
                 export_rule_files(rule_name, collapsed_ip_set, "ipcidr", formats)
 
-                mihomo_new_set = set(collapsed_ip_set)
-                singbox_new_set = set(collapsed_ip_set)
-
-                msg = f"{time_str} - 更新 ipcidr/{rule_name}: 共 {len(singbox_new_set)} 条"
+                msg = f"{time_str} - 更新 ipcidr/{rule_name}: 共 {len(collapsed_ip_set)} 条"
                 for fmt in [f.lower() for f in formats]:
                     if fmt == "yaml": global_commit_msgs[f"geo/geoip/{rule_name}.yaml"] = msg
                     elif fmt == "mrs": global_commit_msgs[f"geo/geoip/{rule_name}.mrs"] = msg
                     elif fmt == "json": global_commit_msgs[f"geo/geoip/{rule_name}.json"] = msg
                     elif fmt == "srs": global_commit_msgs[f"geo/geoip/{rule_name}.srs"] = msg
 
-                mihomo_changes[f"ipcidr/{rule_name}"] = {"total": len(mihomo_new_set)}
-                singbox_changes[f"ipcidr/{rule_name}"] = {"total": len(singbox_new_set)}
+                mihomo_items.append({"category": "geoip", "name": rule_name, "formats": formats, "total": len(collapsed_ip_set)})
+                singbox_items.append({"category": "geoip", "name": rule_name, "formats": formats, "total": len(collapsed_ip_set)})
 
-    generate_change_report(mihomo_changes, singbox_changes, global_commit_msgs)
+    generate_change_report(mihomo_items, singbox_items, global_commit_msgs)
     
     with open("commit_msgs.json", "w", encoding="utf-8") as f:
         json.dump(global_commit_msgs, f, indent=2, ensure_ascii=False)

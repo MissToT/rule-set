@@ -49,6 +49,40 @@
     ],
     "microsoft-cn": [
       "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/microsoft%40cn.json"
+    ],
+    "mihoyo-cn": [
+      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/mihoyo-cn.json"
+    ],
+    "ai": [
+      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/category-ai-!cn.json",
+      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geoip/ai.json"
+    ],
+    "games": [
+      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/category-games-!cn.json"
+    ],
+    "game-platforms-download": [
+      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/category-game-platforms-download.json"
+    ],
+    "ehentai": [
+      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/ehentai.json"
+    ],
+    "youtube": [
+      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/youtube.json"
+    ],
+    "tiktok": [
+      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/tiktok.json"
+    ],
+    "telegram": [
+      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/telegram.json",
+      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geoip/telegram.json"
+    ],
+    "twitter": [
+      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/twitter.json",
+      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geoip/twitter.json"
+    ],
+    "private": [
+      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geoip/private.json",
+      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/private.json"
     ]
   }
 }

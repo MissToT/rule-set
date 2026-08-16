@@ -1,39 +1,47 @@
-# 🌐 Mihomo 规则集概览
+# 🛡️ Mihomo 代理规则集
 
 > 自动化构建的多格式代理规则订阅源。
-> **更新时间：** 2026年8月16日19:21:57
+> **更新时间：** 2026年8月16日19:26:33
 
-| 规则分类 | 支持格式 | 规则数量 |
+## 📂 GeoSite 域名规则
+
+| 规则名称 | 下载地址与格式 | 规则数量 |
 | :--- | :--- | :---: |
-| `domain/adblock` | YAML / MRS | **100386** |
-| `domain/ai` | YAML / MRS | **173** |
-| `domain/china` | YAML / MRS | **112774** |
-| `domain/cloudflare` | YAML / MRS | **76** |
-| `domain/cloudflare-cn` | YAML / MRS | **19** |
-| `domain/ehentai` | YAML / MRS | **8** |
-| `domain/emby` | YAML / MRS | **131** |
-| `domain/emby-cn` | YAML / MRS | **38** |
-| `domain/fake-ip-filter` | YAML / MRS | **113** |
-| `domain/game-platforms-download` | YAML / MRS | **491** |
-| `domain/games` | YAML / MRS | **860** |
-| `domain/google` | YAML / MRS | **1045** |
-| `domain/googlefcm` | YAML / MRS | **7** |
-| `domain/japan` | YAML / MRS | **40** |
-| `domain/microsoft` | YAML / MRS | **750** |
-| `domain/microsoft-cn` | YAML / MRS | **190** |
-| `domain/mihoyo-cn` | YAML / MRS | **16** |
-| `domain/private` | YAML / MRS | **130** |
-| `domain/proxy` | YAML / MRS | **29629** |
-| `domain/taiwan` | YAML / MRS | **18** |
-| `domain/telegram` | YAML / MRS | **21** |
-| `domain/tiktok` | YAML / MRS | **36** |
-| `domain/twitter` | YAML / MRS | **24** |
-| `domain/youtube` | YAML / MRS | **178** |
-| `ipcidr/ai` | YAML / MRS | **68** |
-| `ipcidr/china` | YAML / MRS | **18133** |
-| `ipcidr/cloudflare` | YAML / MRS | **608** |
-| `ipcidr/google` | YAML / MRS | **2948** |
-| `ipcidr/private` | YAML / MRS | **14** |
-| `ipcidr/proxy` | YAML / MRS | **112** |
-| `ipcidr/telegram` | YAML / MRS | **8** |
-| `ipcidr/twitter` | YAML / MRS | **17** |
+| `adblock` | [MRS](geo/geosite/adblock.mrs) · [YAML](geo/geosite/adblock.yaml) | **100386** |
+| `ai` | [MRS](geo/geosite/ai.mrs) · [YAML](geo/geosite/ai.yaml) | **173** |
+| `china` | [MRS](geo/geosite/china.mrs) · [YAML](geo/geosite/china.yaml) | **112774** |
+| `cloudflare` | [MRS](geo/geosite/cloudflare.mrs) · [YAML](geo/geosite/cloudflare.yaml) | **76** |
+| `cloudflare-cn` | [MRS](geo/geosite/cloudflare-cn.mrs) · [YAML](geo/geosite/cloudflare-cn.yaml) | **19** |
+| `ehentai` | [MRS](geo/geosite/ehentai.mrs) · [YAML](geo/geosite/ehentai.yaml) | **8** |
+| `emby` | [MRS](geo/geosite/emby.mrs) | **131** |
+| `emby-cn` | [MRS](geo/geosite/emby-cn.mrs) | **38** |
+| `fake-ip-filter` | [MRS](geo/geosite/fake-ip-filter.mrs) · [YAML](geo/geosite/fake-ip-filter.yaml) | **113** |
+| `game-platforms-download` | [MRS](geo/geosite/game-platforms-download.mrs) · [YAML](geo/geosite/game-platforms-download.yaml) | **491** |
+| `games` | [MRS](geo/geosite/games.mrs) · [YAML](geo/geosite/games.yaml) | **860** |
+| `google` | [MRS](geo/geosite/google.mrs) · [YAML](geo/geosite/google.yaml) | **1045** |
+| `googlefcm` | [MRS](geo/geosite/googlefcm.mrs) · [YAML](geo/geosite/googlefcm.yaml) | **7** |
+| `japan` | [MRS](geo/geosite/japan.mrs) · [YAML](geo/geosite/japan.yaml) | **40** |
+| `microsoft` | [MRS](geo/geosite/microsoft.mrs) · [YAML](geo/geosite/microsoft.yaml) | **750** |
+| `microsoft-cn` | [MRS](geo/geosite/microsoft-cn.mrs) · [YAML](geo/geosite/microsoft-cn.yaml) | **190** |
+| `mihoyo-cn` | [MRS](geo/geosite/mihoyo-cn.mrs) · [YAML](geo/geosite/mihoyo-cn.yaml) | **16** |
+| `private` | [MRS](geo/geosite/private.mrs) · [YAML](geo/geosite/private.yaml) | **130** |
+| `proxy` | [MRS](geo/geosite/proxy.mrs) · [YAML](geo/geosite/proxy.yaml) | **29629** |
+| `taiwan` | [MRS](geo/geosite/taiwan.mrs) · [YAML](geo/geosite/taiwan.yaml) | **18** |
+| `telegram` | [MRS](geo/geosite/telegram.mrs) · [YAML](geo/geosite/telegram.yaml) | **21** |
+| `tiktok` | [MRS](geo/geosite/tiktok.mrs) · [YAML](geo/geosite/tiktok.yaml) | **36** |
+| `twitter` | [MRS](geo/geosite/twitter.mrs) · [YAML](geo/geosite/twitter.yaml) | **24** |
+| `youtube` | [MRS](geo/geosite/youtube.mrs) · [YAML](geo/geosite/youtube.yaml) | **178** |
+
+## 📂 GeoIP IP 规则
+
+| 规则名称 | 下载地址与格式 | 规则数量 |
+| :--- | :--- | :---: |
+| `ai` | [MRS](geo/geoip/ai.mrs) · [YAML](geo/geoip/ai.yaml) | **68** |
+| `china` | [MRS](geo/geoip/china.mrs) · [YAML](geo/geoip/china.yaml) | **18133** |
+| `cloudflare` | [MRS](geo/geoip/cloudflare.mrs) · [YAML](geo/geoip/cloudflare.yaml) | **608** |
+| `google` | [MRS](geo/geoip/google.mrs) · [YAML](geo/geoip/google.yaml) | **2948** |
+| `private` | [MRS](geo/geoip/private.mrs) · [YAML](geo/geoip/private.yaml) | **14** |
+| `proxy` | [MRS](geo/geoip/proxy.mrs) · [YAML](geo/geoip/proxy.yaml) | **112** |
+| `telegram` | [MRS](geo/geoip/telegram.mrs) · [YAML](geo/geoip/telegram.yaml) | **8** |
+| `twitter` | [MRS](geo/geoip/twitter.mrs) · [YAML](geo/geoip/twitter.yaml) | **17** |
+

@@ -218,8 +218,11 @@ def load_prev_singbox_rules(geo_subfolder, rule_name):
     prev_json = os.path.join(PREV_SINGBOX_DIR, "geo", geo_subfolder, f"{rule_name}.json")
     if os.path.exists(prev_json):
         try:
-            d_set, ip_set, _ = parse_mixed_rules_to_buckets(prev_json)
-            return ip_set if geo_subfolder == "geoip" else d_set
+            d_set, ip_set, dr_set = parse_mixed_rules_to_buckets(prev_json)
+            if geo_subfolder == "geoip":
+                return ip_set
+            else:
+                return d_set | {f"REGEX:{r}" for r in dr_set}
         except Exception:
             pass
     return None
@@ -471,13 +474,16 @@ def main():
             m_added = sorted(mihomo_new_set - prev_mihomo_rules) if prev_mihomo_rules is not None else []
             m_removed = sorted(prev_mihomo_rules - mihomo_new_set) if prev_mihomo_rules is not None else []
 
-            # Sing-box 差异对比（独立基于 prev_singbox 的 .json 文件）
+            # Sing-box 差异对比（独立基于 prev_singbox 的 .json 文件，包含 regex）
             prev_singbox_rules = load_prev_singbox_rules(geo_dir, rule_name)
             singbox_new_set = set(merged_rules)
+            if rule_type != "ipcidr" and merged_domain_regex:
+                singbox_new_set |= {f"REGEX:{r}" for r in merged_domain_regex}
+            
             s_added = sorted(singbox_new_set - prev_singbox_rules) if prev_singbox_rules is not None else []
             s_removed = sorted(prev_singbox_rules - singbox_new_set) if prev_singbox_rules is not None else []
 
-            msg = f"{time_str} - 更新 {rule_type}/{rule_name}: 共 {len(merged_rules)} 条"
+            msg = f"{time_str} - 更新 {rule_type}/{rule_name}: 共 {len(singbox_new_set)} 条"
             global_commit_msgs[f"geo/{geo_dir}/{rule_name}.yaml"] = msg
             global_commit_msgs[f"geo/{geo_dir}/{rule_name}.mrs"]  = msg
             global_commit_msgs[f"geo/{geo_dir}/{rule_name}.json"] = msg
@@ -553,10 +559,13 @@ def main():
 
                 prev_singbox_rules = load_prev_singbox_rules("geosite", rule_name)
                 singbox_new_set = set(mixed_domain_set)
+                if mixed_domain_regex_set:
+                    singbox_new_set |= {f"REGEX:{r}" for r in mixed_domain_regex_set}
+
                 s_added = sorted(singbox_new_set - prev_singbox_rules) if prev_singbox_rules is not None else []
                 s_removed = sorted(prev_singbox_rules - singbox_new_set) if prev_singbox_rules is not None else []
 
-                msg = f"{time_str} - 更新 domain/{rule_name}: 共 {len(mixed_domain_set)} 条"
+                msg = f"{time_str} - 更新 domain/{rule_name}: 共 {len(singbox_new_set)} 条"
                 global_commit_msgs[f"geo/geosite/{rule_name}.yaml"] = msg
                 global_commit_msgs[f"geo/geosite/{rule_name}.mrs"]  = msg
                 global_commit_msgs[f"geo/geosite/{rule_name}.json"] = msg
@@ -591,7 +600,7 @@ def main():
                 s_added = sorted(singbox_new_set - prev_singbox_rules) if prev_singbox_rules is not None else []
                 s_removed = sorted(prev_singbox_rules - singbox_new_set) if prev_singbox_rules is not None else []
 
-                msg = f"{time_str} - 更新 ipcidr/{rule_name}: 共 {len(mixed_ip_set)} 条"
+                msg = f"{time_str} - 更新 ipcidr/{rule_name}: 共 {len(singbox_new_set)} 条"
                 global_commit_msgs[f"geo/geoip/{rule_name}.yaml"] = msg
                 global_commit_msgs[f"geo/geoip/{rule_name}.mrs"]  = msg
                 global_commit_msgs[f"geo/geoip/{rule_name}.json"] = msg
@@ -615,7 +624,7 @@ def main():
         json.dump(global_commit_msgs, f, ensure_ascii=False, indent=2)
 
     shutil.rmtree("temp_workspace", ignore_errors=True)
-    print("\n[√] 所有任务完成：已实现 GitHub 链接自动转 raw、.srs 反编译，以及 Mihomo 与 Sing-box 独立差异对比！")
+    print("\n[√] 所有任务完成：已完美适配 Sing-box 正则条数统计与差异比对！")
 
 if __name__ == "__main__":
     main()

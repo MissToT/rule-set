@@ -12,7 +12,7 @@ def load_config():
     if os.path.exists("config.json"):
         with open("config.json", "r", encoding="utf-8") as f:
             return json.load(f)
-    return {"domain": {}, "ipcidr": {}, "classical": {}}
+    return {"settings": {}, "domain": {}, "ipcidr": {}, "classical": {}}
 
 RULES_CONFIG = load_config()
 
@@ -79,11 +79,12 @@ def setup_binaries():
     print("[*] 内核准备完毕并已赋权。")
 
 def setup_custom_rule_dirs():
-    for action in ["add", "remove"]:
+    # 变更为 include 和 exclude 目录
+    for action in ["include", "exclude"]:
         for rule_type in ["domain", "ipcidr", "classical"]:
             dir_path = os.path.join("rules", action, rule_type)
             os.makedirs(dir_path, exist_ok=True)
-    print("[*] 已初始化自定义规则目录（已取消自动清理）")
+    print("[*] 已初始化自定义规则目录（新路径为 rules/include 和 rules/exclude）")
 
 def parse_mixed_rules_to_buckets(filename):
     domain_set = set()
@@ -442,10 +443,15 @@ def main():
     now = datetime.now(timezone(timedelta(hours=8)))
     time_str = f"{now.year}年{now.month}月{now.day}日{now.strftime('%H:%M:%S')}"
 
+    # 读取全局 enable_local 配置，默认开启
+    global_enable_local = RULES_CONFIG.get("settings", {}).get("enable_local", True)
+
     # 1. 处理 domain 和 ipcidr 常规规则
     for rule_type in ["domain", "ipcidr"]:
         rule_names = set(RULES_CONFIG.get(rule_type, {}).keys())
-        for action in ["add", "remove"]:
+        
+        # 无论全局开关如何，先全量扫描本地规则收集名称，方便后续判断和过滤
+        for action in ["include", "exclude"]:
             dir_path = os.path.join("rules", action, rule_type)
             if os.path.exists(dir_path):
                 for filename in os.listdir(dir_path):
@@ -456,6 +462,27 @@ def main():
         print(f"\n[*] 开始批量构建 [{rule_type.upper()}] 分流规则...")
 
         for rule_name in sorted(rule_names):
+            rule_config = RULES_CONFIG.get(rule_type, {}).get(rule_name)
+
+            if isinstance(rule_config, dict):
+                include_urls = rule_config.get("include", [])
+                exclude_urls = rule_config.get("exclude", [])
+                # 局部规则如果有声明 enable_local，则覆盖（掩盖）全局设置
+                final_enable_local = rule_config.get("enable_local", global_enable_local)
+            elif isinstance(rule_config, list):
+                include_urls = rule_config
+                exclude_urls = []
+                final_enable_local = global_enable_local
+            else:
+                # 针对不在 JSON 且仅存在于本地文件夹的纯本地规则
+                include_urls = []
+                exclude_urls = []
+                final_enable_local = global_enable_local
+
+            # 【关键】如果没有任何远程规则，且最终判定本地开关关闭，该规则将完全作废跳过
+            if not include_urls and not exclude_urls and not final_enable_local:
+                continue
+
             print(f"\n[+] 处理规则集: {rule_name}")
             geo_dir = 'geoip' if rule_type == 'ipcidr' else 'geosite'
 
@@ -465,20 +492,8 @@ def main():
             merged_rules = set()
             merged_domain_regex = set()
 
-            # 解析规则配置：兼容旧版直接填写 list 和新版传入 dict 
-            rule_config = RULES_CONFIG.get(rule_type, {}).get(rule_name, [])
-            if isinstance(rule_config, dict):
-                add_urls = rule_config.get("add", [])
-                remove_urls = rule_config.get("remove", [])
-                enable_local = rule_config.get("local", True)
-            else:
-                # 兼容旧版本列表形式，默认开启 local 合并
-                add_urls = rule_config
-                remove_urls = []
-                enable_local = True
-
-            # 遍历并处理远程链接（先 add，后 remove）
-            for action_type, url_list in [("add", add_urls), ("remove", remove_urls)]:
+            # 遍历并处理远程链接（先 include，后 exclude）
+            for action_type, url_list in [("include", include_urls), ("exclude", exclude_urls)]:
                 for i, url in enumerate(url_list):
                     try:
                         temp_dl = f"temp_workspace/{rule_name}_{action_type}_{i}.dl"
@@ -502,13 +517,13 @@ def main():
                         
                         d_set, ip_set, dr_set = parse_mixed_rules_to_buckets(temp_txt)
                         
-                        if action_type == "add":
+                        if action_type == "include":
                             if rule_type == "ipcidr":
                                 merged_rules |= ip_set
                             else:
                                 merged_rules |= d_set
                                 merged_domain_regex |= dr_set
-                        else:  # remove
+                        else:  # exclude
                             if rule_type == "ipcidr":
                                 merged_rules -= ip_set
                             else:
@@ -519,14 +534,15 @@ def main():
                         print(f"[-] 警告：处理规则源跳过 | {url} -> {e}")
                         continue
 
-            # 处理本地自定义规则（根据 local 字段开关决定）
-            if enable_local:
-                for action in ["remove", "add"]:
+            # 处理本地自定义规则（根据 final_enable_local 开关决定）
+            if final_enable_local:
+                # 逻辑通常是：先去除指定的本地 exclude，再将必须的 include 合并进来
+                for action in ["exclude", "include"]:
                     custom_file = os.path.join("rules", action, rule_type, f"{rule_name}.txt")
                     if os.path.exists(custom_file):
                         d_set, ip_set, dr_set = parse_mixed_rules_to_buckets(custom_file)
                         target_set = ip_set if rule_type == "ipcidr" else d_set
-                        if action == "remove":
+                        if action == "exclude":
                             merged_rules -= target_set
                             if rule_type != "ipcidr":
                                 merged_domain_regex -= dr_set
@@ -586,7 +602,8 @@ def main():
     # 2. 处理 classical 混合格式
     classical_dict = RULES_CONFIG.get("classical", {})
     classical_names = set(classical_dict.keys())
-    for action in ["add", "remove"]:
+    
+    for action in ["include", "exclude"]:
         dir_path = os.path.join("rules", action, "classical")
         if os.path.exists(dir_path):
             for filename in os.listdir(dir_path):
@@ -596,6 +613,24 @@ def main():
     if classical_names:
         print(f"\n[*] 开始处理 [CLASSICAL] 混合规则自动分离...")
         for rule_name in sorted(classical_names):
+            rule_config = classical_dict.get(rule_name)
+
+            if isinstance(rule_config, dict):
+                include_urls = rule_config.get("include", [])
+                exclude_urls = rule_config.get("exclude", [])
+                final_enable_local = rule_config.get("enable_local", global_enable_local)
+            elif isinstance(rule_config, list):
+                include_urls = rule_config
+                exclude_urls = []
+                final_enable_local = global_enable_local
+            else:
+                include_urls = []
+                exclude_urls = []
+                final_enable_local = global_enable_local
+
+            if not include_urls and not exclude_urls and not final_enable_local:
+                continue
+
             prev_mihomo_domain_rules = get_prev_rules("geosite", rule_name, "mihomo")
             prev_singbox_domain_rules = get_prev_rules("geosite", rule_name, "singbox")
             prev_mihomo_ip_rules = get_prev_rules("geoip", rule_name, "mihomo")
@@ -605,19 +640,8 @@ def main():
             mixed_ip_set = set()
             mixed_domain_regex_set = set()
 
-            # 解析规则配置：兼容旧版直接填写 list 和新版传入 dict
-            rule_config = classical_dict.get(rule_name, [])
-            if isinstance(rule_config, dict):
-                add_urls = rule_config.get("add", [])
-                remove_urls = rule_config.get("remove", [])
-                enable_local = rule_config.get("local", True)
-            else:
-                add_urls = rule_config
-                remove_urls = []
-                enable_local = True
-
-            # 遍历并处理远程链接（先 add，后 remove）
-            for action_type, url_list in [("add", add_urls), ("remove", remove_urls)]:
+            # 遍历并处理远程链接（先 include，后 exclude）
+            for action_type, url_list in [("include", include_urls), ("exclude", exclude_urls)]:
                 for i, url in enumerate(url_list):
                     try:
                         temp_dl = f"temp_workspace/classical_{rule_name}_{action_type}_{i}.dl"
@@ -641,11 +665,11 @@ def main():
 
                         d_set, ip_set, dr_set = parse_mixed_rules_to_buckets(temp_txt)
                         
-                        if action_type == "add":
+                        if action_type == "include":
                             mixed_domain_set |= d_set
                             mixed_ip_set |= ip_set
                             mixed_domain_regex_set |= dr_set
-                        else: # remove
+                        else: # exclude
                             mixed_domain_set -= d_set
                             mixed_ip_set -= ip_set
                             mixed_domain_regex_set -= dr_set
@@ -654,13 +678,13 @@ def main():
                         print(f"[-] 警告：处理规则源跳过 | {url} -> {e}")
                         continue
 
-            # 处理本地自定义规则（根据 local 字段开关决定）
-            if enable_local:
-                for action in ["remove", "add"]:
+            # 处理本地自定义规则
+            if final_enable_local:
+                for action in ["exclude", "include"]:
                     custom_file = os.path.join("rules", action, "classical", f"{rule_name}.txt")
                     if os.path.exists(custom_file):
                         d_set, ip_set, dr_set = parse_mixed_rules_to_buckets(custom_file)
-                        if action == "remove":
+                        if action == "exclude":
                             mixed_domain_set -= d_set
                             mixed_ip_set -= ip_set
                             mixed_domain_regex_set -= dr_set

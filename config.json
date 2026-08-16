@@ -31,7 +31,24 @@
       "https://github.com/QuixoticHeart/rule-set/blob/ruleset/singbox/version2/proxy.srs"
     ],
     "google": [
-      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/google.srs"
+      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/google.srs",
+      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geoip/google.json"
+    ],
+    "googlefcm": [
+      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/googlefcm%40!cn.json"
+    ],
+    "cloudflare": [
+      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geoip/cloudflare.json",
+      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/cloudflare.json"
+    ],
+    "cloudflare-cn": [
+      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/cloudflare-cn.json"
+    ],
+    "microsoft": [
+      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/microsoft.json"
+    ],
+    "microsoft-cn": [
+      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/microsoft%40cn.json"
     ]
   }
 }

@@ -28,7 +28,7 @@ def parse_rule_line(line, default_type):
     """
     智能解析单行规则：
     1. 严格只提取 DOMAIN、DOMAIN-SUFFIX、DOMAIN-KEYWORD、IP-CIDR、IP-CIDR6。
-    2. 遇到 PROCESS-NAME、DST-PORT、GEOIP 等非法前缀直接丢弃，绝不盲目降级。
+    2. 遇到 PROCESS-NAME、DST-PORT、GEOIP 等非法前缀直接丢弃。
     3. 完美适配各类通配符。
     """
     line = line.strip()
@@ -38,13 +38,11 @@ def parse_rule_line(line, default_type):
     if line.startswith("'") and line.endswith("'"): line = line[1:-1]
     if line.startswith('"') and line.endswith('"'): line = line[1:-1]
     
-    # 检查是否包含逗号（即带前缀的规则）
     if ',' in line:
         parts = line.split(',', 1)
         pfx = parts[0].strip().upper()
         val = parts[1].strip()
         
-        # 严格白名单校验
         if pfx == 'DOMAIN-SUFFIX':
             if val.startswith('*.'): val = val[2:]
             elif val.startswith('*'): val = val[1:]
@@ -59,11 +57,8 @@ def parse_rule_line(line, default_type):
         elif pfx in ('IP-CIDR', 'IP-CIDR6'):
             return (pfx, val)
         else:
-            # 遇到诸如 PROCESS-NAME, DST-PORT, GEOIP 等不在白名单内的规则，直接安全丢弃！
             return None
 
-    # 无逗号的纯文本行（无前缀适配）
-    # 尝试判断是否为 IP 或 CIDR
     if '/' in line or any(c.isdigit() for c in line) and ('::' in line or '.' in line):
         try:
             ipaddress.ip_network(line, strict=False)
@@ -71,7 +66,6 @@ def parse_rule_line(line, default_type):
         except ValueError:
             pass
 
-    # 无前缀域名的通配符适配
     if line.startswith('*.'):
         return ('DOMAIN-SUFFIX', line[2:])
     elif line.startswith('*') and line.endswith('*') and len(line) > 2:
@@ -83,7 +77,6 @@ def parse_rule_line(line, default_type):
     elif line.startswith('.'):
         return ('DOMAIN-SUFFIX', line[1:])
         
-    # 根据上下文类型兜底解析为纯域名或 IP
     if default_type == 'domain':
         return ('DOMAIN', line)
     elif default_type == 'ipcidr':
@@ -126,7 +119,6 @@ def fetch_and_parse(url, rule_type, temp_dir="temp_workspace"):
         temp_txt = os.path.join(temp_dir, "temp_dl.txt")
         with open(temp_mrs, 'wb' ) as f:
             f.write(content_bytes)
-        # 统一利用 mihomo 将二进制 mrs 转为文本
         os.system(f"./mihomo convert-ruleset domain mrs {temp_mrs} {temp_txt}")
         if os.path.exists(temp_txt):
             with open(temp_txt, 'r', encoding='utf-8') as f:
@@ -262,15 +254,13 @@ def export_bypass_txt_files(v4_collapsed, v6_collapsed, commit_msgs):
 
 def export_rule_set(rule_name, rules_set, geo_dir, rule_type_for_convert):
     """
-    统一导出 geosite 或 geoip 的四种格式文件 (.yaml, .mrs, .json, .srs)
+    统一导出到原汁原味的 geo/geosite 和 geo/geoip 目录下 (.yaml, .mrs, .json, .srs)
     """
-    mihomo_dir  = f"mihomo_out/geo/{geo_dir}"
-    singbox_dir = f"singbox_out/geo/{geo_dir}"
-    os.makedirs(mihomo_dir,  exist_ok=True)
-    os.makedirs(singbox_dir, exist_ok=True)
+    target_dir = f"geo/{geo_dir}"
+    os.makedirs(target_dir, exist_ok=True)
 
     # 1. 导出 Mihomo YAML
-    yaml_path = f"{mihomo_dir}/{rule_name}.yaml"
+    yaml_path = f"{target_dir}/{rule_name}.yaml"
     with open(yaml_path, 'w', encoding='utf-8') as f:
         f.write("payload:\n")
         for rule_tuple in sorted(rules_set):
@@ -278,7 +268,7 @@ def export_rule_set(rule_name, rules_set, geo_dir, rule_type_for_convert):
             f.write(f"  - '{string_val}'\n")
 
     # 2. 导出 Sing-box JSON
-    json_path = f"{singbox_dir}/{rule_name}.json"
+    json_path = f"{target_dir}/{rule_name}.json"
     sb_rules = []
     
     if geo_dir == "geosite":
@@ -307,31 +297,29 @@ def export_rule_set(rule_name, rules_set, geo_dir, rule_type_for_convert):
         for rule_tuple in sorted(rules_set):
             f.write(f"{rule_to_str(rule_tuple)}\n")
             
-    os.system(f"./mihomo convert-ruleset {rule_type_for_convert} text {temp_txt_path} {mihomo_dir}/{rule_name}.mrs")
-    os.system(f"./sing-box rule-set compile --output {singbox_dir}/{rule_name}.srs {json_path}")
+    os.system(f"./mihomo convert-ruleset {rule_type_for_convert} text {temp_txt_path} {target_dir}/{rule_name}.mrs")
+    os.system(f"./sing-box rule-set compile --output {target_dir}/{rule_name}.srs {json_path}")
 
 def generate_change_report(all_changes, commit_msgs):
     now = datetime.now(timezone(timedelta(hours=8)))
     time_str = f"{now.year}年{now.month}月{now.day}日{now.strftime('%H:%M:%S')}"
     
-    configs = [("Mihomo", "mihomo_out", "(.yaml / .mrs)"), ("Sing-box", "singbox_out", "(.json / .srs)")]
-    for branch, out_dir, ext in configs:
-        lines = [f"# {branch} 规则变更记录\n\n**更新时间：** {time_str}\n\n---\n\n"]
-        for key in sorted(all_changes.keys()):
-            data = all_changes[key]
-            lines.append(f"## `{key}` {ext}\n\n")
-            if data["prev_total"] is None:
-                lines.append(f"> 首次生成，共 **{data['total']}** 条规则\n\n")
-            else:
-                diff = data["total"] - data["prev_total"]
-                sign = (f"+{diff}" if diff >= 0 else str(diff))
-                lines.append(f"- 规则总数：**{data['total']}**（{sign}）\n")
-            lines.append("\n")
+    lines = [f"# 规则变更记录\n\n**更新时间：** {time_str}\n\n---\n\n"]
+    for key in sorted(all_changes.keys()):
+        data = all_changes[key]
+        lines.append(f"## `{key}`\n\n")
+        if data["prev_total"] is None:
+            lines.append(f"> 首次生成，共 **{data['total']}** 条规则\n\n")
+        else:
+            diff = data["total"] - data["prev_total"]
+            sign = (f"+{diff}" if diff >= 0 else str(diff))
+            lines.append(f"- 规则总数：**{data['total']}**（{sign}）\n")
+        lines.append("\n")
 
-        os.makedirs(out_dir, exist_ok=True)
-        with open(os.path.join(out_dir, "README.md"), "w", encoding="utf-8") as f:
-            f.write("".join(lines))
-    commit_msgs["README.md"] = f"{time_str} - 更新 README.md"
+    os.makedirs("geo", exist_ok=True)
+    with open(os.path.join("geo", "README.md"), "w", encoding="utf-8") as f:
+        f.write("".join(lines))
+    commit_msgs["geo/README.md"] = f"{time_str} - 更新 geo/README.md"
 
 
 # ==================== 5. 主处理流程 (实现同名合并与 Classical 拆分) ====================
@@ -342,8 +330,8 @@ def main():
     
     os.makedirs("temp_workspace", exist_ok=True)
     os.makedirs("bypass_out", exist_ok=True)
-    os.makedirs("mihomo_out", exist_ok=True)
-    os.makedirs("singbox_out", exist_ok=True)
+    os.makedirs("geo/geosite", exist_ok=True)
+    os.makedirs("geo/geoip", exist_ok=True)
 
     master_domains = {}  # {rule_name: set of domain rules}
     master_ipcidrs = {}  # {rule_name: set of ip rules}
@@ -405,7 +393,7 @@ def main():
 
         export_rule_set(rule_name, rules_set, "geosite", "domain")
 
-        msg = f"{time_str} - 更新 geosite/{rule_name}: 新增 {add_cnt} 条, 移除 {rm_cnt} 条"
+        msg = f"{time_str} - 更新 geo/geosite/{rule_name}: 新增 {add_cnt} 条, 移除 {rm_cnt} 条"
         global_commit_msgs[f"geo/geosite/{rule_name}.yaml"] = msg
         global_commit_msgs[f"geo/geosite/{rule_name}.mrs"]  = msg
         global_commit_msgs[f"geo/geosite/{rule_name}.json"] = msg
@@ -419,7 +407,6 @@ def main():
     # ==================== 7. 导出 Geoip 规则集 (含 IP CIDR 合并) ====================
     print("\n[*] 正在导出 Geoip IP规则集...")
     for rule_name, rules_set in sorted(master_ipcidrs.items()):
-        # IP 合并网段折叠逻辑
         v4_nets, v6_nets = [], []
         other_ip_rules = set()
         for pfx, val in rules_set:
@@ -449,7 +436,7 @@ def main():
         if rule_name == "china":
             export_bypass_txt_files(v4_collapsed, v6_collapsed, global_commit_msgs)
 
-        msg = f"{time_str} - 更新 geoip/{rule_name}: 新增 {add_cnt} 条, 移除 {rm_cnt} 条"
+        msg = f"{time_str} - 更新 geo/geoip/{rule_name}: 新增 {add_cnt} 条, 移除 {rm_cnt} 条"
         global_commit_msgs[f"geo/geoip/{rule_name}.yaml"] = msg
         global_commit_msgs[f"geo/geoip/{rule_name}.mrs"]  = msg
         global_commit_msgs[f"geo/geoip/{rule_name}.json"] = msg

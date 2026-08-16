@@ -1,0 +1,1 @@
+# 在此写入需要【移除】的 speedtest (classical) 规则

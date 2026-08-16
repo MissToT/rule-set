@@ -1,2 +1,13 @@
-# 自定义本地 domain 覆写规则 (include): china
-# 每行一条规则，支持 Mihomo / Sing-box 格式
+# Github加速镜像
+gh-proxy.com
+# Pixiv加速镜像
+i.pixiv.re
++.pixiv.re
+# 再漫画
++.zaimanhua.com
+# 图床
+p.sda1.dev
+# 网易云
++.netease.im
+# 守候订阅域名
+sub1.sntp.me

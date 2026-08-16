@@ -116,8 +116,19 @@ def parse_mixed_rules_to_buckets(filename):
     ipcidr_set = set()
     domain_regex_set = set()
     
-    if not os.path.exists(filename):
+    if not os.path.exists(filename) or os.path.getsize(filename) == 0:
         return domain_set, ipcidr_set, domain_regex_set
+
+    # 0. 安全防护：检查是否为二进制文件（如未解压的 srs/mrs 或其他二进制流），防止二进制乱码污染规则
+    try:
+        with open(filename, 'rb') as f:
+            chunk = f.read(512)
+            # 如果包含过多的非文本控制字符或空字节，说明它是二进制文件，不能用文本方式解析
+            if b'\x00' in chunk or sum(1 for b in chunk if b < 32 and b not in (9, 10, 13)) > 20:
+                print(f"[-] 警告: 发现文件 {filename} 包含二进制数据，跳过文本/JSON解析。")
+                return domain_set, ipcidr_set, domain_regex_set
+    except Exception:
+        pass
 
     # 1. 尝试作为 sing-box JSON 规则集解析
     try:

@@ -1,6 +1,6 @@
 # Mihomo 规则变更记录
 
-**更新时间：** 2026年8月16日18:57:12
+**更新时间：** 2026年8月16日19:02:29
 
 ---
 
@@ -36,20 +36,112 @@
 
 ## `domain/emby` (.yaml / .mrs)
 
-- 规则总数：**131**（+2）
+- 规则总数：**131**（+131）
 
-<details><summary>✅ 新增 2 条（点击展开）</summary>
+<details><summary>✅ 新增 131 条（点击展开）</summary>
 
 ```text
-gousen.cc.cd
-server2.cn2gias.uk
++.123456.al
++.404.sb
++.4545.cf
++.blueseacdn.com
++.cn-music.mefun.vip
++.cn2gias.uk
++.dandanplay.net
++.emby.ml
++.emby1.69yun69.com
++.embyplus.club
++.embyplus.org
++.emos.best
++.feverss.cloud
++.gfwemby.org
++.gousen.cc.cd
++.hongxingyunmovie.vip
++.ju.dog
++.kingemby.xyz
++.loseremby.org
++.media-1.co.uk
++.misakaf.org
++.mius.uk
++.nebula-emby.com
++.nvidia.rip
++.plex.direct
++.poloemby.xyz
++.pololine.ml
++.sadchicktv.com
++.server2.cn2gias.uk
++.sfcj.org
++.sgtv.ii00.cc
++.singularity.deja-vu.beauty
++.sptv.ii00.cc
++.stream.ntrrr.top
++.stream.synn.cc
++.texon.fans
++.yunti.online
++.yyssr.org
+agahk.odysseyplus.site
+agahk1.jmsooo.com
+agajp1.jmsooo.com
+agasg.odysseyplus.site
+agasg1.jmsooo.com
+aws.jmsooo.com
+az-hk.embyclub.com
+azsgp.embyclub.com
+cc.ccemby.tk
+cf.jmsooo.com
+cf.odysseyplus.site
+cf1.jmsooo.com
+... 等等
 ```
 </details>
 
 ## `domain/emby-cn` (.yaml / .mrs)
 
-- 规则总数：**38**（+0）
-- 无变化
+- 规则总数：**38**（+38）
+
+<details><summary>✅ 新增 38 条（点击展开）</summary>
+
+```text
++.array2026.cc
++.aurx.top
++.emby.yun
++.yuntv.de
+114514.fuckme.pushgoodcloud.com
+a.aurx.top
+ap-cn01.emby.bangumi.ca
+ap-cn02.emby.bangumi.ca
+ap-cn03.emby.bangumi.ca
+ap-cn04.emby.bangumi.ca
+b.aurx.top
+c.aurx.top
+dadakuai.552554.xyz
+direct.aurx.top
+emby.aurx.top
+emby1.ktsky.top
+emby2.sadchicktv.com
+emos.de5.net
+faemby.t21w2.cn
+faemby.wwcgrn.cn
+fd1.kingemby.xyz
+genshen.mihoyo.bbroot.com
+gy1.emby.yun
+gy2.emby.yun
+gy3.emby.yun
+mi2.miraiemby.com
+mi3.miraiemby.com
+prime.aurx.top
+s2.array2026.cc
+stream-1.jiedaibao.gs
+stream-2.miraiemby.com
+stream-3.miraiemby.com
+tyemby.klplay.top
+v.aurx.top
+vip1.miraiemby.com
+www.yuntv.de
+xg.yuntv.de
+xigua.yuntv.de
+```
+</details>
 
 ## `domain/fake-ip-filter` (.yaml / .mrs)
 
@@ -84,24 +176,7 @@ server2.cn2gias.uk
 ## `domain/microsoft` (.yaml / .mrs)
 
 - 规则总数：**750**（+0）
-
-<details><summary>✅ 新增 3 条（点击展开）</summary>
-
-```text
-*1drv*
-*onedrive*
-*skydrive*
-```
-</details>
-
-<details><summary>❌ 移除 3 条（点击展开）</summary>
-
-```text
-**1drv**
-**onedrive**
-**skydrive**
-```
-</details>
+- 无变化
 
 ## `domain/microsoft-cn` (.yaml / .mrs)
 
@@ -121,100 +196,7 @@ server2.cn2gias.uk
 ## `domain/proxy` (.yaml / .mrs)
 
 - 规则总数：**29629**（+0）
-
-<details><summary>✅ 新增 41 条（点击展开）</summary>
-
-```text
-*1drv*
-*1e100*
-*abema*
-*amazon*
-*appledaily*
-*avoddashs*
-*avtb*
-*bbcfmt*
-*beetalk*
-*binance*
-*blogspot*
-*browserleaks*
-*discord*
-*dlercloud*
-*dropbox*
-*facebook*
-*fbcdn*
-*gmail*
-*google*
-*huobi*
-*instagram*
-*jav*
-*metamask*
-*okx*
-*onedrive*
-*paypal*
-*pinterest*
-*porn*
-*sci-hub*
-*skydrive*
-*spotify*
-*telegram*
-*tiktok*
-*ttvnw*
-*twimg*
-*twitter*
-*uk-live*
-*voddazn*
-*whatsapp*
-*wikileaks*
-*youtube*
-```
-</details>
-
-<details><summary>❌ 移除 41 条（点击展开）</summary>
-
-```text
-**1drv**
-**1e100**
-**abema**
-**amazon**
-**appledaily**
-**avoddashs**
-**avtb**
-**bbcfmt**
-**beetalk**
-**binance**
-**blogspot**
-**browserleaks**
-**discord**
-**dlercloud**
-**dropbox**
-**facebook**
-**fbcdn**
-**gmail**
-**google**
-**huobi**
-**instagram**
-**jav**
-**metamask**
-**okx**
-**onedrive**
-**paypal**
-**pinterest**
-**porn**
-**sci-hub**
-**skydrive**
-**spotify**
-**telegram**
-**tiktok**
-**ttvnw**
-**twimg**
-**twitter**
-**uk-live**
-**voddazn**
-**whatsapp**
-**wikileaks**
-**youtube**
-```
-</details>
+- 无变化
 
 ## `domain/taiwan` (.yaml / .mrs)
 

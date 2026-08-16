@@ -1,3 +1,0 @@
-+.oplist.org
-DOMAIN-SUFFIX,lsposed.org
-DOMAIN-SUFFIX,lsposed.zip

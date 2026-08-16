@@ -238,9 +238,10 @@ def load_historical_rules(base_dir, geo_subfolder, rule_name, tool_type):
         if not target_yaml and not target_mrs:
             return None
         if not target_yaml and target_mrs:
-            target_yaml = os.path.join("temp_workspace", f"{rule_name}_mihomo_hist_dec.yaml")
+            # [修复 1] 修复临时文件名避免冲突，并将转换格式从 mrs 改为 yaml (解密 mrs 到 yaml)
+            target_yaml = os.path.join("temp_workspace", f"{geo_subfolder}_{rule_name}_mihomo_hist_dec.yaml")
             rule_type_str = "ipcidr" if geo_subfolder == "geoip" else "domain"
-            os.system(f"./mihomo convert-ruleset {rule_type_str} mrs {target_mrs} {target_yaml}")
+            os.system(f"./mihomo convert-ruleset {rule_type_str} yaml {target_mrs} {target_yaml}")
         rules = set()
         if os.path.exists(target_yaml):
             try:
@@ -265,7 +266,8 @@ def load_historical_rules(base_dir, geo_subfolder, rule_name, tool_type):
         if not target_json and not target_srs:
             return None
         if not target_json and target_srs:
-            target_json = os.path.join("temp_workspace", f"{rule_name}_singbox_hist_dec.json")
+            # [修复 2] 修复 singbox 历史解密文件的临时路径避免同名冲突
+            target_json = os.path.join("temp_workspace", f"{geo_subfolder}_{rule_name}_singbox_hist_dec.json")
             ret = os.system(f"./sing-box rule-set decompile {target_srs} --output {target_json}")
             if ret != 0 or not os.path.exists(target_json):
                 os.system(f"./sing-box rule-set decompile {target_srs} > {target_json}")
@@ -390,7 +392,8 @@ def export_rule_files(rule_name, rules_set, rule_type, formats, domain_regex_set
                     f.write(f"  - '{rule}'\n")
             temp_yaml_created = True
         
-        os.system(f"./mihomo convert-ruleset {rule_type} yaml {yaml_path} {mihomo_files['mrs']}")
+        # [修复 3] 将转换目标格式从 yaml 改为 mrs (编译 yaml 到 mrs)
+        os.system(f"./mihomo convert-ruleset {rule_type} mrs {yaml_path} {mihomo_files['mrs']}")
         
         if temp_yaml_created and "yaml" not in fmt_lower:
             if os.path.exists(yaml_path):
@@ -598,7 +601,8 @@ def main():
                     url_lower = url.lower()
                     if url_lower.endswith('.mrs'):
                         t_str = "ipcidr" if rule_type == "ipcidr" else "domain"
-                        ret = os.system(f"./mihomo convert-ruleset {t_str} mrs {temp_dl} {temp_txt}")
+                        # [修复 4] 下载远程 mrs 源时，解析解密应为 mrs -> yaml
+                        ret = os.system(f"./mihomo convert-ruleset {t_str} yaml {temp_dl} {temp_txt}")
                         if ret != 0 or not os.path.exists(temp_txt):
                             raise Exception("Mihomo 转换 mrs 失败")
                     elif url_lower.endswith('.srs'):

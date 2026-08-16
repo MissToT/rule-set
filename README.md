@@ -1,6 +1,6 @@
 # Sing-box 代理规则集
 
-最后更新: 2026-08-17 00:48:27 (UTC+8)
+最后更新: 2026-08-17 01:00:00 (UTC+8)
 
 ## GeoSite 域名规则
 
@@ -16,7 +16,7 @@
 | emby-cn | [SRS](geo/geosite/emby-cn.srs) | 38 |
 | fake-ip-filter | [SRS](geo/geosite/fake-ip-filter.srs) / [JSON](geo/geosite/fake-ip-filter.json) | 145 |
 | game-platforms-download | [SRS](geo/geosite/game-platforms-download.srs) / [JSON](geo/geosite/game-platforms-download.json) | 491 |
-| games | [SRS](geo/geosite/games.srs) / [JSON](geo/geosite/games.json) | 863 |
+| games | [SRS](geo/geosite/games.srs) / [JSON](geo/geosite/games.json) | 1,341 |
 | google | [SRS](geo/geosite/google.srs) / [JSON](geo/geosite/google.json) | 1,047 |
 | googlefcm | [SRS](geo/geosite/googlefcm.srs) / [JSON](geo/geosite/googlefcm.json) | 7 |
 | japan | [SRS](geo/geosite/japan.srs) / [JSON](geo/geosite/japan.json) | 40 |

@@ -110,6 +110,7 @@ def parse_mixed_rules_to_buckets(filename):
     except Exception:
         pass
 
+    # 优先尝试作为 JSON 格式解析（如 sing-box 源码规则集 JSON）
     try:
         with open(filename, 'r', encoding='utf-8') as f:
             data = json.load(f)
@@ -147,9 +148,12 @@ def parse_mixed_rules_to_buckets(filename):
                             except ValueError:
                                 continue
                 return domain_set, ipcidr_set, domain_regex_set
+    except json.JSONDecodeError:
+        pass
     except Exception:
         pass
 
+    # 逐行文本解析
     with open(filename, 'r', encoding='utf-8', errors='ignore') as f:
         for line in f:
             line = line.strip()
@@ -388,10 +392,8 @@ def export_rule_files(rule_name, rules_set, rule_type, formats, domain_regex_set
                     f.write(f"  - '{rule}'\n")
             temp_yaml_created = True
         
-        temp_txt_path = f"temp_workspace/merged_{rule_name}_{rule_type}.txt"
-        with open(temp_txt_path, 'w', encoding='utf-8') as f:
-            f.write("\n".join(sorted(rules_set)))
-        os.system(f"./mihomo convert-ruleset {rule_type} text {temp_txt_path} {mihomo_files['mrs']}")
+        # 修正：Mihomo convert-ruleset 格式应为 yaml 而非 text
+        os.system(f"./mihomo convert-ruleset {rule_type} yaml {yaml_path} {mihomo_files['mrs']}")
         
         if temp_yaml_created and "yaml" not in fmt_lower:
             if os.path.exists(yaml_path):
@@ -589,7 +591,6 @@ def main():
                     
                     d_set, ip_set, dr_set = parse_mixed_rules_to_buckets(temp_txt)
                     
-                    # [DEBUG] 打印单个源解析出的条数
                     print(f"[DEBUG] 规则 [{rule_name}] ({action_type} 源: {url}) -> 域名:{len(d_set)}, IP:{len(ip_set)}, 正则:{len(dr_set)}")
                     
                     if action_type == "include":
@@ -609,7 +610,6 @@ def main():
                 custom_file = os.path.join("rules", action, rule_type, f"{rule_name}.txt")
                 if os.path.exists(custom_file):
                     d_set, ip_set, dr_set = parse_mixed_rules_to_buckets(custom_file)
-                    # [DEBUG] 打印本地覆写规则条数
                     print(f"[DEBUG] 规则 [{rule_name}] (本地覆写 {action}: {custom_file}) -> 域名:{len(d_set)}, IP:{len(ip_set)}, 正则:{len(dr_set)}")
                     if action == "exclude":
                         base_domain_set -= d_set
@@ -677,7 +677,6 @@ def main():
             merged_rules = data["domain"]
             merged_regex = data["regex"]
             
-            # [DEBUG] 打印 domain 类型合并后的最终条数
             print(f"[DEBUG] 规则 [{rule_name}] (domain类型) 最终合并后 -> 域名/后缀数: {len(merged_rules)}, 正则数: {len(merged_regex)}")
 
             if not merged_rules and not merged_regex:
@@ -713,7 +712,6 @@ def main():
         elif rule_type == "ipcidr":
             raw_ips = data["ip"]
             
-            # [DEBUG] 打印 ipcidr 类型合并前的原始IP数
             print(f"[DEBUG] 规则 [{rule_name}] (ipcidr类型) 合并前原始IP数: {len(raw_ips)}")
 
             if not raw_ips:
@@ -819,11 +817,9 @@ def main():
                 singbox_changes[f"ipcidr/{rule_name}"] = {"total": len(singbox_new_set), "prev_total": len(prev_singbox_ip) if prev_singbox_ip is not None else None, "added": s_added, "removed": s_removed}
 
     generate_change_report(mihomo_changes, singbox_changes, global_commit_msgs)
+    
     with open("commit_msgs.json", "w", encoding="utf-8") as f:
-        json.dump(global_commit_msgs, f, ensure_ascii=False, indent=2)
-
-    shutil.rmtree("temp_workspace", ignore_errors=True)
-    print("\n[√] 所有任务完成！")
+        json.dump(global_commit_msgs, f, indent=2, ensure_ascii=False)
 
 if __name__ == "__main__":
     main()

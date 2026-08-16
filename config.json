@@ -1,180 +1,183 @@
 {
+  "settings": {
+    "enable_local": true
+  },
   "domain": {
     "china": {
-      "local": true,
-      "add": [
+      "enable_local": true,
+      "include": [
         "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/cn.srs",
         "https://github.com/QuixoticHeart/rule-set/blob/ruleset/singbox/version2/cn.srs"
       ],
-      "remove": []
+      "exclude": []
     },
     "adblock": {
-      "local": true,
-      "add": [
+      "enable_local": true,
+      "include": [
         "https://anti-ad.net/mihomo.mrs"
       ],
-      "remove": []
+      "exclude": []
     },
     "fake-ip-filter": {
-      "local": true,
-      "add": [
+      "enable_local": true,
+      "include": [
         "https://github.com/QuixoticHeart/rule-set/blob/ruleset/singbox/version2/fake-ip-filter.srs"
       ],
-      "remove": []
+      "exclude": []
     },
     "japan": {
-      "local": true,
-      "add": [
+      "enable_local": true,
+      "include": [
         "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/dlsite.srs",
         "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/dmm.srs",
         "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/pixiv.srs"
       ],
-      "remove": []
+      "exclude": []
     },
     "taiwan": {
-      "local": true,
-      "add": [
+      "enable_local": true,
+      "include": [
         "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/bahamut.srs",
         "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/manhuagui.srs"
       ],
-      "remove": []
+      "exclude": []
     }
   },
   "ipcidr": {
     "china": {
-      "local": true,
-      "add": [
+      "enable_local": true,
+      "include": [
         "https://github.com/QuixoticHeart/rule-set/blob/ruleset/singbox/version2/cncidr.srs",
         "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geoip/cn.srs"
       ],
-      "remove": []
+      "exclude": []
     }
   },
   "classical": {
     "proxy": {
-      "local": true,
-      "add": [
+      "enable_local": true,
+      "include": [
         "https://github.com/QuixoticHeart/rule-set/blob/ruleset/singbox/version2/proxy.srs"
       ],
-      "remove": []
+      "exclude": []
     },
     "google": {
-      "local": true,
-      "add": [
+      "enable_local": true,
+      "include": [
         "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/google.srs",
         "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geoip/google.srs"
       ],
-      "remove": []
+      "exclude": []
     },
     "googlefcm": {
-      "local": true,
-      "add": [
+      "enable_local": true,
+      "include": [
         "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/googlefcm%40!cn.srs"
       ],
-      "remove": []
+      "exclude": []
     },
     "cloudflare": {
-      "local": true,
-      "add": [
+      "enable_local": true,
+      "include": [
         "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geoip/cloudflare.srs",
         "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/cloudflare.srs"
       ],
-      "remove": []
+      "exclude": []
     },
     "cloudflare-cn": {
-      "local": true,
-      "add": [
+      "enable_local": true,
+      "include": [
         "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/cloudflare-cn.srs"
       ],
-      "remove": []
+      "exclude": []
     },
     "microsoft": {
-      "local": true,
-      "add": [
+      "enable_local": true,
+      "include": [
         "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/microsoft.srs"
       ],
-      "remove": []
+      "exclude": []
     },
     "microsoft-cn": {
-      "local": true,
-      "add": [
+      "enable_local": true,
+      "include": [
         "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/microsoft%40cn.srs"
       ],
-      "remove": []
+      "exclude": []
     },
     "mihoyo-cn": {
-      "local": true,
-      "add": [
+      "enable_local": true,
+      "include": [
         "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/mihoyo-cn.srs"
       ],
-      "remove": []
+      "exclude": []
     },
     "ai": {
-      "local": true,
-      "add": [
+      "enable_local": true,
+      "include": [
         "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/category-ai-!cn.srs",
         "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geoip/ai.srs"
       ],
-      "remove": []
+      "exclude": []
     },
     "games": {
-      "local": true,
-      "add": [
+      "enable_local": true,
+      "include": [
         "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/category-games-!cn.srs"
       ],
-      "remove": []
+      "exclude": []
     },
     "game-platforms-download": {
-      "local": true,
-      "add": [
+      "enable_local": true,
+      "include": [
         "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/category-game-platforms-download.srs"
       ],
-      "remove": []
+      "exclude": []
     },
     "ehentai": {
-      "local": true,
-      "add": [
+      "enable_local": true,
+      "include": [
         "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/ehentai.srs"
       ],
-      "remove": []
+      "exclude": []
     },
     "youtube": {
-      "local": true,
-      "add": [
+      "enable_local": true,
+      "include": [
         "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/youtube.srs"
       ],
-      "remove": []
+      "exclude": []
     },
     "tiktok": {
-      "local": true,
-      "add": [
+      "enable_local": true,
+      "include": [
         "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/tiktok.srs"
       ],
-      "remove": []
+      "exclude": []
     },
     "telegram": {
-      "local": true,
-      "add": [
+      "enable_local": true,
+      "include": [
         "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/telegram.srs",
         "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geoip/telegram.srs"
       ],
-      "remove": []
+      "exclude": []
     },
     "twitter": {
-      "local": true,
-      "add": [
+      "enable_local": true,
+      "include": [
         "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/twitter.srs",
         "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geoip/twitter.srs"
       ],
-      "remove": []
+      "exclude": []
     },
     "private": {
-      "local": true,
-      "add": [
+      "enable_local": true,
+      "include": [
         "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geoip/private.srs",
         "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/private.srs"
       ],
-      "remove": []
+      "exclude": []
     }
   }
 }

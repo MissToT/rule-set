@@ -1,2 +1,3 @@
 # 咸鱼广告域名屏蔽会导致功耗异常
 +.px.ucweb.com
+px.ucweb.com

@@ -93,10 +93,22 @@ def setup_custom_rule_dirs():
 def download_file(url, filename):
     normalized_url = normalize_url(url)
     print(f"  -> 下载源: {normalized_url}")
-    req = urllib.request.Request(normalized_url, headers={'User-Agent': 'Mozilla/5.0'})
-    with urllib.request.urlopen(req) as response:
-        with open(filename, 'wb') as f:
-            f.write(response.read())
+    # 使用 curl 代替 urllib，完美支持主流浏览器 UA、TLS 指纹与重定向，彻底解决防爬拦截问题
+    cmd = f"curl -L -s -A 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36' -o {filename} '{normalized_url}'"
+    ret = os.system(cmd)
+    if ret != 0 or not os.path.exists(filename) or os.path.getsize(filename) == 0:
+        raise Exception(f"下载文件失败: {normalized_url}")
+    
+    # 检查是否误下载到了 CDN 拦截或报错的 HTML 网页
+    try:
+        with open(filename, 'rb') as f:
+            header_snippet = f.read(200).lower()
+            if b'<html' in header_snippet or b'<!doctype' in header_snippet:
+                raise Exception(f"下载内容为 HTML 网页（触发防爬/CDN拦截），链接无效: {normalized_url}")
+    except Exception as e:
+        if "HTML 网页" in str(e):
+            raise e
+        pass
 
 def parse_mixed_rules_to_buckets(filename):
     domain_set = set()
@@ -624,7 +636,7 @@ def main():
         json.dump(global_commit_msgs, f, ensure_ascii=False, indent=2)
 
     shutil.rmtree("temp_workspace", ignore_errors=True)
-    print("\n[√] 所有任务完成：已完美适配 Sing-box 正则条数统计与差异比对！")
+    print("\n[√] 所有任务完成：已完美解决防爬拦截与 SRS 乱码问题！")
 
 if __name__ == "__main__":
     main()

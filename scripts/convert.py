@@ -45,15 +45,15 @@ def curl_download(url, output):
     cmd = f"curl -L -s -A 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36' -o {output} '{normalized_url}'"
     ret = os.system(cmd)
     if ret != 0 or not os.path.exists(output) or os.path.getsize(output) == 0:
-        raise Exception(f"下载文件失败: {normalized_url}")
+        raise Exception(f"下载过程异常或文件为空")
     
     try:
         with open(output, 'rb') as f:
             header_snippet = f.read(200).lower()
             if b'<html' in header_snippet or b'<!doctype' in header_snippet:
-                raise Exception(f"下载内容为 HTML 网页（触发防爬/CDN拦截），链接无效: {normalized_url}")
+                raise Exception(f"下载内容为 HTML 网页（触发防爬/CDN拦截）")
     except Exception as e:
-        if "HTML 网页" in str(e):
+        if "HTML" in str(e):
             raise e
         pass
 
@@ -119,17 +119,17 @@ def parse_mixed_rules_to_buckets(filename):
     if not os.path.exists(filename) or os.path.getsize(filename) == 0:
         return domain_set, ipcidr_set, domain_regex_set
 
-    # 0. 安全防护：检查是否为二进制文件（如未解压的 srs/mrs 或其他二进制流），防止二进制乱码污染规则
+    # 安全防护：检查是否为二进制文件
     try:
         with open(filename, 'rb') as f:
             chunk = f.read(512)
             if b'\x00' in chunk or sum(1 for b in chunk if b < 32 and b not in (9, 10, 13)) > 20:
-                print(f"[-] 警告: 发现文件 {filename} 包含二进制数据，跳过文本/JSON解析。")
+                print(f"[-] 警告: 发现文件 {filename} 包含二进制数据，跳过文本解析。")
                 return domain_set, ipcidr_set, domain_regex_set
     except Exception:
         pass
 
-    # 1. 尝试作为 sing-box JSON 规则集解析
+    # 1. 尝试作为 sing-box JSON 解析
     try:
         with open(filename, 'r', encoding='utf-8') as f:
             data = json.load(f)
@@ -174,16 +174,14 @@ def parse_mixed_rules_to_buckets(filename):
     with open(filename, 'r', encoding='utf-8', errors='ignore') as f:
         for line in f:
             line = line.strip()
-            if not line or line.startswith('#'):
-                continue
+            if not line or line.startswith('#'): continue
             if line.startswith("'") and line.endswith("'"): line = line[1:-1]
             if line.startswith('"') and line.endswith('"'): line = line[1:-1]
             if line.startswith('- '):
                 line = line[2:].strip()
                 if line.startswith("'") and line.endswith("'"): line = line[1:-1]
                 if line.startswith('"') and line.endswith('"'): line = line[1:-1]
-            if line == 'payload:':
-                continue
+            if line == 'payload:': continue
 
             if ',' in line:
                 parts = [p.strip() for p in line.split(',')]
@@ -218,13 +216,10 @@ def parse_mixed_rules_to_buckets(filename):
             elif pfx in ('DOMAIN', 'DOMAIN-KEYWORD'):
                 val = parts[1] if len(parts) > 1 else ''
                 if val:
-                    if pfx == 'DOMAIN-KEYWORD':
-                        domain_set.add(f"*{val}*")
-                    else:
-                        domain_set.add(val)
+                    if pfx == 'DOMAIN-KEYWORD': domain_set.add(f"*{val}*")
+                    else: domain_set.add(val)
                     continue
 
-            # 处理裸露带通配符或纯域名的行
             if line.startswith('+.'):
                 domain_set.add(line)
                 continue
@@ -241,10 +236,8 @@ def parse_mixed_rules_to_buckets(filename):
                 pass
 
             if line:
-                if '.' not in line:
-                    domain_set.add(f"*{line}*")
-                else:
-                    domain_set.add(line)
+                if '.' not in line: domain_set.add(f"*{line}*")
+                else: domain_set.add(line)
 
     return domain_set, ipcidr_set, domain_regex_set
 
@@ -261,7 +254,6 @@ def load_prev_mihomo_rules(geo_subfolder, rule_name):
                         if val.startswith("'") and val.endswith("'"): val = val[1:-1]
                         if val.startswith('"') and val.endswith('"'): val = val[1:-1]
                         if val:
-                            # 归一化旧版点号前缀为 + 号前缀，避免历史 Diff 抖动
                             if val.startswith('.') and not val.startswith('+.'):
                                 val = f"+.{val.lstrip('.')}"
                             rules.add(val)
@@ -358,13 +350,11 @@ def export_four_formats(rule_name, rules_set, rule_type, domain_regex_set=None):
     os.makedirs(mihomo_dir,  exist_ok=True)
     os.makedirs(singbox_dir, exist_ok=True)
 
-    # Mihomo 导出：不包含 DOMAIN-REGEX
     with open(f"{mihomo_dir}/{rule_name}.yaml", 'w', encoding='utf-8') as f:
         f.write("payload:\n")
         for rule in sorted(rules_set):
             f.write(f"  - '{rule}'\n")
 
-    # Sing-box 导出：包含 DOMAIN-REGEX
     with open(f"{singbox_dir}/{rule_name}.json", 'w', encoding='utf-8') as f:
         if is_ip:
             json.dump({"version": 2, "rules": [{"ip_cidr": sorted(list(rules_set))}]}, f, indent=2, ensure_ascii=False)
@@ -453,41 +443,47 @@ def main():
     # 1. 处理 domain 和 ipcidr 常规规则
     for rule_type in ["domain", "ipcidr"]:
         rules_dict = RULES_CONFIG.get(rule_type, {})
+        if not rules_dict: continue
         print(f"\n[*] 开始批量构建 [{rule_type.upper()}] 分流规则...")
 
-        all_rule_names = set(rules_dict.keys())
-
-        for rule_name in sorted(all_rule_names):
+        for rule_name in sorted(rules_dict.keys()):
             print(f"\n[+] 处理规则集: {rule_name}")
             merged_rules = set()
             merged_domain_regex = set()
 
             urls = rules_dict.get(rule_name, [])
             for i, url in enumerate(urls):
-                temp_dl = f"temp_workspace/{rule_name}_{i}.dl"
-                temp_txt = f"temp_workspace/{rule_name}_{i}.txt"
-                curl_download(url, temp_dl)
-                
-                url_lower = url.lower()
-                if url_lower.endswith('.mrs'):
-                    ret = os.system(f"./mihomo convert-ruleset {rule_type} mrs {temp_dl} {temp_txt}")
-                    if ret != 0 or not os.path.exists(temp_txt):
-                        raise Exception(f"Mihomo 转换 mrs 失败: {url}")
-                elif url_lower.endswith('.srs'):
-                    temp_json = f"temp_workspace/{rule_name}_{i}.json"
-                    ret = os.system(f"./sing-box rule-set decompile {temp_dl} --output {temp_json}")
-                    if ret != 0 or not os.path.exists(temp_json) or os.path.getsize(temp_json) == 0:
-                        raise Exception(f"Sing-box 反编译 srs 失败: {url}")
-                    temp_txt = temp_json
-                else:
-                    shutil.copy(temp_dl, temp_txt)
-                
-                d_set, ip_set, dr_set = parse_mixed_rules_to_buckets(temp_txt)
-                if rule_type == "ipcidr":
-                    merged_rules |= ip_set
-                else:
-                    merged_rules |= d_set
-                    merged_domain_regex |= dr_set
+                try:
+                    temp_dl = f"temp_workspace/{rule_name}_{i}.dl"
+                    temp_txt = f"temp_workspace/{rule_name}_{i}.txt"
+                    
+                    # 下载文件，如果失败会抛出异常跳转到 except
+                    curl_download(url, temp_dl)
+                    
+                    url_lower = url.lower()
+                    if url_lower.endswith('.mrs'):
+                        ret = os.system(f"./mihomo convert-ruleset {rule_type} mrs {temp_dl} {temp_txt}")
+                        if ret != 0 or not os.path.exists(temp_txt):
+                            raise Exception("Mihomo 转换 mrs 失败")
+                    elif url_lower.endswith('.srs'):
+                        temp_json = f"temp_workspace/{rule_name}_{i}.json"
+                        ret = os.system(f"./sing-box rule-set decompile {temp_dl} --output {temp_json}")
+                        if ret != 0 or not os.path.exists(temp_json) or os.path.getsize(temp_json) == 0:
+                            raise Exception("Sing-box 反编译 srs 失败")
+                        temp_txt = temp_json
+                    else:
+                        shutil.copy(temp_dl, temp_txt)
+                    
+                    d_set, ip_set, dr_set = parse_mixed_rules_to_buckets(temp_txt)
+                    if rule_type == "ipcidr":
+                        merged_rules |= ip_set
+                    else:
+                        merged_rules |= d_set
+                        merged_domain_regex |= dr_set
+
+                except Exception as e:
+                    print(f"[-] 警告：处理规则源跳过 | {url} -> {e}")
+                    continue  # 核心：发生任何错误都不中断程序，继续处理下一个链接
 
             for action in ["remove", "add"]:
                 custom_file = os.path.join("rules", action, rule_type, f"{rule_name}.txt")
@@ -565,28 +561,34 @@ def main():
             mixed_domain_regex_set = set()
 
             for i, url in enumerate(urls):
-                temp_dl = f"temp_workspace/classical_{rule_name}_{i}.dl"
-                temp_txt = f"temp_workspace/classical_{rule_name}_{i}.txt"
-                curl_download(url, temp_dl)
-                
-                url_lower = url.lower()
-                if url_lower.endswith('.mrs'):
-                    ret = os.system(f"./mihomo convert-ruleset domain mrs {temp_dl} {temp_txt}")
-                    if ret != 0 or not os.path.exists(temp_txt):
-                        raise Exception(f"Mihomo 转换 mrs 失败: {url}")
-                elif url_lower.endswith('.srs'):
-                    temp_json = f"temp_workspace/classical_{rule_name}_{i}.json"
-                    ret = os.system(f"./sing-box rule-set decompile {temp_dl} --output {temp_json}")
-                    if ret != 0 or not os.path.exists(temp_json) or os.path.getsize(temp_json) == 0:
-                        raise Exception(f"Sing-box 反编译 srs 失败: {url}")
-                    temp_txt = temp_json
-                else:
-                    shutil.copy(temp_dl, temp_txt)
+                try:
+                    temp_dl = f"temp_workspace/classical_{rule_name}_{i}.dl"
+                    temp_txt = f"temp_workspace/classical_{rule_name}_{i}.txt"
+                    
+                    curl_download(url, temp_dl)
+                    
+                    url_lower = url.lower()
+                    if url_lower.endswith('.mrs'):
+                        ret = os.system(f"./mihomo convert-ruleset domain mrs {temp_dl} {temp_txt}")
+                        if ret != 0 or not os.path.exists(temp_txt):
+                            raise Exception("Mihomo 转换 mrs 失败")
+                    elif url_lower.endswith('.srs'):
+                        temp_json = f"temp_workspace/classical_{rule_name}_{i}.json"
+                        ret = os.system(f"./sing-box rule-set decompile {temp_dl} --output {temp_json}")
+                        if ret != 0 or not os.path.exists(temp_json) or os.path.getsize(temp_json) == 0:
+                            raise Exception("Sing-box 反编译 srs 失败")
+                        temp_txt = temp_json
+                    else:
+                        shutil.copy(temp_dl, temp_txt)
 
-                d_set, ip_set, dr_set = parse_mixed_rules_to_buckets(temp_txt)
-                mixed_domain_set |= d_set
-                mixed_ip_set |= ip_set
-                mixed_domain_regex_set |= dr_set
+                    d_set, ip_set, dr_set = parse_mixed_rules_to_buckets(temp_txt)
+                    mixed_domain_set |= d_set
+                    mixed_ip_set |= ip_set
+                    mixed_domain_regex_set |= dr_set
+                    
+                except Exception as e:
+                    print(f"[-] 警告：处理规则源跳过 | {url} -> {e}")
+                    continue  # 同样地，这里如果某条混合规则出问题，直接跳过并继续
 
             for action in ["remove", "add"]:
                 custom_file = os.path.join("rules", action, "classical", f"{rule_name}.txt")
@@ -676,7 +678,7 @@ def main():
         json.dump(global_commit_msgs, f, ensure_ascii=False, indent=2)
 
     shutil.rmtree("temp_workspace", ignore_errors=True)
-    print("\n[√] 所有任务完成：已完美支持字符串与数组混排的上游规则！")
+    print("\n[√] 所有任务完成：已支持错误捕获与容错跳过！")
 
 if __name__ == "__main__":
     main()

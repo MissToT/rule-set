@@ -1,0 +1,37 @@
+{
+  "domain": {
+    "china": [
+      "https://github.com/QuixoticHeart/rule-set/raw/ruleset/meta/domain/cn.mrs",
+      "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geosite/cn.mrs"
+    ],
+    "proxy": [
+      "https://github.com/QuixoticHeart/rule-set/raw/ruleset/meta/domain/proxy.mrs"
+    ],
+    "adblock": [
+      "https://github.com/privacy-protection-tools/anti-ad.github.io/raw/master/docs/mihomo.mrs"
+    ],
+    "japan": [
+      "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geosite/dlsite.mrs",
+      "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geosite/dmm.mrs",
+      "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geosite/pixiv.mrs"
+    ],
+    "taiwan": [
+      "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geosite/bahamut.mrs",
+      "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geosite/manhuagui.mrs"
+    ]
+  },
+  "ipcidr": {
+    "china": [
+      "https://github.com/QuixoticHeart/rule-set/raw/ruleset/meta/ipcidr/cn.mrs",
+      "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geoip/cn.mrs"
+    ],
+    "proxy": [
+      "https://github.com/QuixoticHeart/rule-set/raw/ruleset/meta/ipcidr/proxy.mrs"
+    ]
+  },
+  "classical": {
+    "speedtest": [
+      "https://raw.githubusercontent.com/QuixoticHeart/rule-set/refs/heads/ruleset/meta/classical/speedtest.list"
+    ]
+  }
+}

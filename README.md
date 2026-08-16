@@ -1,7 +1,7 @@
 # 🛡️ Mihomo 代理规则集
 
 > 自动化构建的多格式代理规则订阅源。
-> **更新时间：** 2026年8月16日19:26:33
+> **更新时间：** 2026年8月16日19:32:43
 
 ## 📂 GeoSite 域名规则
 
@@ -9,7 +9,7 @@
 | :--- | :--- | :---: |
 | `adblock` | [MRS](geo/geosite/adblock.mrs) · [YAML](geo/geosite/adblock.yaml) | **100386** |
 | `ai` | [MRS](geo/geosite/ai.mrs) · [YAML](geo/geosite/ai.yaml) | **173** |
-| `china` | [MRS](geo/geosite/china.mrs) · [YAML](geo/geosite/china.yaml) | **112774** |
+| `china` | [MRS](geo/geosite/china.mrs) | **112774** |
 | `cloudflare` | [MRS](geo/geosite/cloudflare.mrs) · [YAML](geo/geosite/cloudflare.yaml) | **76** |
 | `cloudflare-cn` | [MRS](geo/geosite/cloudflare-cn.mrs) · [YAML](geo/geosite/cloudflare-cn.yaml) | **19** |
 | `ehentai` | [MRS](geo/geosite/ehentai.mrs) · [YAML](geo/geosite/ehentai.yaml) | **8** |

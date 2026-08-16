@@ -79,13 +79,11 @@ def setup_binaries():
     print("[*] 内核准备完毕并已赋权。")
 
 def setup_custom_rule_dirs():
-    # 自动根据 config.json 中的规则名称，在 include 和 exclude 目录下生成对应的 .txt 模板文件
     for action in ["include", "exclude"]:
         for rule_type in ["domain", "ipcidr", "classical"]:
             dir_path = os.path.join("rules", action, rule_type)
             os.makedirs(dir_path, exist_ok=True)
             
-            # 获取当前类型下在 config.json 中定义的所有规则名称
             rule_names = RULES_CONFIG.get(rule_type, {}).keys()
             for rule_name in rule_names:
                 file_path = os.path.join(dir_path, f"{rule_name}.txt")
@@ -354,7 +352,7 @@ def export_bypass_txt_files(v4_collapsed, v6_collapsed, commit_msgs):
     with open(os.path.join("bypass_out", "README.md"), "w", encoding="utf-8") as f:
         f.write("".join(lines))
 
-def export_four_formats(rule_name, rules_set, rule_type, domain_regex_set=None):
+def export_rule_files(rule_name, rules_set, rule_type, formats, domain_regex_set=None):
     if domain_regex_set is None:
         domain_regex_set = set()
     is_ip = (rule_type == "ipcidr")
@@ -363,39 +361,73 @@ def export_four_formats(rule_name, rules_set, rule_type, domain_regex_set=None):
     os.makedirs(mihomo_dir,  exist_ok=True)
     os.makedirs(singbox_dir, exist_ok=True)
 
-    with open(f"{mihomo_dir}/{rule_name}.yaml", 'w', encoding='utf-8') as f:
-        f.write("payload:\n")
-        for rule in sorted(rules_set):
-            f.write(f"  - '{rule}'\n")
+    # 规范化 formats 转换为小写
+    fmt_lower = [f.lower() for f in formats]
 
-    with open(f"{singbox_dir}/{rule_name}.json", 'w', encoding='utf-8') as f:
-        if is_ip:
-            json.dump({"version": 2, "rules": [{"ip_cidr": sorted(list(rules_set))}]}, f, indent=2, ensure_ascii=False)
-        else:
-            domains, suffixes, keywords = [], [], []
-            for r in sorted(rules_set):
-                if r.startswith('*') and r.endswith('*'):
-                    keywords.append(r[1:-1])
-                elif r.startswith('+.'):
-                    suffixes.append(r[2:])
-                elif r.startswith('.'):
-                    suffixes.append(r[1:])
-                else:
-                    domains.append(r)
-            
-            rule_obj = {}
-            if domains: rule_obj["domain"] = domains
-            if suffixes: rule_obj["domain_suffix"] = suffixes
-            if keywords: rule_obj["domain_keyword"] = keywords
-            if domain_regex_set: rule_obj["domain_regex"] = sorted(list(domain_regex_set))
-            
-            json.dump({"version": 2, "rules": [rule_obj]}, f, indent=2, ensure_ascii=False)
+    if "yaml" in fmt_lower:
+        with open(f"{mihomo_dir}/{rule_name}.yaml", 'w', encoding='utf-8') as f:
+            f.write("payload:\n")
+            for rule in sorted(rules_set):
+                f.write(f"  - '{rule}'\n")
 
-    temp_txt_path = f"temp_workspace/merged_{rule_name}_{rule_type}.txt"
-    with open(temp_txt_path, 'w', encoding='utf-8') as f:
-        f.write("\n".join(sorted(rules_set)))
-    os.system(f"./mihomo convert-ruleset {rule_type} text {temp_txt_path} {mihomo_dir}/{rule_name}.mrs")
-    os.system(f"./sing-box rule-set compile --output {singbox_dir}/{rule_name}.srs {singbox_dir}/{rule_name}.json")
+    if "mrs" in fmt_lower:
+        # mrs 转换需要依赖 yaml 文件
+        yaml_path = f"{mihomo_dir}/{rule_name}.yaml"
+        if not os.path.exists(yaml_path):
+            with open(yaml_path, 'w', encoding='utf-8') as f:
+                f.write("payload:\n")
+                for rule in sorted(rules_set):
+                    f.write(f"  - '{rule}'\n")
+        temp_txt_path = f"temp_workspace/merged_{rule_name}_{rule_type}.txt"
+        with open(temp_txt_path, 'w', encoding='utf-8') as f:
+            f.write("\n".join(sorted(rules_set)))
+        os.system(f"./mihomo convert-ruleset {rule_type} text {temp_txt_path} {mihomo_dir}/{rule_name}.mrs")
+
+    if "json" in fmt_lower:
+        with open(f"{singbox_dir}/{rule_name}.json", 'w', encoding='utf-8') as f:
+            if is_ip:
+                json.dump({"version": 2, "rules": [{"ip_cidr": sorted(list(rules_set))}]}, f, indent=2, ensure_ascii=False)
+            else:
+                domains, suffixes, keywords = [], [], []
+                for r in sorted(rules_set):
+                    if r.startswith('*') and r.endswith('*'):
+                        keywords.append(r[1:-1])
+                    elif r.startswith('+.'):
+                        suffixes.append(r[2:])
+                    elif r.startswith('.'):
+                        suffixes.append(r[1:])
+                    else:
+                        domains.append(r)
+                
+                rule_obj = {}
+                if domains: rule_obj["domain"] = domains
+                if suffixes: rule_obj["domain_suffix"] = suffixes
+                if keywords: rule_obj["domain_keyword"] = keywords
+                if domain_regex_set: rule_obj["domain_regex"] = sorted(list(domain_regex_set))
+                
+                json.dump({"version": 2, "rules": [rule_obj]}, f, indent=2, ensure_ascii=False)
+
+    if "srs" in fmt_lower:
+        json_path = f"{singbox_dir}/{rule_name}.json"
+        if not os.path.exists(json_path):
+            if is_ip:
+                with open(json_path, 'w', encoding='utf-8') as f:
+                    json.dump({"version": 2, "rules": [{"ip_cidr": sorted(list(rules_set))}]}, f, indent=2, ensure_ascii=False)
+            else:
+                domains, suffixes, keywords = [], [], []
+                for r in sorted(rules_set):
+                    if r.startswith('*') and r.endswith('*'): keywords.append(r[1:-1])
+                    elif r.startswith('+.'): suffixes.append(r[2:])
+                    elif r.startswith('.'): suffixes.append(r[1:])
+                    else: domains.append(r)
+                rule_obj = {}
+                if domains: rule_obj["domain"] = domains
+                if suffixes: rule_obj["domain_suffix"] = suffixes
+                if keywords: rule_obj["domain_keyword"] = keywords
+                if domain_regex_set: rule_obj["domain_regex"] = sorted(list(domain_regex_set))
+                with open(json_path, 'w', encoding='utf-8') as f:
+                    json.dump({"version": 2, "rules": [rule_obj]}, f, indent=2, ensure_ascii=False)
+        os.system(f"./sing-box rule-set compile --output {singbox_dir}/{rule_name}.srs {singbox_dir}/{rule_name}.json")
 
 def generate_change_report(mihomo_changes, singbox_changes, commit_msgs):
     now = datetime.now(timezone(timedelta(hours=8)))
@@ -453,321 +485,293 @@ def main():
     now = datetime.now(timezone(timedelta(hours=8)))
     time_str = f"{now.year}年{now.month}月{now.day}日{now.strftime('%H:%M:%S')}"
 
-    # 读取全局 enable_local 配置，默认开启
-    global_enable_local = RULES_CONFIG.get("settings", {}).get("enable_local", True)
+    settings = RULES_CONFIG.get("settings", {})
+    global_enable_local = settings.get("enable_local", True)
+    global_formats = settings.get("formats", ["mrs", "yaml", "srs", "json"])
 
-    # 1. 处理 domain 和 ipcidr 常规规则
-    for rule_type in ["domain", "ipcidr"]:
-        rule_names = set(RULES_CONFIG.get(rule_type, {}).keys())
-        
-        # 无论全局开关如何，先全量扫描本地规则收集名称，方便后续判断和过滤
+    # 缓存所有解析好的原始规则集，用于后续 inline 引用
+    # 结构: rule_cache[rule_name] = {"type": type, "domain": set, "ip": set, "regex": set, "formats": list}
+    rule_cache = {}
+
+    # 预先收集所有规则名称（来自配置及本地目录）
+    all_rule_defs = [] # 存储元组 (rule_type, rule_name, rule_config)
+    
+    for rule_type in ["domain", "ipcidr", "classical"]:
+        type_dict = RULES_CONFIG.get(rule_type, {})
+        rule_names = set(type_dict.keys())
         for action in ["include", "exclude"]:
             dir_path = os.path.join("rules", action, rule_type)
             if os.path.exists(dir_path):
                 for filename in os.listdir(dir_path):
                     if filename.endswith(".txt"):
                         rule_names.add(filename[:-4])
-
-        if not rule_names: continue
-        print(f"\n[*] 开始批量构建 [{rule_type.upper()}] 分流规则...")
-
+        
         for rule_name in sorted(rule_names):
-            rule_config = RULES_CONFIG.get(rule_type, {}).get(rule_name)
+            rule_config = type_dict.get(rule_name, {})
+            all_rule_defs.append((rule_type, rule_name, rule_config))
 
-            if isinstance(rule_config, dict):
-                include_urls = rule_config.get("include", [])
-                exclude_urls = rule_config.get("exclude", [])
-                # 局部规则如果有声明 enable_local，则覆盖（掩盖）全局设置
-                final_enable_local = rule_config.get("enable_local", global_enable_local)
-            elif isinstance(rule_config, list):
-                include_urls = rule_config
-                exclude_urls = []
-                final_enable_local = global_enable_local
-            else:
-                # 针对不在 JSON 且仅存在于本地文件夹的纯本地规则
-                include_urls = []
-                exclude_urls = []
-                final_enable_local = global_enable_local
+    print(f"\n[*] 开始第一阶段：下载与解析所有基础规则源...")
 
-            # 【关键】如果没有任何远程规则，且最终判定本地开关关闭，该规则将完全作废跳过
-            if not include_urls and not exclude_urls and not final_enable_local:
+    # 第一阶段：先解析并缓存每个规则的基础内容（远程 + 本地）
+    for rule_type, rule_name, rule_config in all_rule_defs:
+        if isinstance(rule_config, dict):
+            include_urls = rule_config.get("include", [])
+            exclude_urls = rule_config.get("exclude", [])
+            final_enable_local = rule_config.get("enable_local", global_enable_local)
+            formats = rule_config.get("formats", global_formats)
+            inline_inc = rule_config.get("inline_include", [])
+            inline_exc = rule_config.get("inline_exclude", [])
+        elif isinstance(rule_config, list):
+            include_urls = rule_config
+            exclude_urls = []
+            final_enable_local = global_enable_local
+            formats = global_formats
+            inline_inc, inline_exc = [], []
+        else:
+            include_urls, exclude_urls = [], []
+            final_enable_local = global_enable_local
+            formats = global_formats
+            inline_inc, inline_exc = [], []
+
+        if not include_urls and not exclude_urls and not final_enable_local and not inline_inc:
+            continue
+
+        base_domain_set = set()
+        base_ip_set = set()
+        base_domain_regex = set()
+
+        # 处理远程链接
+        for action_type, url_list in [("include", include_urls), ("exclude", exclude_urls)]:
+            for i, url in enumerate(url_list):
+                try:
+                    temp_dl = f"temp_workspace/{rule_name}_{action_type}_{i}.dl"
+                    temp_txt = f"temp_workspace/{rule_name}_{action_type}_{i}.txt"
+                    
+                    curl_download(url, temp_dl)
+                    
+                    url_lower = url.lower()
+                    if url_lower.endswith('.mrs'):
+                        t_str = "ipcidr" if rule_type == "ipcidr" else "domain"
+                        ret = os.system(f"./mihomo convert-ruleset {t_str} mrs {temp_dl} {temp_txt}")
+                        if ret != 0 or not os.path.exists(temp_txt):
+                            raise Exception("Mihomo 转换 mrs 失败")
+                    elif url_lower.endswith('.srs'):
+                        temp_json = f"temp_workspace/{rule_name}_{action_type}_{i}.json"
+                        ret = os.system(f"./sing-box rule-set decompile {temp_dl} --output {temp_json}")
+                        if ret != 0 or not os.path.exists(temp_json) or os.path.getsize(temp_json) == 0:
+                            raise Exception("Sing-box 反编译 srs 失败")
+                        temp_txt = temp_json
+                    else:
+                        shutil.copy(temp_dl, temp_txt)
+                    
+                    d_set, ip_set, dr_set = parse_mixed_rules_to_buckets(temp_txt)
+                    
+                    if action_type == "include":
+                        base_domain_set |= d_set
+                        base_ip_set |= ip_set
+                        base_domain_regex |= dr_set
+                    else:
+                        base_domain_set -= d_set
+                        base_ip_set -= ip_set
+                        base_domain_regex -= dr_set
+                except Exception as e:
+                    print(f"[-] 警告：处理规则源跳过 | {url} -> {e}")
+                    continue
+
+        # 处理本地自定义规则
+        if final_enable_local:
+            for action in ["exclude", "include"]:
+                custom_file = os.path.join("rules", action, rule_type, f"{rule_name}.txt")
+                if os.path.exists(custom_file):
+                    d_set, ip_set, dr_set = parse_mixed_rules_to_buckets(custom_file)
+                    if action == "exclude":
+                        base_domain_set -= d_set
+                        base_ip_set -= ip_set
+                        base_domain_regex -= dr_set
+                    else:
+                        base_domain_set |= d_set
+                        base_ip_set |= ip_set
+                        base_domain_regex |= dr_set
+
+        rule_cache[rule_name] = {
+            "type": rule_type,
+            "domain": base_domain_set,
+            "ip": base_ip_set,
+            "regex": base_domain_regex,
+            "formats": formats,
+            "inline_include": inline_inc,
+            "inline_exclude": inline_exc
+        }
+
+    print(f"\n[*] 开始第二阶段：解析内联引用 (inline_include / inline_exclude) 并生成最终规则...")
+
+    # 第二阶段：处理 inline 引用
+    for rule_type, rule_name, rule_config in all_rule_defs:
+        if rule_name not in rule_cache:
+            continue
+        
+        current = rule_cache[rule_name]
+        
+        # 递归或直接合并 inline_include
+        for target_name in current["inline_include"]:
+            if target_name in rule_cache:
+                target_data = rule_cache[target_name]
+                current["domain"] |= target_data["domain"]
+                current["ip"] |= target_data["ip"]
+                current["regex"] |= target_data["regex"]
+
+        # 处理 inline_exclude
+        for target_name in current["inline_exclude"]:
+            if target_name in rule_cache:
+                target_data = rule_cache[target_name]
+                current["domain"] -= target_data["domain"]
+                current["ip"] -= target_data["ip"]
+                current["regex"] -= target_data["regex"]
+
+    print(f"\n[*] 开始第三阶段：优化CIDR并导出最终多格式规则文件...")
+
+    # 第三阶段：执行 CIDR 压缩整理、历史记录比对并根据 formats 导出文件
+    for rule_type, rule_name, rule_config in all_rule_defs:
+        if rule_name not in rule_cache:
+            continue
+        
+        data = rule_cache[rule_name]
+        formats = data["formats"]
+
+        if rule_type == "domain":
+            merged_rules = data["domain"]
+            merged_regex = data["regex"]
+            if not merged_rules and not merged_regex:
                 continue
 
-            print(f"\n[+] 处理规则集: {rule_name}")
-            geo_dir = 'geoip' if rule_type == 'ipcidr' else 'geosite'
+            geo_dir = "geosite"
+            prev_mihomo = get_prev_rules(geo_dir, rule_name, "mihomo")
+            prev_singbox = get_prev_rules(geo_dir, rule_name, "singbox")
 
-            prev_mihomo_rules = get_prev_rules(geo_dir, rule_name, "mihomo")
-            prev_singbox_rules = get_prev_rules(geo_dir, rule_name, "singbox")
-
-            merged_rules = set()
-            merged_domain_regex = set()
-
-            # 遍历并处理远程链接（先 include，后 exclude）
-            for action_type, url_list in [("include", include_urls), ("exclude", exclude_urls)]:
-                for i, url in enumerate(url_list):
-                    try:
-                        temp_dl = f"temp_workspace/{rule_name}_{action_type}_{i}.dl"
-                        temp_txt = f"temp_workspace/{rule_name}_{action_type}_{i}.txt"
-                        
-                        curl_download(url, temp_dl)
-                        
-                        url_lower = url.lower()
-                        if url_lower.endswith('.mrs'):
-                            ret = os.system(f"./mihomo convert-ruleset {rule_type} mrs {temp_dl} {temp_txt}")
-                            if ret != 0 or not os.path.exists(temp_txt):
-                                raise Exception("Mihomo 转换 mrs 失败")
-                        elif url_lower.endswith('.srs'):
-                            temp_json = f"temp_workspace/{rule_name}_{action_type}_{i}.json"
-                            ret = os.system(f"./sing-box rule-set decompile {temp_dl} --output {temp_json}")
-                            if ret != 0 or not os.path.exists(temp_json) or os.path.getsize(temp_json) == 0:
-                                raise Exception("Sing-box 反编译 srs 失败")
-                            temp_txt = temp_json
-                        else:
-                            shutil.copy(temp_dl, temp_txt)
-                        
-                        d_set, ip_set, dr_set = parse_mixed_rules_to_buckets(temp_txt)
-                        
-                        if action_type == "include":
-                            if rule_type == "ipcidr":
-                                merged_rules |= ip_set
-                            else:
-                                merged_rules |= d_set
-                                merged_domain_regex |= dr_set
-                        else:  # exclude
-                            if rule_type == "ipcidr":
-                                merged_rules -= ip_set
-                            else:
-                                merged_rules -= d_set
-                                merged_domain_regex -= dr_set
-
-                    except Exception as e:
-                        print(f"[-] 警告：处理规则源跳过 | {url} -> {e}")
-                        continue
-
-            # 处理本地自定义规则（根据 final_enable_local 开关决定）
-            if final_enable_local:
-                # 逻辑通常是：先去除指定的本地 exclude，再将必须的 include 合并进来
-                for action in ["exclude", "include"]:
-                    custom_file = os.path.join("rules", action, rule_type, f"{rule_name}.txt")
-                    if os.path.exists(custom_file):
-                        d_set, ip_set, dr_set = parse_mixed_rules_to_buckets(custom_file)
-                        target_set = ip_set if rule_type == "ipcidr" else d_set
-                        if action == "exclude":
-                            merged_rules -= target_set
-                            if rule_type != "ipcidr":
-                                merged_domain_regex -= dr_set
-                        else:
-                            merged_rules |= target_set
-                            if rule_type != "ipcidr":
-                                merged_domain_regex |= dr_set
-
-            if rule_type == "ipcidr":
-                v4_nets, v6_nets = [], []
-                for item in merged_rules:
-                    try:
-                        net = ipaddress.ip_network(item.strip(), strict=False)
-                        if net.version == 4: v4_nets.append(net)
-                        else: v6_nets.append(net)
-                    except ValueError:
-                        continue
-                v4_collapsed = sorted(ipaddress.collapse_addresses(v4_nets))
-                v6_collapsed = sorted(ipaddress.collapse_addresses(v6_nets))
-                merged_rules = set(str(n) for n in (v4_collapsed + v6_collapsed))
-
-                if rule_name == "china":
-                    export_bypass_txt_files(v4_collapsed, v6_collapsed, global_commit_msgs)
-
-            export_four_formats(rule_name, merged_rules, rule_type, merged_domain_regex if rule_type != "ipcidr" else None)
+            export_rule_files(rule_name, merged_rules, "domain", formats, merged_regex)
 
             mihomo_new_set = set(merged_rules)
-            m_added = sorted(mihomo_new_set - prev_mihomo_rules) if prev_mihomo_rules is not None else []
-            m_removed = sorted(prev_mihomo_rules - mihomo_new_set) if prev_mihomo_rules is not None else []
+            m_added = sorted(mihomo_new_set - prev_mihomo) if prev_mihomo is not None else []
+            m_removed = sorted(prev_mihomo - mihomo_new_set) if prev_mihomo is not None else []
 
             singbox_new_set = set(merged_rules)
-            if rule_type != "ipcidr" and merged_domain_regex:
-                singbox_new_set |= {f"REGEX:{r}" for r in merged_domain_regex}
-            
-            s_added = sorted(singbox_new_set - prev_singbox_rules) if prev_singbox_rules is not None else []
-            s_removed = sorted(prev_singbox_rules - singbox_new_set) if prev_singbox_rules is not None else []
+            if merged_regex:
+                singbox_new_set |= {f"REGEX:{r}" for r in merged_regex}
+            s_added = sorted(singbox_new_set - prev_singbox) if prev_singbox is not None else []
+            s_removed = sorted(prev_singbox - singbox_new_set) if prev_singbox is not None else []
 
-            msg = f"{time_str} - 更新 {rule_type}/{rule_name}: 共 {len(singbox_new_set)} 条"
-            global_commit_msgs[f"geo/{geo_dir}/{rule_name}.yaml"] = msg
-            global_commit_msgs[f"geo/{geo_dir}/{rule_name}.mrs"]  = msg
-            global_commit_msgs[f"geo/{geo_dir}/{rule_name}.json"] = msg
-            global_commit_msgs[f"geo/{geo_dir}/{rule_name}.srs"]  = msg
+            msg = f"{time_str} - 更新 domain/{rule_name}: 共 {len(singbox_new_set)} 条"
+            for fmt in [f.lower() for f in formats]:
+                if fmt == "yaml": global_commit_msgs[f"geo/geosite/{rule_name}.yaml"] = msg
+                elif fmt == "mrs": global_commit_msgs[f"geo/geosite/{rule_name}.mrs"] = msg
+                elif fmt == "json": global_commit_msgs[f"geo/geosite/{rule_name}.json"] = msg
+                elif fmt == "srs": global_commit_msgs[f"geo/geosite/{rule_name}.srs"] = msg
 
-            mihomo_changes[f"{rule_type}/{rule_name}"] = {
-                "total": len(mihomo_new_set),
-                "prev_total": len(prev_mihomo_rules) if prev_mihomo_rules is not None else None,
-                "added": m_added,
-                "removed": m_removed
-            }
-            singbox_changes[f"{rule_type}/{rule_name}"] = {
-                "total": len(singbox_new_set),
-                "prev_total": len(prev_singbox_rules) if prev_singbox_rules is not None else None,
-                "added": s_added,
-                "removed": s_removed
-            }
+            mihomo_changes[f"domain/{rule_name}"] = {"total": len(mihomo_new_set), "prev_total": len(prev_mihomo) if prev_mihomo is not None else None, "added": m_added, "removed": m_removed}
+            singbox_changes[f"domain/{rule_name}"] = {"total": len(singbox_new_set), "prev_total": len(prev_singbox) if prev_singbox is not None else None, "added": s_added, "removed": s_removed}
 
-    # 2. 处理 classical 混合格式
-    classical_dict = RULES_CONFIG.get("classical", {})
-    classical_names = set(classical_dict.keys())
-    
-    for action in ["include", "exclude"]:
-        dir_path = os.path.join("rules", action, "classical")
-        if os.path.exists(dir_path):
-            for filename in os.listdir(dir_path):
-                if filename.endswith(".txt"):
-                    classical_names.add(filename[:-4])
-
-    if classical_names:
-        print(f"\n[*] 开始处理 [CLASSICAL] 混合规则自动分离...")
-        for rule_name in sorted(classical_names):
-            rule_config = classical_dict.get(rule_name)
-
-            if isinstance(rule_config, dict):
-                include_urls = rule_config.get("include", [])
-                exclude_urls = rule_config.get("exclude", [])
-                final_enable_local = rule_config.get("enable_local", global_enable_local)
-            elif isinstance(rule_config, list):
-                include_urls = rule_config
-                exclude_urls = []
-                final_enable_local = global_enable_local
-            else:
-                include_urls = []
-                exclude_urls = []
-                final_enable_local = global_enable_local
-
-            if not include_urls and not exclude_urls and not final_enable_local:
+        elif rule_type == "ipcidr":
+            raw_ips = data["ip"]
+            if not raw_ips:
                 continue
 
-            prev_mihomo_domain_rules = get_prev_rules("geosite", rule_name, "mihomo")
-            prev_singbox_domain_rules = get_prev_rules("geosite", rule_name, "singbox")
-            prev_mihomo_ip_rules = get_prev_rules("geoip", rule_name, "mihomo")
-            prev_singbox_ip_rules = get_prev_rules("geoip", rule_name, "singbox")
+            v4_nets, v6_nets = [], []
+            for item in raw_ips:
+                try:
+                    net = ipaddress.ip_network(item.strip(), strict=False)
+                    if net.version == 4: v4_nets.append(net)
+                    else: v6_nets.append(net)
+                except ValueError:
+                    continue
+            v4_collapsed = sorted(ipaddress.collapse_addresses(v4_nets))
+            v6_collapsed = sorted(ipaddress.collapse_addresses(v6_nets))
+            merged_rules = set(str(n) for n in (v4_collapsed + v6_collapsed))
 
-            mixed_domain_set = set()
-            mixed_ip_set = set()
-            mixed_domain_regex_set = set()
+            if rule_name == "china":
+                export_bypass_txt_files(v4_collapsed, v6_collapsed, global_commit_msgs)
 
-            # 遍历并处理远程链接（先 include，后 exclude）
-            for action_type, url_list in [("include", include_urls), ("exclude", exclude_urls)]:
-                for i, url in enumerate(url_list):
-                    try:
-                        temp_dl = f"temp_workspace/classical_{rule_name}_{action_type}_{i}.dl"
-                        temp_txt = f"temp_workspace/classical_{rule_name}_{action_type}_{i}.txt"
-                        
-                        curl_download(url, temp_dl)
-                        
-                        url_lower = url.lower()
-                        if url_lower.endswith('.mrs'):
-                            ret = os.system(f"./mihomo convert-ruleset domain mrs {temp_dl} {temp_txt}")
-                            if ret != 0 or not os.path.exists(temp_txt):
-                                raise Exception("Mihomo 转换 mrs 失败")
-                        elif url_lower.endswith('.srs'):
-                            temp_json = f"temp_workspace/classical_{rule_name}_{action_type}_{i}.json"
-                            ret = os.system(f"./sing-box rule-set decompile {temp_dl} --output {temp_json}")
-                            if ret != 0 or not os.path.exists(temp_json) or os.path.getsize(temp_json) == 0:
-                                raise Exception("Sing-box 反编译 srs 失败")
-                            temp_txt = temp_json
-                        else:
-                            shutil.copy(temp_dl, temp_txt)
+            geo_dir = "geoip"
+            prev_mihomo = get_prev_rules(geo_dir, rule_name, "mihomo")
+            prev_singbox = get_prev_rules(geo_dir, rule_name, "singbox")
 
-                        d_set, ip_set, dr_set = parse_mixed_rules_to_buckets(temp_txt)
-                        
-                        if action_type == "include":
-                            mixed_domain_set |= d_set
-                            mixed_ip_set |= ip_set
-                            mixed_domain_regex_set |= dr_set
-                        else: # exclude
-                            mixed_domain_set -= d_set
-                            mixed_ip_set -= ip_set
-                            mixed_domain_regex_set -= dr_set
-                        
-                    except Exception as e:
-                        print(f"[-] 警告：处理规则源跳过 | {url} -> {e}")
-                        continue
+            export_rule_files(rule_name, merged_rules, "ipcidr", formats)
 
-            # 处理本地自定义规则
-            if final_enable_local:
-                for action in ["exclude", "include"]:
-                    custom_file = os.path.join("rules", action, "classical", f"{rule_name}.txt")
-                    if os.path.exists(custom_file):
-                        d_set, ip_set, dr_set = parse_mixed_rules_to_buckets(custom_file)
-                        if action == "exclude":
-                            mixed_domain_set -= d_set
-                            mixed_ip_set -= ip_set
-                            mixed_domain_regex_set -= dr_set
-                        else:
-                            mixed_domain_set |= d_set
-                            mixed_ip_set |= ip_set
-                            mixed_domain_regex_set |= dr_set
+            mihomo_new_set = set(merged_rules)
+            m_added = sorted(mihomo_new_set - prev_mihomo) if prev_mihomo is not None else []
+            m_removed = sorted(prev_mihomo - mihomo_new_set) if prev_mihomo is not None else []
 
-            if mixed_domain_set or mixed_domain_regex_set:
-                export_four_formats(rule_name, mixed_domain_set, "domain", mixed_domain_regex_set)
-                
+            singbox_new_set = set(merged_rules)
+            s_added = sorted(singbox_new_set - prev_singbox) if prev_singbox is not None else []
+            s_removed = sorted(prev_singbox - singbox_new_set) if prev_singbox is not None else []
+
+            msg = f"{time_str} - 更新 ipcidr/{rule_name}: 共 {len(singbox_new_set)} 条"
+            for fmt in [f.lower() for f in formats]:
+                if fmt == "yaml": global_commit_msgs[f"geo/geoip/{rule_name}.yaml"] = msg
+                elif fmt == "mrs": global_commit_msgs[f"geo/geoip/{rule_name}.mrs"] = msg
+                elif fmt == "json": global_commit_msgs[f"geo/geoip/{rule_name}.json"] = msg
+                elif fmt == "srs": global_commit_msgs[f"geo/geoip/{rule_name}.srs"] = msg
+
+            mihomo_changes[f"ipcidr/{rule_name}"] = {"total": len(mihomo_new_set), "prev_total": len(prev_mihomo) if prev_mihomo is not None else None, "added": m_added, "removed": m_removed}
+            singbox_changes[f"ipcidr/{rule_name}"] = {"total": len(singbox_new_set), "prev_total": len(prev_singbox) if prev_singbox is not None else None, "added": s_added, "removed": s_removed}
+
+        elif rule_type == "classical":
+            mixed_domain_set = data["domain"]
+            mixed_ip_set = data["ip"]
+            mixed_regex_set = data["regex"]
+
+            if mixed_domain_set or mixed_regex_set:
+                prev_mihomo_d = get_prev_rules("geosite", rule_name, "mihomo")
+                prev_singbox_d = get_prev_rules("geosite", rule_name, "singbox")
+
+                export_rule_files(rule_name, mixed_domain_set, "domain", formats, mixed_regex_set)
+
                 mihomo_new_set = set(mixed_domain_set)
-                m_added = sorted(mihomo_new_set - prev_mihomo_domain_rules) if prev_mihomo_domain_rules is not None else []
-                m_removed = sorted(prev_mihomo_domain_rules - mihomo_new_set) if prev_mihomo_domain_rules is not None else []
+                m_added = sorted(mihomo_new_set - prev_mihomo_d) if prev_mihomo_d is not None else []
+                m_removed = sorted(prev_mihomo_d - mihomo_new_set) if prev_mihomo_d is not None else []
 
                 singbox_new_set = set(mixed_domain_set)
-                if mixed_domain_regex_set:
-                    singbox_new_set |= {f"REGEX:{r}" for r in mixed_domain_regex_set}
-
-                s_added = sorted(singbox_new_set - prev_singbox_domain_rules) if prev_singbox_domain_rules is not None else []
-                s_removed = sorted(prev_singbox_domain_rules - singbox_new_set) if prev_singbox_domain_rules is not None else []
+                if mixed_regex_set:
+                    singbox_new_set |= {f"REGEX:{r}" for r in mixed_regex_set}
+                s_added = sorted(singbox_new_set - prev_singbox_d) if prev_singbox_d is not None else []
+                s_removed = sorted(prev_singbox_d - singbox_new_set) if prev_singbox_d is not None else []
 
                 msg = f"{time_str} - 更新 domain/{rule_name}: 共 {len(singbox_new_set)} 条"
-                global_commit_msgs[f"geo/geosite/{rule_name}.yaml"] = msg
-                global_commit_msgs[f"geo/geosite/{rule_name}.mrs"]  = msg
-                global_commit_msgs[f"geo/geosite/{rule_name}.json"] = msg
-                global_commit_msgs[f"geo/geosite/{rule_name}.srs"]  = msg
+                for fmt in [f.lower() for f in formats]:
+                    if fmt == "yaml": global_commit_msgs[f"geo/geosite/{rule_name}.yaml"] = msg
+                    elif fmt == "mrs": global_commit_msgs[f"geo/geosite/{rule_name}.mrs"] = msg
+                    elif fmt == "json": global_commit_msgs[f"geo/geosite/{rule_name}.json"] = msg
+                    elif fmt == "srs": global_commit_msgs[f"geo/geosite/{rule_name}.srs"] = msg
 
-                mihomo_changes[f"domain/{rule_name}"] = {
-                    "total": len(mihomo_new_set),
-                    "prev_total": len(prev_mihomo_domain_rules) if prev_mihomo_domain_rules is not None else None,
-                    "added": m_added,
-                    "removed": m_removed
-                }
-                singbox_changes[f"domain/{rule_name}"] = {
-                    "total": len(singbox_new_set),
-                    "prev_total": len(prev_singbox_domain_rules) if prev_singbox_domain_rules is not None else None,
-                    "added": s_added,
-                    "removed": s_removed
-                }
+                mihomo_changes[f"domain/{rule_name}"] = {"total": len(mihomo_new_set), "prev_total": len(prev_mihomo_d) if prev_mihomo_d is not None else None, "added": m_added, "removed": m_removed}
+                singbox_changes[f"domain/{rule_name}"] = {"total": len(singbox_new_set), "prev_total": len(prev_singbox_d) if prev_singbox_d is not None else None, "added": s_added, "removed": s_removed}
 
             if mixed_ip_set:
+                prev_mihomo_ip = get_prev_rules("geoip", rule_name, "mihomo")
+                prev_singbox_ip = get_prev_rules("geoip", rule_name, "singbox")
+
                 v4_nets = [ipaddress.ip_network(x, strict=False) for x in mixed_ip_set if ipaddress.ip_network(x, strict=False).version == 4]
                 v4_collapsed = sorted(ipaddress.collapse_addresses(v4_nets))
-                mixed_ip_set = set(str(n) for n in v4_collapsed)
-                export_four_formats(rule_name, mixed_ip_set, "ipcidr")
-                
-                mihomo_new_set = set(mixed_ip_set)
-                m_added = sorted(mihomo_new_set - prev_mihomo_ip_rules) if prev_mihomo_ip_rules is not None else []
-                m_removed = sorted(prev_mihomo_ip_rules - mihomo_new_set) if prev_mihomo_ip_rules is not None else []
+                collapsed_ip_set = set(str(n) for n in v4_collapsed)
 
-                singbox_new_set = set(mixed_ip_set)
-                s_added = sorted(singbox_new_set - prev_singbox_ip_rules) if prev_singbox_ip_rules is not None else []
-                s_removed = sorted(prev_singbox_ip_rules - singbox_new_set) if prev_singbox_ip_rules is not None else []
+                export_rule_files(rule_name, collapsed_ip_set, "ipcidr", formats)
+
+                mihomo_new_set = set(collapsed_ip_set)
+                m_added = sorted(mihomo_new_set - prev_mihomo_ip) if prev_mihomo_ip is not None else []
+                m_removed = sorted(prev_mihomo_ip - mihomo_new_set) if prev_mihomo_ip is not None else []
+
+                singbox_new_set = set(collapsed_ip_set)
+                s_added = sorted(singbox_new_set - prev_singbox_ip) if prev_singbox_ip is not None else []
+                s_removed = sorted(prev_singbox_ip - singbox_new_set) if prev_singbox_ip is not None else []
 
                 msg = f"{time_str} - 更新 ipcidr/{rule_name}: 共 {len(singbox_new_set)} 条"
-                global_commit_msgs[f"geo/geoip/{rule_name}.yaml"] = msg
-                global_commit_msgs[f"geo/geoip/{rule_name}.mrs"]  = msg
-                global_commit_msgs[f"geo/geoip/{rule_name}.json"] = msg
-                global_commit_msgs[f"geo/geoip/{rule_name}.srs"]  = msg
+                for fmt in [f.lower() for f in formats]:
+                    if fmt == "yaml": global_commit_msgs[f"geo/geoip/{rule_name}.yaml"] = msg
+                    elif fmt == "mrs": global_commit_msgs[f"geo/geoip/{rule_name}.mrs"] = msg
+                    elif fmt == "json": global_commit_msgs[f"geo/geoip/{rule_name}.json"] = msg
+                    elif fmt == "srs": global_commit_msgs[f"geo/geoip/{rule_name}.srs"] = msg
 
-                mihomo_changes[f"ipcidr/{rule_name}"] = {
-                    "total": len(mihomo_new_set),
-                    "prev_total": len(prev_mihomo_ip_rules) if prev_mihomo_ip_rules is not None else None,
-                    "added": m_added,
-                    "removed": m_removed
-                }
-                singbox_changes[f"ipcidr/{rule_name}"] = {
-                    "total": len(singbox_new_set),
-                    "prev_total": len(prev_singbox_ip_rules) if prev_singbox_ip_rules is not None else None,
-                    "added": s_added,
-                    "removed": s_removed
-                }
+                mihomo_changes[f"ipcidr/{rule_name}"] = {"total": len(mihomo_new_set), "prev_total": len(prev_mihomo_ip) if prev_mihomo_ip is not None else None, "added": m_added, "removed": m_removed}
+                singbox_changes[f"ipcidr/{rule_name}"] = {"total": len(singbox_new_set), "prev_total": len(prev_singbox_ip) if prev_singbox_ip is not None else None, "added": s_added, "removed": s_removed}
 
     generate_change_report(mihomo_changes, singbox_changes, global_commit_msgs)
     with open("commit_msgs.json", "w", encoding="utf-8") as f:

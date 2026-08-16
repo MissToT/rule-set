@@ -6,7 +6,6 @@
   "domain": {
     "china": {
       "enable_local": true,
-      "formats": ["MRS","SRS"],
       "include": {
         "inline": ["emby-cn"],
         "urls": [

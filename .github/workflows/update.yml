@@ -29,6 +29,13 @@ jobs:
           else
             echo "[*] mihomo 分支尚不存在（首次运行），跳过差异比对"
           fi
+          # === 新增：补上 singbox 分支的克隆 ===
+          if git ls-remote --exit-code "$REPO_URL" refs/heads/singbox > /dev/null 2>&1; then
+            git clone --depth=1 --branch singbox "$REPO_URL" prev_singbox
+            echo "[*] 已克隆 singbox 历史快照，用于差异比对"
+          else
+            echo "[*] singbox 分支尚不存在，跳过差异比对"
+          fi
           if git ls-remote --exit-code "$REPO_URL" refs/heads/bypass > /dev/null 2>&1; then
             git clone --depth=1 --branch bypass "$REPO_URL" prev_bypass
             echo "[*] 已克隆 bypass 历史快照，用于差异比对"

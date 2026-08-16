@@ -1,10 +1,14 @@
 {
   "settings": {
-    "enable_local": false
+    "enable_local": false,
+    "formats": [ "MRS", "YAML", "SRS", "JSON" ]
   },
   "domain": {
     "china": {
       "enable_local": true,
+      "formats": [ "MRS", "SRS" ],
+      "inline_include": ["emby-cn"],
+      "inline_exclude": [],
       "include": [
         "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/cn.srs",
         "https://github.com/QuixoticHeart/rule-set/blob/ruleset/singbox/version2/cn.srs"
@@ -20,6 +24,7 @@
     },
     "emby": {
       "enable_local": true,
+      "formats": [ "MRS", "SRS" ],
       "include": [
         "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/category-emby.srs"
       ],
@@ -27,6 +32,7 @@
     },
     "emby-cn": {
       "enable_local": true,
+      "formats": [ "MRS", "SRS" ],
       "include": [],
       "exclude": []
     },

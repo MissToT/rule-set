@@ -18,6 +18,7 @@ RULES_CONFIG = load_config()
 
 PREV_MIHOMO_DIR = "prev_mihomo"
 PREV_SINGBOX_DIR = "prev_singbox"
+PREV_BYPASS_DIR = "prev_bypass"
 
 def normalize_url(url):
     if "github.com" in url and "/blob/" in url:

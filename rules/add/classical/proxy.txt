@@ -1,1 +1,3 @@
-# 在此写入需要【新增】的 proxy (classical) 规则
++.oplist.org
+DOMAIN-SUFFIX,lsposed.org
+DOMAIN-SUFFIX,lsposed.zip

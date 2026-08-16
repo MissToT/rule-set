@@ -1,0 +1,2 @@
+# 自定义本地 classical 覆写规则 (exclude): cloudflare-cn
+# 每行一条规则，支持 Mihomo / Sing-box 格式

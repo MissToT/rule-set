@@ -32,57 +32,57 @@
     ],
     "google": [
       "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/google.srs",
-      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geoip/google.json"
+      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geoip/google.srs"
     ],
     "googlefcm": [
-      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/googlefcm%40!cn.json"
+      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/googlefcm%40!cn.srs"
     ],
     "cloudflare": [
-      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geoip/cloudflare.json",
-      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/cloudflare.json"
+      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geoip/cloudflare.srs",
+      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/cloudflare.srs"
     ],
     "cloudflare-cn": [
-      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/cloudflare-cn.json"
+      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/cloudflare-cn.srs"
     ],
     "microsoft": [
-      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/microsoft.json"
+      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/microsoft.srs"
     ],
     "microsoft-cn": [
-      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/microsoft%40cn.json"
+      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/microsoft%40cn.srs"
     ],
     "mihoyo-cn": [
-      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/mihoyo-cn.json"
+      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/mihoyo-cn.srs"
     ],
     "ai": [
-      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/category-ai-!cn.json",
-      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geoip/ai.json"
+      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/category-ai-!cn.srs",
+      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geoip/ai.srs"
     ],
     "games": [
-      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/category-games-!cn.json"
+      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/category-games-!cn.srs"
     ],
     "game-platforms-download": [
-      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/category-game-platforms-download.json"
+      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/category-game-platforms-download.srs"
     ],
     "ehentai": [
-      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/ehentai.json"
+      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/ehentai.srs"
     ],
     "youtube": [
-      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/youtube.json"
+      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/youtube.srs"
     ],
     "tiktok": [
-      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/tiktok.json"
+      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/tiktok.srs"
     ],
     "telegram": [
-      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/telegram.json",
-      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geoip/telegram.json"
+      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/telegram.srs",
+      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geoip/telegram.srs"
     ],
     "twitter": [
-      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/twitter.json",
-      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geoip/twitter.json"
+      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/twitter.srs",
+      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geoip/twitter.srs"
     ],
     "private": [
-      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geoip/private.json",
-      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/private.json"
+      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geoip/private.srs",
+      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/private.srs"
     ]
   }
 }

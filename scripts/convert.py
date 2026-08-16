@@ -123,7 +123,6 @@ def parse_mixed_rules_to_buckets(filename):
     try:
         with open(filename, 'rb') as f:
             chunk = f.read(512)
-            # 如果包含过多的非文本控制字符或空字节，说明它是二进制文件，不能用文本方式解析
             if b'\x00' in chunk or sum(1 for b in chunk if b < 32 and b not in (9, 10, 13)) > 20:
                 print(f"[-] 警告: 发现文件 {filename} 包含二进制数据，跳过文本/JSON解析。")
                 return domain_set, ipcidr_set, domain_regex_set
@@ -136,7 +135,6 @@ def parse_mixed_rules_to_buckets(filename):
             data = json.load(f)
             if isinstance(data, dict) and "rules" in data:
                 for rule_obj in data["rules"]:
-                    # 兼容处理：sing-box 规则字段可能是字符串也可能是列表
                     domains = rule_obj.get("domain", [])
                     if isinstance(domains, str): domains = [domains]
                     for d in domains:
@@ -146,7 +144,8 @@ def parse_mixed_rules_to_buckets(filename):
                     if isinstance(suffixes, str): suffixes = [suffixes]
                     for ds in suffixes:
                         if ds:
-                            domain_set.add(f".{ds}" if not ds.startswith('.') else ds)
+                            clean_ds = ds.lstrip('+').lstrip('.')
+                            domain_set.add(f"+.{clean_ds}")
 
                     keywords = rule_obj.get("domain_keyword", [])
                     if isinstance(keywords, str): keywords = [keywords]
@@ -210,7 +209,13 @@ def parse_mixed_rules_to_buckets(filename):
                 if val:
                     domain_regex_set.add(val)
                     continue
-            elif pfx in ('DOMAIN', 'DOMAIN-SUFFIX', 'DOMAIN-KEYWORD'):
+            elif pfx == 'DOMAIN-SUFFIX':
+                val = parts[1] if len(parts) > 1 else ''
+                if val:
+                    clean_val = val.lstrip('+').lstrip('.')
+                    domain_set.add(f"+.{clean_val}")
+                    continue
+            elif pfx in ('DOMAIN', 'DOMAIN-KEYWORD'):
                 val = parts[1] if len(parts) > 1 else ''
                 if val:
                     if pfx == 'DOMAIN-KEYWORD':
@@ -218,6 +223,15 @@ def parse_mixed_rules_to_buckets(filename):
                     else:
                         domain_set.add(val)
                     continue
+
+            # 处理裸露带通配符或纯域名的行
+            if line.startswith('+.'):
+                domain_set.add(line)
+                continue
+            elif line.startswith('.'):
+                clean_val = line.lstrip('.')
+                domain_set.add(f"+.{clean_val}")
+                continue
 
             try:
                 net = ipaddress.ip_network(line, strict=False)
@@ -247,6 +261,9 @@ def load_prev_mihomo_rules(geo_subfolder, rule_name):
                         if val.startswith("'") and val.endswith("'"): val = val[1:-1]
                         if val.startswith('"') and val.endswith('"'): val = val[1:-1]
                         if val:
+                            # 归一化旧版点号前缀为 + 号前缀，避免历史 Diff 抖动
+                            if val.startswith('.') and not val.startswith('+.'):
+                                val = f"+.{val.lstrip('.')}"
                             rules.add(val)
             return rules
         except Exception:

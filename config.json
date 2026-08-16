@@ -31,7 +31,7 @@
   },
   "classical": {
     "google": [
-      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/google.srs"
+      "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/google.json"
     ]
   }
 }

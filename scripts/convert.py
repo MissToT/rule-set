@@ -238,10 +238,26 @@ def load_historical_rules(base_dir, geo_subfolder, rule_name, tool_type):
         if not target_yaml and not target_mrs:
             return None
         if not target_yaml and target_mrs:
-            # 将后缀改为 .txt，并将格式从 yaml 改为 text
-            target_yaml = os.path.join("temp_workspace", f"{geo_subfolder}_{rule_name}_mihomo_hist_dec.txt")
+            # 1. 定义临时文本和包装后的 yaml 路径
+            target_txt = os.path.join("temp_workspace", f"{geo_subfolder}_{rule_name}_mihomo_hist_dec.txt")
+            target_yaml = os.path.join("temp_workspace", f"{geo_subfolder}_{rule_name}_mihomo_hist_dec.yaml")
+            os.makedirs("temp_workspace", exist_ok=True)
             rule_type_str = "ipcidr" if geo_subfolder == "geoip" else "domain"
-            os.system(f"./mihomo convert-ruleset {rule_type_str} text {target_mrs} {target_yaml}")
+            
+            # 2. 使用正确的 mihomo mrs 解包命令
+            os.system(f"./mihomo convert-ruleset {rule_type_str} mrs {target_mrs} {target_txt}")
+            
+            # 3. 将解包出的文本行包装为 parse_mixed_rules_to_buckets 可识别的 yaml 格式
+            if os.path.exists(target_txt):
+                try:
+                    with open(target_txt, 'r', encoding='utf-8') as f:
+                        lines = [line.strip() for line in f if line.strip() and not line.startswith('#')]
+                    with open(target_yaml, 'w', encoding='utf-8') as f:
+                        f.write("payload:\n")
+                        for line in lines:
+                            f.write(f"  - '{line}'\n")
+                except Exception:
+                    pass
         
         if os.path.exists(target_yaml):
             try:
@@ -260,6 +276,7 @@ def load_historical_rules(base_dir, geo_subfolder, rule_name, tool_type):
             return None
         if not target_json and target_srs:
             target_json = os.path.join("temp_workspace", f"{geo_subfolder}_{rule_name}_singbox_hist_dec.json")
+            os.makedirs("temp_workspace", exist_ok=True)
             os.system(f"./sing-box rule-set decompile {target_srs} -o {target_json}")
         
         if os.path.exists(target_json):

@@ -86,9 +86,9 @@ def setup_custom_rule_dirs():
                 if not os.path.exists(file_path):
                     with open(file_path, "w", encoding="utf-8") as f:
                         f.write(f"# 自定义本地 {rule_type} 覆写规则 ({action}): {rule_name}\n")
-                        f.write(f"# 每行一条规则，支持 Mihomo / Sing-box 格式\n")
+                        f.write(f"# 每行一条规则\n")
                         
-    print("[*] 已自动为所有规则生成对应的本地覆写（include/exclude）模板文件。")
+    print("[*] 已自动为所有规则生成对应的本地覆写模板文件。")
 
 def parse_mixed_rules_to_buckets(filename):
     domain_set = set()
@@ -225,7 +225,7 @@ def parse_mixed_rules_to_buckets(filename):
 def export_bypass_txt_files(v4_collapsed, v6_collapsed, commit_msgs):
     os.makedirs("bypass_out", exist_ok=True)
     now = datetime.now(timezone(timedelta(hours=8)))
-    time_str = f"{now.year}年{now.month}月{now.day}日{now.strftime('%H:%M:%S')}"
+    time_str = f"{now.year}-{now.month:02d}-{now.day:02d} {now.strftime('%H:%M:%S')}"
 
     def process_bypass_file(filename, collapsed_nets):
         filepath = os.path.join("bypass_out", filename)
@@ -242,14 +242,13 @@ def export_bypass_txt_files(v4_collapsed, v6_collapsed, commit_msgs):
     v6_res = process_bypass_file("cn-ipv6.txt", v6_collapsed)
 
     lines = [
-        "# 🚀 IP 绕过规则概览\n\n",
-        "> 持续更新中国大陆 IP CIDR 优化分流列表。\n",
-        f"> **更新时间：** {time_str}\n\n",
-        "| 规则文件 | 下载地址 | 规则数量 |\n",
-        "| :--- | :--- | :---: |\n"
+        "# 中国大陆 IP 绕过列表\n\n",
+        f"更新时间: {time_str} (UTC+8)\n\n",
+        "| 规则文件 | 下载 | 条目数 |\n",
+        "| :--- | :---: | :---: |\n"
     ]
     for key, data in [("cn-ipv4.txt", v4_res), ("cn-ipv6.txt", v6_res)]:
-        lines.append(f"| `{key}` | [TXT]({key}) | **{data['total']}** |\n")
+        lines.append(f"| {key} | [下载]({key}) | {data['total']:,} |\n")
 
     with open(os.path.join("bypass_out", "README.md"), "w", encoding="utf-8") as f:
         f.write("".join(lines))
@@ -359,22 +358,23 @@ def export_rule_files(rule_name, rules_set, rule_type, formats, domain_regex_set
 
 def generate_change_report(mihomo_items, singbox_items, commit_msgs):
     now = datetime.now(timezone(timedelta(hours=8)))
-    time_str = f"{now.year}年{now.month}月{now.day}日{now.strftime('%H:%M:%S')}"
+    time_str = f"{now.year}-{now.month:02d}-{now.day:02d} {now.strftime('%H:%M:%S')}"
     
     def build_markdown_report(title, items, client_type):
         lines = [
-            f"# 🛡️ {title} 代理规则集\n\n",
-            f"> 自动化构建的多格式代理规则订阅源。\n",
-            f"> **更新时间：** {time_str}\n\n"
+            f"# {title} 代理规则集\n\n",
+            f"最后更新: {time_str} (UTC+8)\n\n",
         ]
         
         geosite_items = [x for x in items if x['category'] == 'geosite']
         geoip_items = [x for x in items if x['category'] == 'geoip']
         
         if geosite_items:
-            lines.append("## 📂 GeoSite 域名规则\n\n")
-            lines.append("| 规则名称 | 下载地址与格式 | 规则数量 |\n")
-            lines.append("| :--- | :--- | :---: |\n")
+            lines.extend([
+                "## GeoSite 域名规则\n\n",
+                "| 规则名称 | 格式 | 条目数 |\n",
+                "| :--- | :---: | :---: |\n"
+            ])
             for item in sorted(geosite_items, key=lambda x: x['name']):
                 name = item['name']
                 total = item['total']
@@ -387,14 +387,16 @@ def generate_change_report(mihomo_items, singbox_items, commit_msgs):
                     valid = [f for f in active_formats if f in ('json', 'srs')]
                     links = [f"[{f.upper()}](geo/geosite/{name}.{f})" for f in valid]
                 
-                link_str = " · ".join(links) if links else "无"
-                lines.append(f"| `{name}` | {link_str} | **{total}** |\n")
+                link_str = " / ".join(links) if links else "无"
+                lines.append(f"| {name} | {link_str} | {total:,} |\n")
             lines.append("\n")
             
         if geoip_items:
-            lines.append("## 📂 GeoIP IP 规则\n\n")
-            lines.append("| 规则名称 | 下载地址与格式 | 规则数量 |\n")
-            lines.append("| :--- | :--- | :---: |\n")
+            lines.extend([
+                "## GeoIP IP 规则\n\n",
+                "| 规则名称 | 格式 | 条目数 |\n",
+                "| :--- | :---: | :---: |\n"
+            ])
             for item in sorted(geoip_items, key=lambda x: x['name']):
                 name = item['name']
                 total = item['total']
@@ -407,8 +409,8 @@ def generate_change_report(mihomo_items, singbox_items, commit_msgs):
                     valid = [f for f in active_formats if f in ('json', 'srs')]
                     links = [f"[{f.upper()}](geo/geoip/{name}.{f})" for f in valid]
                 
-                link_str = " · ".join(links) if links else "无"
-                lines.append(f"| `{name}` | {link_str} | **{total}** |\n")
+                link_str = " / ".join(links) if links else "无"
+                lines.append(f"| {name} | {link_str} | {total:,} |\n")
             lines.append("\n")
             
         return "".join(lines)

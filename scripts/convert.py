@@ -75,10 +75,8 @@ def download_file(url, filename):
 
 def parse_mixed_rules_to_buckets(filename):
     """
-    解析规则，只保留有效的 DOMAIN, DOMAIN-SUFFIX, DOMAIN-KEYWORD, IP-CIDR, IP-CIDR6。
-    对于无前缀的纯文本：
-    - 如果是 IP，归入 ipcidr。
-    - 如果是不包含点号的关键字或纯字符串，自动转换为带通配符的形式（如 *keyword* 或匹配语法）。
+    解析规则：
+    - 无前缀且不含点号的纯字符串（如 speedtest、ipv6-test），直接转为带通配符的格式（如 *speedtest*）。
     """
     domain_set = set()
     ipcidr_set = set()
@@ -116,8 +114,11 @@ def parse_mixed_rules_to_buckets(filename):
                 elif pfx in ('DOMAIN', 'DOMAIN-SUFFIX', 'DOMAIN-KEYWORD'):
                     val = parts[1] if len(parts) > 1 else ''
                     if val:
-                        # 如果原本是 DOMAIN-KEYWORD，可以用通配符形式表达或保留标准格式
-                        domain_set.add(line)
+                        # 如果是 keyword，直接转为带有星号的通配符形式
+                        if pfx == 'DOMAIN-KEYWORD':
+                            domain_set.add(f"*{val}*")
+                        else:
+                            domain_set.add(val)
                         continue
                 else:
                     continue
@@ -130,10 +131,10 @@ def parse_mixed_rules_to_buckets(filename):
             except ValueError:
                 pass
 
-            # 无前缀纯文本：如果没有点号，转换为通配符关键字形式
+            # 无前缀纯文本：不含点号则加星号变成通配符 *keyword*
             if line:
                 if '.' not in line:
-                    domain_set.add(f"DOMAIN-KEYWORD,{line}")
+                    domain_set.add(f"*{line}*")
                 else:
                     domain_set.add(line)
 
@@ -157,20 +158,15 @@ def export_four_formats(rule_name, rules_set, rule_type):
         else:
             domains, suffixes, keywords = [], [], []
             for r in sorted(rules_set):
-                if ',' in r:
-                    pfx, val = r.split(',', 1)
-                    pfx = pfx.strip().upper()
-                    val = val.strip()
-                    if pfx == 'DOMAIN-KEYWORD':
-                        keywords.append(val)
-                    elif pfx == 'DOMAIN-SUFFIX':
-                        suffixes.append(val)
-                    elif pfx == 'DOMAIN':
-                        domains.append(val)
+                # 检查是否是通配符形式 *xxx*
+                if r.startswith('*') and r.endswith('*'):
+                    keywords.append(r[1:-1])
+                elif r.startswith('+.'):
+                    suffixes.append(r[2:])
+                elif r.startswith('.'):
+                    suffixes.append(r[1:])
                 else:
-                    if r.startswith('+.'): suffixes.append(r[2:])
-                    elif r.startswith('.'): suffixes.append(r[1:])
-                    else: domains.append(r)
+                    domains.append(r)
             
             rule_obj = {}
             if domains: rule_obj["domain"] = domains
@@ -204,7 +200,7 @@ def main():
     setup_custom_rule_dirs()
     
     os.makedirs("temp_workspace", exist_ok=True)
-    os.makedirs("bypass_out", exist_ok=True)
+    os.makedirs("bypass_out", exist_ok=True)  # 恢复 bypass_out 目录创建
     os.makedirs("mihomo_out", exist_ok=True)
     os.makedirs("singbox_out", exist_ok=True)
 
@@ -213,6 +209,7 @@ def main():
     now = datetime.now(timezone(timedelta(hours=8)))
     time_str = f"{now.year}年{now.month}月{now.day}日{now.strftime('%H:%M:%S')}"
 
+    # 1. 处理 domain 和 ipcidr 常规规则
     for rule_type in ["domain", "ipcidr"]:
         rules_dict = RULES_CONFIG.get(rule_type, {})
         print(f"\n[*] 开始批量构建 [{rule_type.upper()}] 分流规则...")
@@ -282,6 +279,7 @@ def main():
 
             all_changes[f"{rule_type}/{rule_name}"] = {"total": len(merged_rules)}
 
+    # 2. 处理 classical 混合格式
     classical_dict = RULES_CONFIG.get("classical", {})
     if classical_dict:
         print(f"\n[*] 开始处理 [CLASSICAL] 混合规则自动分离...")
@@ -328,12 +326,19 @@ def main():
                 global_commit_msgs[f"geo/geoip/{rule_name}.srs"]  = msg
                 all_changes[f"ipcidr/{rule_name}"] = {"total": len(mixed_ip_set)}
 
+    # 3. 恢复 bypass_out 相关处理（如果本地有配置或需要独立生成 bypass 文件）
+    # 注：如果你有特定的 bypass 生成逻辑，可在此处补充，同时确保 bypass_out 目录被正确打包提交
+    print(f"\n[*] 正在检查 bypass_out 目录...")
+    if os.path.exists("bypass_out") and os.listdir("bypass_out"):
+        for f_name in os.listdir("bypass_out"):
+            global_commit_msgs[f"bypass_out/{f_name}"] = f"{time_str} - 更新 bypass 规则"
+
     generate_change_report(all_changes, global_commit_msgs)
     with open("commit_msgs.json", "w", encoding="utf-8") as f:
         json.dump(global_commit_msgs, f, ensure_ascii=False, indent=2)
 
     shutil.rmtree("temp_workspace", ignore_errors=True)
-    print("\n[√] 所有任务及 classical 分离已全部完成！")
+    print("\n[√] 所有任务、bypass 目录及通配符格式转换已全部完成！")
 
 if __name__ == "__main__":
     main()

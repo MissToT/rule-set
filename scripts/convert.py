@@ -238,13 +238,13 @@ def load_historical_rules(base_dir, geo_subfolder, rule_name, tool_type):
         if not target_yaml and not target_mrs:
             return None
         if not target_yaml and target_mrs:
-            target_yaml = os.path.join("temp_workspace", f"{geo_subfolder}_{rule_name}_mihomo_hist_dec.yaml")
+            # 将后缀改为 .txt，并将格式从 yaml 改为 text
+            target_yaml = os.path.join("temp_workspace", f"{geo_subfolder}_{rule_name}_mihomo_hist_dec.txt")
             rule_type_str = "ipcidr" if geo_subfolder == "geoip" else "domain"
-            os.system(f"./mihomo convert-ruleset {rule_type_str} yaml {target_mrs} {target_yaml}")
+            os.system(f"./mihomo convert-ruleset {rule_type_str} text {target_mrs} {target_yaml}")
         
         if os.path.exists(target_yaml):
             try:
-                # 修复：改用 parse_mixed_rules_to_buckets 统一解析 Mihomo 解码后的 YAML 历史规则
                 d_set, ip_set, dr_set = parse_mixed_rules_to_buckets(target_yaml)
                 if geo_subfolder == "geoip":
                     return ip_set
@@ -253,16 +253,15 @@ def load_historical_rules(base_dir, geo_subfolder, rule_name, tool_type):
             except Exception:
                 pass
         return None
-    elif tool_type == "singbox":
+    elif tool_type == "sing-box":
         target_json = find_file(sub_path, f"{rule_name}.json")
         target_srs = find_file(sub_path, f"{rule_name}.srs")
         if not target_json and not target_srs:
             return None
         if not target_json and target_srs:
             target_json = os.path.join("temp_workspace", f"{geo_subfolder}_{rule_name}_singbox_hist_dec.json")
-            ret = os.system(f"./sing-box rule-set decompile {target_srs} --output {target_json}")
-            if ret != 0 or not os.path.exists(target_json):
-                os.system(f"./sing-box rule-set decompile {target_srs} > {target_json}")
+            os.system(f"./sing-box rule-set decompile {target_srs} -o {target_json}")
+        
         if os.path.exists(target_json):
             try:
                 d_set, ip_set, dr_set = parse_mixed_rules_to_buckets(target_json)

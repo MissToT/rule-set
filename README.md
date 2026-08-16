@@ -1,47 +1,46 @@
-# 🛡️ Sing-box 代理规则集
+# Sing-box 代理规则集
 
-> 自动化构建的多格式代理规则订阅源。
-> **更新时间：** 2026年8月16日19:32:43
+最后更新: 2026-08-16 19:37:51 (UTC+8)
 
-## 📂 GeoSite 域名规则
+## GeoSite 域名规则
 
-| 规则名称 | 下载地址与格式 | 规则数量 |
-| :--- | :--- | :---: |
-| `adblock` | [SRS](geo/geosite/adblock.srs) · [JSON](geo/geosite/adblock.json) | **100386** |
-| `ai` | [SRS](geo/geosite/ai.srs) · [JSON](geo/geosite/ai.json) | **174** |
-| `china` | [SRS](geo/geosite/china.srs) | **112774** |
-| `cloudflare` | [SRS](geo/geosite/cloudflare.srs) · [JSON](geo/geosite/cloudflare.json) | **76** |
-| `cloudflare-cn` | [SRS](geo/geosite/cloudflare-cn.srs) · [JSON](geo/geosite/cloudflare-cn.json) | **19** |
-| `ehentai` | [SRS](geo/geosite/ehentai.srs) · [JSON](geo/geosite/ehentai.json) | **8** |
-| `emby` | [SRS](geo/geosite/emby.srs) | **131** |
-| `emby-cn` | [SRS](geo/geosite/emby-cn.srs) | **38** |
-| `fake-ip-filter` | [SRS](geo/geosite/fake-ip-filter.srs) · [JSON](geo/geosite/fake-ip-filter.json) | **145** |
-| `game-platforms-download` | [SRS](geo/geosite/game-platforms-download.srs) · [JSON](geo/geosite/game-platforms-download.json) | **491** |
-| `games` | [SRS](geo/geosite/games.srs) · [JSON](geo/geosite/games.json) | **863** |
-| `google` | [SRS](geo/geosite/google.srs) · [JSON](geo/geosite/google.json) | **1047** |
-| `googlefcm` | [SRS](geo/geosite/googlefcm.srs) · [JSON](geo/geosite/googlefcm.json) | **7** |
-| `japan` | [SRS](geo/geosite/japan.srs) · [JSON](geo/geosite/japan.json) | **40** |
-| `microsoft` | [SRS](geo/geosite/microsoft.srs) · [JSON](geo/geosite/microsoft.json) | **750** |
-| `microsoft-cn` | [SRS](geo/geosite/microsoft-cn.srs) · [JSON](geo/geosite/microsoft-cn.json) | **190** |
-| `mihoyo-cn` | [SRS](geo/geosite/mihoyo-cn.srs) · [JSON](geo/geosite/mihoyo-cn.json) | **17** |
-| `private` | [SRS](geo/geosite/private.srs) · [JSON](geo/geosite/private.json) | **131** |
-| `proxy` | [SRS](geo/geosite/proxy.srs) · [JSON](geo/geosite/proxy.json) | **29764** |
-| `taiwan` | [SRS](geo/geosite/taiwan.srs) · [JSON](geo/geosite/taiwan.json) | **18** |
-| `telegram` | [SRS](geo/geosite/telegram.srs) · [JSON](geo/geosite/telegram.json) | **21** |
-| `tiktok` | [SRS](geo/geosite/tiktok.srs) · [JSON](geo/geosite/tiktok.json) | **36** |
-| `twitter` | [SRS](geo/geosite/twitter.srs) · [JSON](geo/geosite/twitter.json) | **24** |
-| `youtube` | [SRS](geo/geosite/youtube.srs) · [JSON](geo/geosite/youtube.json) | **178** |
+| 规则名称 | 格式 | 条目数 |
+| :--- | :---: | :---: |
+| adblock | [SRS](geo/geosite/adblock.srs) / [JSON](geo/geosite/adblock.json) | 100,386 |
+| ai | [SRS](geo/geosite/ai.srs) / [JSON](geo/geosite/ai.json) | 174 |
+| china | [SRS](geo/geosite/china.srs) | 112,774 |
+| cloudflare | [SRS](geo/geosite/cloudflare.srs) / [JSON](geo/geosite/cloudflare.json) | 76 |
+| cloudflare-cn | [SRS](geo/geosite/cloudflare-cn.srs) / [JSON](geo/geosite/cloudflare-cn.json) | 19 |
+| ehentai | [SRS](geo/geosite/ehentai.srs) / [JSON](geo/geosite/ehentai.json) | 8 |
+| emby | [SRS](geo/geosite/emby.srs) | 131 |
+| emby-cn | [SRS](geo/geosite/emby-cn.srs) | 38 |
+| fake-ip-filter | [SRS](geo/geosite/fake-ip-filter.srs) / [JSON](geo/geosite/fake-ip-filter.json) | 145 |
+| game-platforms-download | [SRS](geo/geosite/game-platforms-download.srs) / [JSON](geo/geosite/game-platforms-download.json) | 491 |
+| games | [SRS](geo/geosite/games.srs) / [JSON](geo/geosite/games.json) | 863 |
+| google | [SRS](geo/geosite/google.srs) / [JSON](geo/geosite/google.json) | 1,047 |
+| googlefcm | [SRS](geo/geosite/googlefcm.srs) / [JSON](geo/geosite/googlefcm.json) | 7 |
+| japan | [SRS](geo/geosite/japan.srs) / [JSON](geo/geosite/japan.json) | 40 |
+| microsoft | [SRS](geo/geosite/microsoft.srs) / [JSON](geo/geosite/microsoft.json) | 750 |
+| microsoft-cn | [SRS](geo/geosite/microsoft-cn.srs) / [JSON](geo/geosite/microsoft-cn.json) | 190 |
+| mihoyo-cn | [SRS](geo/geosite/mihoyo-cn.srs) / [JSON](geo/geosite/mihoyo-cn.json) | 17 |
+| private | [SRS](geo/geosite/private.srs) / [JSON](geo/geosite/private.json) | 131 |
+| proxy | [SRS](geo/geosite/proxy.srs) / [JSON](geo/geosite/proxy.json) | 29,764 |
+| taiwan | [SRS](geo/geosite/taiwan.srs) / [JSON](geo/geosite/taiwan.json) | 18 |
+| telegram | [SRS](geo/geosite/telegram.srs) / [JSON](geo/geosite/telegram.json) | 21 |
+| tiktok | [SRS](geo/geosite/tiktok.srs) / [JSON](geo/geosite/tiktok.json) | 36 |
+| twitter | [SRS](geo/geosite/twitter.srs) / [JSON](geo/geosite/twitter.json) | 24 |
+| youtube | [SRS](geo/geosite/youtube.srs) / [JSON](geo/geosite/youtube.json) | 178 |
 
-## 📂 GeoIP IP 规则
+## GeoIP IP 规则
 
-| 规则名称 | 下载地址与格式 | 规则数量 |
-| :--- | :--- | :---: |
-| `ai` | [SRS](geo/geoip/ai.srs) · [JSON](geo/geoip/ai.json) | **68** |
-| `china` | [SRS](geo/geoip/china.srs) · [JSON](geo/geoip/china.json) | **18133** |
-| `cloudflare` | [SRS](geo/geoip/cloudflare.srs) · [JSON](geo/geoip/cloudflare.json) | **608** |
-| `google` | [SRS](geo/geoip/google.srs) · [JSON](geo/geoip/google.json) | **2948** |
-| `private` | [SRS](geo/geoip/private.srs) · [JSON](geo/geoip/private.json) | **14** |
-| `proxy` | [SRS](geo/geoip/proxy.srs) · [JSON](geo/geoip/proxy.json) | **112** |
-| `telegram` | [SRS](geo/geoip/telegram.srs) · [JSON](geo/geoip/telegram.json) | **8** |
-| `twitter` | [SRS](geo/geoip/twitter.srs) · [JSON](geo/geoip/twitter.json) | **17** |
+| 规则名称 | 格式 | 条目数 |
+| :--- | :---: | :---: |
+| ai | [SRS](geo/geoip/ai.srs) / [JSON](geo/geoip/ai.json) | 68 |
+| china | [SRS](geo/geoip/china.srs) / [JSON](geo/geoip/china.json) | 18,133 |
+| cloudflare | [SRS](geo/geoip/cloudflare.srs) / [JSON](geo/geoip/cloudflare.json) | 608 |
+| google | [SRS](geo/geoip/google.srs) / [JSON](geo/geoip/google.json) | 2,948 |
+| private | [SRS](geo/geoip/private.srs) / [JSON](geo/geoip/private.json) | 14 |
+| proxy | [SRS](geo/geoip/proxy.srs) / [JSON](geo/geoip/proxy.json) | 112 |
+| telegram | [SRS](geo/geoip/telegram.srs) / [JSON](geo/geoip/telegram.json) | 8 |
+| twitter | [SRS](geo/geoip/twitter.srs) / [JSON](geo/geoip/twitter.json) | 17 |
 

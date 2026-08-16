@@ -1,2 +1,25 @@
-# 自定义本地 domain 覆写规则 (include): adblock
-# 每行一条规则，支持 Mihomo / Sing-box 格式
+reqhfg-launches.appsflyersdk.com
+update.9mod.com
+a.tiktokmod.pro
+# 肖剑秋名下盗版域名
++.open-source.com.cn
++.rspack.cn
++.tauri.org.cn
++.dmlr.cn
++.pytest.cn
++.llmd.cn
++.pptr.cn
++.gptr.com.cn
++.langflow.cn
++.tortoisesvn.cn
++.stackoverflow.com.cn
++.holybible.com.cn
++.v2ex.cn
++.wordpresstheme.cn
++.cupy.cn
++.openwebui.cn
++.openwebui.com.cn
++.caddyserver.com.cn
++.git-scm.cn
++.mdn.org.cn
++.graphrag.com.cn

@@ -8,7 +8,7 @@
       "enable_local": true,
       "formats": ["MRS","SRS"],
       "include": {
-        "inline": ["emby-cn"],
+        "inline": ["emby-cn","mihoyo-cn"],
         "urls": [
           "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/cn.srs",
           "https://github.com/QuixoticHeart/rule-set/blob/ruleset/singbox/version2/cn.srs"

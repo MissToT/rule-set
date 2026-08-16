@@ -133,6 +133,25 @@ def parse_mixed_rules_to_buckets(filename):
 
     return domain_set, ipcidr_set
 
+def load_prev_rules_from_yaml(geo_subfolder, rule_name):
+    prev_yaml = os.path.join(PREV_SNAPSHOT_DIR, "geo", geo_subfolder, f"{rule_name}.yaml")
+    if os.path.exists(prev_yaml):
+        rules = set()
+        try:
+            with open(prev_yaml, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if line.startswith("- "):
+                        val = line[2:].strip()
+                        if val.startswith("'") and val.endswith("'"): val = val[1:-1]
+                        if val.startswith('"') and val.endswith('"'): val = val[1:-1]
+                        if val:
+                            rules.add(val)
+            return rules
+        except Exception:
+            pass
+    return None
+
 def export_bypass_txt_files(v4_collapsed, v6_collapsed, commit_msgs):
     os.makedirs("bypass_out", exist_ok=True)
     now = datetime.now(timezone(timedelta(hours=8)))
@@ -247,7 +266,30 @@ def generate_change_report(all_changes, commit_msgs):
         lines = [f"# {branch} 规则变更记录\n\n**更新时间：** {time_str}\n\n---\n\n"]
         for key in sorted(all_changes.keys()):
             data = all_changes[key]
-            lines.append(f"## `{key}` {ext}\n- 规则总数：**{data['total']}**\n\n")
+            lines.append(f"## `{key}` {ext}\n\n")
+            if data["prev_total"] is None:
+                lines.append(f"> 首次生成，共 **{data['total']}** 条规则\n\n")
+            else:
+                diff = data["total"] - data["prev_total"]
+                sign = (f"+{diff}" if diff >= 0 else str(diff))
+                lines.append(f"- 规则总数：**{data['total']}**（{sign}）\n")
+
+                if data["added"]:
+                    lines.append(f"\n<details><summary>✅ 新增 {len(data['added'])} 条（点击展开）</summary>\n\n```text\n")
+                    for r in data["added"][:50]: lines.append(f"{r}\n")
+                    if len(data["added"]) > 50: lines.append(f"... 等等\n")
+                    lines.append("```\n</details>\n")
+
+                if data["removed"]:
+                    lines.append(f"\n<details><summary>❌ 移除 {len(data['removed'])} 条（点击展开）</summary>\n\n```text\n")
+                    for r in data["removed"][:50]: lines.append(f"{r}\n")
+                    if len(data["removed"]) > 50: lines.append(f"... 等等\n")
+                    lines.append("```\n</details>\n")
+
+                if not data["added"] and not data["removed"]:
+                    lines.append("- 无变化\n")
+            lines.append("\n")
+
         os.makedirs(out_dir, exist_ok=True)
         with open(os.path.join(out_dir, "README.md"), "w", encoding="utf-8") as f:
             f.write("".join(lines))
@@ -326,20 +368,29 @@ def main():
                 v6_collapsed = sorted(ipaddress.collapse_addresses(v6_nets))
                 merged_rules = set(str(n) for n in (v4_collapsed + v6_collapsed))
 
-                # 恢复：如果是 china 规则，则自动生成 bypass_out 独立文件
                 if rule_name == "china":
                     export_bypass_txt_files(v4_collapsed, v6_collapsed, global_commit_msgs)
 
             export_four_formats(rule_name, merged_rules, rule_type)
 
             geo_dir = 'geoip' if rule_type == 'ipcidr' else 'geosite'
+            prev_rules = load_prev_rules_from_yaml(geo_dir, rule_name)
+            new_rules_set = set(merged_rules)
+            added = sorted(new_rules_set - prev_rules) if prev_rules is not None else []
+            removed = sorted(prev_rules - new_rules_set) if prev_rules is not None else []
+
             msg = f"{time_str} - 更新 {rule_type}/{rule_name}: 共 {len(merged_rules)} 条"
             global_commit_msgs[f"geo/{geo_dir}/{rule_name}.yaml"] = msg
             global_commit_msgs[f"geo/{geo_dir}/{rule_name}.mrs"]  = msg
             global_commit_msgs[f"geo/{geo_dir}/{rule_name}.json"] = msg
             global_commit_msgs[f"geo/{geo_dir}/{rule_name}.srs"]  = msg
 
-            all_changes[f"{rule_type}/{rule_name}"] = {"total": len(merged_rules)}
+            all_changes[f"{rule_type}/{rule_name}"] = {
+                "total": len(new_rules_set),
+                "prev_total": len(prev_rules) if prev_rules is not None else None,
+                "added": added,
+                "removed": removed
+            }
 
     # 2. 处理 classical 混合格式
     classical_dict = RULES_CONFIG.get("classical", {})
@@ -369,31 +420,51 @@ def main():
 
             if mixed_domain_set:
                 export_four_formats(rule_name, mixed_domain_set, "domain")
+                prev_rules = load_prev_rules_from_yaml("geosite", rule_name)
+                new_rules_set = set(mixed_domain_set)
+                added = sorted(new_rules_set - prev_rules) if prev_rules is not None else []
+                removed = sorted(prev_rules - new_rules_set) if prev_rules is not None else []
+
                 msg = f"{time_str} - 更新 domain/{rule_name}: 共 {len(mixed_domain_set)} 条"
                 global_commit_msgs[f"geo/geosite/{rule_name}.yaml"] = msg
                 global_commit_msgs[f"geo/geosite/{rule_name}.mrs"]  = msg
                 global_commit_msgs[f"geo/geosite/{rule_name}.json"] = msg
                 global_commit_msgs[f"geo/geosite/{rule_name}.srs"]  = msg
-                all_changes[f"domain/{rule_name}"] = {"total": len(mixed_domain_set)}
+                all_changes[f"domain/{rule_name}"] = {
+                    "total": len(new_rules_set),
+                    "prev_total": len(prev_rules) if prev_rules is not None else None,
+                    "added": added,
+                    "removed": removed
+                }
 
             if mixed_ip_set:
                 v4_nets = [ipaddress.ip_network(x, strict=False) for x in mixed_ip_set if ipaddress.ip_network(x, strict=False).version == 4]
                 v4_collapsed = sorted(ipaddress.collapse_addresses(v4_nets))
                 mixed_ip_set = set(str(n) for n in v4_collapsed)
                 export_four_formats(rule_name, mixed_ip_set, "ipcidr")
+                prev_rules = load_prev_rules_from_yaml("geoip", rule_name)
+                new_rules_set = set(mixed_ip_set)
+                added = sorted(new_rules_set - prev_rules) if prev_rules is not None else []
+                removed = sorted(prev_rules - new_rules_set) if prev_rules is not None else []
+
                 msg = f"{time_str} - 更新 ipcidr/{rule_name}: 共 {len(mixed_ip_set)} 条"
                 global_commit_msgs[f"geo/geoip/{rule_name}.yaml"] = msg
                 global_commit_msgs[f"geo/geoip/{rule_name}.mrs"]  = msg
                 global_commit_msgs[f"geo/geoip/{rule_name}.json"] = msg
                 global_commit_msgs[f"geo/geoip/{rule_name}.srs"]  = msg
-                all_changes[f"ipcidr/{rule_name}"] = {"total": len(mixed_ip_set)}
+                all_changes[f"ipcidr/{rule_name}"] = {
+                    "total": len(new_rules_set),
+                    "prev_total": len(prev_rules) if prev_rules is not None else None,
+                    "added": added,
+                    "removed": removed
+                }
 
     generate_change_report(all_changes, global_commit_msgs)
     with open("commit_msgs.json", "w", encoding="utf-8") as f:
         json.dump(global_commit_msgs, f, ensure_ascii=False, indent=2)
 
     shutil.rmtree("temp_workspace", ignore_errors=True)
-    print("\n[√] 所有任务、bypass_out 目录及通配符格式转换已全部完成！")
+    print("\n[√] 所有任务、详细变更报告及通配符格式转换已全部完成！")
 
 if __name__ == "__main__":
     main()

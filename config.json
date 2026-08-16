@@ -30,8 +30,8 @@
     ]
   },
   "classical": {
-    "speedtest": [
-      "https://raw.githubusercontent.com/QuixoticHeart/rule-set/refs/heads/ruleset/meta/classical/speedtest.list"
+    "googlefcm": [
+      "https://raw.githubusercontent.com/QuixoticHeart/rule-set/refs/heads/ruleset/singbox/version2/googlefcm.json"
     ]
   }
 }

@@ -1,6 +1,6 @@
 {
   "settings": {
-    "enable_local": true
+    "enable_local": false
   },
   "domain": {
     "china": {

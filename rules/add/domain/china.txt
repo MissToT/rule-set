@@ -4,7 +4,7 @@ gh-proxy.com
 i.pixiv.re
 +.pixiv.re
 # 再漫画
-+.zaimanhua.com
+# +.zaimanhua.com
 # 图床
 p.sda1.dev
 # 网易云

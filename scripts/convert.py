@@ -217,7 +217,6 @@ def parse_mixed_rules_to_buckets(filename):
                 pass
 
             if line:
-                # 修复：防止已经带有星号的关键字被二次包裹
                 if line.startswith('*') and line.endswith('*'):
                     domain_set.add(line)
                 elif '.' not in line:
@@ -243,11 +242,7 @@ def load_historical_rules(base_dir, geo_subfolder, rule_name, tool_type):
         if not target_yaml and not target_mrs:
             return None
         if not target_yaml and target_mrs:
-            target_yaml = os.path.join("temp_workspace", f"{geo_subfolder}_{rule_name}_mihomo_hist_dec.yaml")
-            os.makedirs("temp_workspace", exist_ok=True)
-            rule_type_str = "ipcidr" if geo_subfolder == "geoip" else "domain"
-            # 修正 Mihomo mrs 转 yaml 命令
-            os.system(f"./mihomo convert-ruleset {rule_type_str} yaml {target_mrs} {target_yaml}")
+            return None
         
         if os.path.exists(target_yaml):
             try:
@@ -267,8 +262,7 @@ def load_historical_rules(base_dir, geo_subfolder, rule_name, tool_type):
         if not target_json and target_srs:
             target_json = os.path.join("temp_workspace", f"{geo_subfolder}_{rule_name}_singbox_hist_dec.json")
             os.makedirs("temp_workspace", exist_ok=True)
-            # 修正 sing-box 反编译参数从 -o 改为正确的 --output
-            os.system(f"./sing-box rule-set decompile {target_srs} --output {target_json}")
+            os.system(f"./sing-box rule-set decompile {target_srs} -o {target_json}")
         
         if os.path.exists(target_json):
             try:
@@ -444,7 +438,7 @@ def export_rule_files(rule_name, rules_set, rule_type, formats, domain_regex_set
                     json.dump({"version": 2, "rules": [rule_obj]}, f, indent=2, ensure_ascii=False)
             temp_json_created = True
 
-        os.system(f"./sing-box rule-set compile --output {singbox_files['srs']} {singbox_files['json']}")
+        os.system(f"./sing-box rule-set compile -o {singbox_files['srs']} {singbox_files['json']}")
 
         if temp_json_created and "json" not in fmt_lower:
             if os.path.exists(json_path):
@@ -463,14 +457,14 @@ def generate_change_report(mihomo_changes, singbox_changes, commit_msgs):
     time_str = f"{now.year}年{now.month}月{now.day}日{now.strftime('%H:%M:%S')}"
     
     configs = [
-        ("Mihomo", "mihomo_out", "(.yaml / .mrs)", mihomo_changes), 
-        ("Sing-box", "singbox_out", "(.json / .srs)", singbox_changes)
+        ("Mihomo", "mihomo_out", mihomo_changes), 
+        ("Sing-box", "singbox_out", singbox_changes)
     ]
-    for branch, out_dir, ext, changes_data in configs:
+    for branch, out_dir, changes_data in configs:
         lines = [f"# {branch} 规则变更记录\n\n**更新时间：** {time_str}\n\n---\n\n"]
         for key in sorted(changes_data.keys()):
             data = changes_data[key]
-            lines.append(f"## `{key}` {ext}\n\n")
+            lines.append(f"## `{key}`\n\n")
             if data["prev_total"] is None:
                 lines.append(f"> 首次生成，共 **{data['total']}** 条规则\n\n")
             else:
@@ -604,7 +598,7 @@ def main():
                             raise Exception("Mihomo 转换 mrs 失败")
                     elif url_lower.endswith('.srs'):
                         temp_json = f"temp_workspace/{rule_type}_{rule_name}_{action_type}_{i}.json"
-                        ret = os.system(f"./sing-box rule-set decompile {temp_dl} --output {temp_json}")
+                        ret = os.system(f"./sing-box rule-set decompile {temp_dl} -o {temp_json}")
                         if ret != 0 or not os.path.exists(temp_json) or os.path.getsize(temp_json) == 0:
                             raise Exception("Sing-box 反编译 srs 失败")
                         temp_txt = temp_json
@@ -696,6 +690,11 @@ def main():
             prev_mihomo = get_prev_rules(geo_dir, rule_name, "mihomo")
             prev_singbox = get_prev_rules(geo_dir, rule_name, "singbox")
 
+            if prev_mihomo is None and prev_singbox is not None:
+                prev_mihomo = {r for r in prev_singbox if not str(r).startswith("REGEX:")}
+            if prev_singbox is None and prev_mihomo is not None:
+                prev_singbox = set(prev_mihomo)
+
             export_rule_files(rule_name, merged_rules, "domain", formats, merged_regex)
 
             mihomo_new_set = set(merged_rules)
@@ -742,6 +741,11 @@ def main():
             prev_mihomo = get_prev_rules(geo_dir, rule_name, "mihomo")
             prev_singbox = get_prev_rules(geo_dir, rule_name, "singbox")
 
+            if prev_mihomo is None and prev_singbox is not None:
+                prev_mihomo = set(prev_singbox)
+            if prev_singbox is None and prev_mihomo is not None:
+                prev_singbox = set(prev_mihomo)
+
             export_rule_files(rule_name, merged_rules, "ipcidr", formats)
 
             mihomo_new_set = set(merged_rules)
@@ -771,6 +775,11 @@ def main():
                 prev_mihomo_d = get_prev_rules("geosite", rule_name, "mihomo")
                 prev_singbox_d = get_prev_rules("geosite", rule_name, "singbox")
 
+                if prev_mihomo_d is None and prev_singbox_d is not None:
+                    prev_mihomo_d = {r for r in prev_singbox_d if not str(r).startswith("REGEX:")}
+                if prev_singbox_d is None and prev_mihomo_d is not None:
+                    prev_singbox_d = set(prev_mihomo_d)
+
                 export_rule_files(rule_name, mixed_domain_set, "domain", formats, mixed_regex_set)
 
                 mihomo_new_set = set(mixed_domain_set)
@@ -796,6 +805,11 @@ def main():
             if mixed_ip_set:
                 prev_mihomo_ip = get_prev_rules("geoip", rule_name, "mihomo")
                 prev_singbox_ip = get_prev_rules("geoip", rule_name, "singbox")
+
+                if prev_mihomo_ip is None and prev_singbox_ip is not None:
+                    prev_mihomo_ip = set(prev_singbox_ip)
+                if prev_singbox_ip is None and prev_mihomo_ip is not None:
+                    prev_singbox_ip = set(prev_mihomo_ip)
 
                 v4_nets = [ipaddress.ip_network(x, strict=False) for x in mixed_ip_set if ipaddress.ip_network(x, strict=False).version == 4]
                 v4_collapsed = sorted(ipaddress.collapse_addresses(v4_nets))

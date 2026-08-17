@@ -124,7 +124,7 @@
       "enable_local": true,
       "include": {
         "inline": [
-          "emby,twitter,telegram,tiktok,youtube,ehentai,game-platforms-download,games,ai,google,microsoft,cloudflare,japan,taiwan"
+          "emby,twitter,telegram,tiktok,youtube,ehentai,game-platforms-download,games,ai,google,microsoft,cloudflare,japan,taiwan,googlefcm"
         ],
         "urls": [
           "https://github.com/QuixoticHeart/rule-set/blob/ruleset/singbox/version2/proxy.srs"
@@ -132,7 +132,7 @@
       },
       "exclude": {
         "inline": [
-          "emby-cn,mihoyo-cn,microsoft-cn,cloudflare-cn,googlefcm"
+          "emby-cn,mihoyo-cn,microsoft-cn,cloudflare-cn"
         ],
         "urls": []
       }

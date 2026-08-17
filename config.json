@@ -9,8 +9,7 @@
       "formats": ["MRS","YAML","SRS","JSON"],
       "include": {
         "inline": [
-          "emby-cn",
-          "classical:mihoyo-cn,microsoft-cn,cloudflare-cn,googlefcm"
+          "emby-cn,mihoyo-cn,microsoft-cn,cloudflare-cn,googlefcm"
         ],
         "urls": [
           "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/cn.srs",
@@ -125,8 +124,7 @@
       "enable_local": true,
       "include": {
         "inline": [
-          "domain:emby,japan,taiwan",
-          "twitter,telegram,tiktok,youtube,ehentai,game-platforms-download,games,ai,google,microsoft,cloudflare"
+          "emby,twitter,telegram,tiktok,youtube,ehentai,game-platforms-download,games,ai,google,microsoft,cloudflare,japan,taiwan"
         ],
         "urls": [
           "https://github.com/QuixoticHeart/rule-set/blob/ruleset/singbox/version2/proxy.srs"
@@ -134,8 +132,7 @@
       },
       "exclude": {
         "inline": [
-          "domain:emby-cn",
-          "mihoyo-cn,microsoft-cn,cloudflare-cn,googlefcm"
+          "emby-cn,mihoyo-cn,microsoft-cn,cloudflare-cn,googlefcm"
         ],
         "urls": []
       }

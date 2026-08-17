@@ -9,7 +9,7 @@
       "formats": ["MRS","YAML","SRS","JSON"],
       "include": {
         "inline": [
-          "emby-cn,mihoyo-cn,microsoft-cn,cloudflare-cn,googlefcm"
+          "emby-cn,mihoyo-cn,microsoft-cn,cloudflare-cn"
         ],
         "urls": [
           "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/cn.srs",

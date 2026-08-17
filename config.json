@@ -8,7 +8,7 @@
       "enable_local": true,
       "formats": ["MRS","YAML","SRS","JSON"],
       "include": {
-        "inline": ["emby-cn","mihoyo-cn","microsoft-cn","cloudflare-cn"],
+        "inline": ["emby-cn","mihoyo-cn","microsoft-cn","cloudflare-cn","googlefcm"],
         "urls": [
           "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/cn.srs",
           "https://github.com/QuixoticHeart/rule-set/blob/ruleset/singbox/version2/cn.srs"
@@ -121,13 +121,13 @@
     "proxy": {
       "enable_local": true,
       "include": {
-        "inline": ["emby","twitter","telegram","tiktok","youtube","ehentai","game-platforms-download","games","ai","googlefcm","google","microsoft","cloudflare","japan","taiwan"],
+        "inline": ["emby","twitter","telegram","tiktok","youtube","ehentai","game-platforms-download","games","ai","google","microsoft","cloudflare","japan","taiwan"],
         "urls": [
           "https://github.com/QuixoticHeart/rule-set/blob/ruleset/singbox/version2/proxy.srs"
         ]
       },
       "exclude": {
-        "inline": ["emby-cn","mihoyo-cn","microsoft-cn","cloudflare-cn"],
+        "inline": ["emby-cn","mihoyo-cn","microsoft-cn","cloudflare-cn","googlefcm"],
         "urls": []
       }
     },

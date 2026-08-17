@@ -1,0 +1,103 @@
+{
+  // ==========================================
+  // 全局配置 (settings)
+  // ==========================================
+  "settings": {
+    // 全局开关 (true/false)：开启后默认自动读取 rules/{action}/{rule_type}/{rule_name}.txt 本地文件追加/扣除规则
+    "enable_local": true,
+
+    // 全局默认导出的规则格式列表
+    // 可选格式："MRS" (Mihomo二进制), "YAML" (Clash文本), "SRS" (sing-box二进制), "JSON" (sing-box文本)
+    "formats": ["MRS", "YAML", "SRS", "JSON"]
+  },
+
+  // ==========================================
+  // 域名类规则集 (domain) -> 导出至 geo/geosite
+  // ==========================================
+  "domain": {
+    "media": {
+      // [可选] 单规则覆盖：单独开启/关闭当前规则的本地 txt 覆写（覆盖全局 enable_local）
+      "enable_local": true,
+
+      // [可选] 单规则覆盖：仅导出指定的格式，用于加快不需要格式的编译速度
+      "formats": ["MRS", "SRS"],
+
+      "include": {
+        "inline": [
+          // 语法 1 (无前缀 + 逗号批量)：自动检索并合并 domain、ipcidr、classical 中所有名为 youtube 和 tiktok 的规则
+          "youtube,tiktok",
+
+          // 语法 2 (带前缀)：仅精确引用 classical 分类下的 bilibili-hk 规则
+          "classical:bilibili-hk"
+        ],
+        "urls": [
+          // 远程 SRS / MRS / YAML 规则下载链接
+          "https://raw.githubusercontent.com/example/rules/geosite-media.srs"
+        ]
+      },
+      "exclude": {
+        "inline": [
+          // 语法 3 (带前缀剔除)：从当前规则中递归扣除 domain 分类下 cn-media 的所有域名
+          "domain:cn-media"
+        ],
+        "urls": []
+      }
+    }
+  },
+
+  // ==========================================
+  // IP 网段类规则集 (ipcidr) -> 导出至 geo/geoip
+  // 自动处理 CIDR 聚合合并与重叠剔除
+  // ==========================================
+  "ipcidr": {
+    "telegram": {
+      "enable_local": false,
+      "formats": ["SRS", "JSON"],
+      "include": {
+        "inline": [],
+        "urls": [
+          "https://raw.githubusercontent.com/example/rules/geoip-telegram.srs"
+        ]
+      },
+      "exclude": {
+        "inline": [],
+        "urls": []
+      }
+    }
+  },
+
+  // ==========================================
+  // 混合类规则集 (classical)
+  // 解析时会自动拆分：域名并入 GeoSite，IP 并入 GeoIP
+  // ==========================================
+  "classical": {
+    "proxy-all": {
+      "enable_local": true,
+      "formats": ["MRS", "YAML", "SRS", "JSON"],
+      "include": {
+        "inline": [
+          // 无前缀引用：同时合并所有分类下的 media 和 telegram 规则
+          "media,telegram",
+
+          // 带前缀批量引用：仅引用 domain 分类下的 japan 和 taiwan
+          "domain:japan,taiwan",
+
+          // 带前缀引用：仅引用 ipcidr 分类下的 foreign-ip
+          "ipcidr:foreign-ip"
+        ],
+        "urls": [
+          "https://raw.githubusercontent.com/example/rules/proxy-list.mrs"
+        ]
+      },
+      "exclude": {
+        "inline": [
+          // 无前缀批量剔除：递归扣除所有分类下的 mihoyo-cn 和 china 规则
+          "mihoyo-cn,china"
+        ],
+        "urls": [
+          "https://raw.githubusercontent.com/example/rules/direct-rules.yaml"
+        ]
+      }
+    }
+  }
+}

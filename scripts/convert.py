@@ -582,6 +582,7 @@ def main():
     changed = True
     pass_count = 0
     max_passes = 10
+    ALL_CATEGORIES = ["domain", "ipcidr", "classical"]
 
     while changed and pass_count < max_passes:
         changed = False
@@ -596,59 +597,64 @@ def main():
 
             # 1. 处理 inline_include
             for target_str in current["inline_include"]:
-                if ":" in target_str:
+                has_prefix = ":" in target_str
+                if has_prefix:
                     t_type, names_str = target_str.split(":", 1)
                 else:
-                    t_type, names_str = rule_type, target_str
+                    t_type, names_str = None, target_str
                 
-                # 支持逗号分隔批量解析 (例如 "mihoyo-cn,china,proxy")
                 target_names = [n.strip() for n in names_str.split(",") if n.strip()]
 
                 for t_name in target_names:
-                    target_key = (t_type, t_name)
-                    if target_key in rule_cache:
-                        target_data = rule_cache[target_key]
-                        
-                        d_len_before = len(current["domain"])
-                        ip_len_before = len(current["ip"])
-                        reg_len_before = len(current["regex"])
+                    # 显式指定前缀则只查该分类；未指定前缀则匹配 domain、ipcidr、classical 中的所有同名规则
+                    target_keys = [(t_type, t_name)] if has_prefix else [(cat, t_name) for cat in ALL_CATEGORIES]
 
-                        current["domain"] |= target_data["domain"]
-                        current["ip"] |= target_data["ip"]
-                        current["regex"] |= target_data["regex"]
+                    for target_key in target_keys:
+                        if target_key in rule_cache:
+                            target_data = rule_cache[target_key]
+                            
+                            d_len_before = len(current["domain"])
+                            ip_len_before = len(current["ip"])
+                            reg_len_before = len(current["regex"])
 
-                        if (len(current["domain"]) != d_len_before or 
-                            len(current["ip"]) != ip_len_before or 
-                            len(current["regex"]) != reg_len_before):
-                            changed = True
+                            current["domain"] |= target_data["domain"]
+                            current["ip"] |= target_data["ip"]
+                            current["regex"] |= target_data["regex"]
+
+                            if (len(current["domain"]) != d_len_before or 
+                                len(current["ip"]) != ip_len_before or 
+                                len(current["regex"]) != reg_len_before):
+                                changed = True
 
             # 2. 处理 inline_exclude
             for target_str in current["inline_exclude"]:
-                if ":" in target_str:
+                has_prefix = ":" in target_str
+                if has_prefix:
                     t_type, names_str = target_str.split(":", 1)
                 else:
-                    t_type, names_str = rule_type, target_str
+                    t_type, names_str = None, target_str
                 
-                # 支持逗号分隔批量解析
                 target_names = [n.strip() for n in names_str.split(",") if n.strip()]
 
                 for t_name in target_names:
-                    target_key = (t_type, t_name)
-                    if target_key in rule_cache:
-                        target_data = rule_cache[target_key]
+                    target_keys = [(t_type, t_name)] if has_prefix else [(cat, t_name) for cat in ALL_CATEGORIES]
 
-                        d_len_before = len(current["domain"])
-                        ip_len_before = len(current["ip"])
-                        reg_len_before = len(current["regex"])
+                    for target_key in target_keys:
+                        if target_key in rule_cache:
+                            target_data = rule_cache[target_key]
 
-                        current["domain"] -= target_data["domain"]
-                        current["ip"] -= target_data["ip"]
-                        current["regex"] -= target_data["regex"]
+                            d_len_before = len(current["domain"])
+                            ip_len_before = len(current["ip"])
+                            reg_len_before = len(current["regex"])
 
-                        if (len(current["domain"]) != d_len_before or 
-                            len(current["ip"]) != ip_len_before or 
-                            len(current["regex"]) != reg_len_before):
-                            changed = True
+                            current["domain"] -= target_data["domain"]
+                            current["ip"] -= target_data["ip"]
+                            current["regex"] -= target_data["regex"]
+
+                            if (len(current["domain"]) != d_len_before or 
+                                len(current["ip"]) != ip_len_before or 
+                                len(current["regex"]) != reg_len_before):
+                                changed = True
 
     print(f"\n[*] 开始第三阶段：优化CIDR并导出最终多格式规则文件...")
 

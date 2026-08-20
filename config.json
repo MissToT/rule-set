@@ -22,19 +22,6 @@
         "urls": []
       }
     },
-    "adblock": {
-      "enable_local": true,
-      "include": {
-        "inline": [],
-        "urls": [
-          "https://anti-ad.net/mihomo.mrs"
-        ]
-      },
-      "exclude": {
-        "inline": [],
-        "urls": []
-      }
-    },
     "emby": {
       "enable_local": true,
       "formats": ["MRS","SRS"],
@@ -346,6 +333,34 @@
         "urls": [
           "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geoip/private.srs",
           "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/private.srs"
+        ]
+      },
+      "exclude": {
+        "inline": [],
+        "urls": []
+      }
+    }
+  },
+  "adblock": {
+    "mihomo": {
+      "enable_local": true,
+      "include": {
+        "inline": [],
+        "urls": [
+          "https://anti-ad.net/mihomo.mrs"
+        ]
+      },
+      "exclude": {
+        "inline": [],
+        "urls": []
+      }
+    },
+    "sing-box": {
+      "enable_local": true,
+      "include": {
+        "inline": [],
+        "urls": [
+          "https://anti-ad.net/adguard.txt"
         ]
       },
       "exclude": {

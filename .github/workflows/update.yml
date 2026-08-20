@@ -22,14 +22,13 @@ jobs:
 
       - name: Checkout Previous Snapshot for Diff
         run: |
-          REPO_URL="https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+          REPO_URL="https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}".git
           if git ls-remote --exit-code "$REPO_URL" refs/heads/mihomo > /dev/null 2>&1; then
             git clone --depth=1 --branch mihomo "$REPO_URL" prev_mihomo
             echo "[*] 已克隆 mihomo 历史快照，用于差异比对"
           else
-            echo "[*] mihomo 分支尚不存在（首次运行），跳过差异比对"
+            echo "[*] mihomo 分支尚不存在，跳过差异比对"
           fi
-          # === 新增：补上 singbox 分支的克隆 ===
           if git ls-remote --exit-code "$REPO_URL" refs/heads/singbox > /dev/null 2>&1; then
             git clone --depth=1 --branch singbox "$REPO_URL" prev_singbox
             echo "[*] 已克隆 singbox 历史快照，用于差异比对"
@@ -42,6 +41,12 @@ jobs:
           else
             echo "[*] bypass 分支尚不存在，跳过差异比对"
           fi
+          if git ls-remote --exit-code "$REPO_URL" refs/heads/adblock > /dev/null 2>&1; then
+            git clone --depth=1 --branch adblock "$REPO_URL" prev_adblock
+            echo "[*] 已克隆 adblock 历史快照，用于差异比对"
+          else
+            echo "[*] adblock 分支尚不存在，跳过差异比对"
+          fi
 
       - name: Execute Compilation Script
         run: python scripts/convert.py
@@ -51,7 +56,6 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
-          # 追踪生成的规则模板文件
           git add rules/
           
           if ! git diff --cached --quiet; then
@@ -124,7 +128,7 @@ jobs:
 
           cd deploy_singbox
           
-          TIME_STR=$(python3 -c "from datetime import datetime, timedelta, timezone; now=datetime.now(timezone(timedelta(hours=8))) ; print(f\"{now.year}年{now.month}月{now.day}日{now.strftime('%H:%M:%S')}\")")
+          TIME_STR=$(python3 -c "from datetime import datetime, timedelta, timezone; now=datetime.now(timezone(timedelta(hours=8))); print(f\"{now.year}年{now.month}月{now.day}日{now.strftime('%H:%M:%S')}\")")
 
           if [ -n "$(git status --porcelain)" ]; then
             while IFS= read -r file; do
@@ -186,4 +190,45 @@ jobs:
             echo "::notice::bypass 分支已更新"
           else
             echo "::notice::bypass 分支无变更"
+          fi
+
+      - name: Deploy to adblock Branch
+        run: |
+          REPO_URL="https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+
+          if git ls-remote --exit-code "$REPO_URL" refs/heads/adblock > /dev/null 2>&1; then
+            git clone --depth=1 --branch adblock "$REPO_URL" deploy_adblock
+          else
+            (mkdir -p deploy_adblock \
+              && cd deploy_adblock \
+              && git init \
+              && git remote add origin "$REPO_URL" \
+              && git checkout --orphan adblock)
+          fi
+
+          rsync -av --delete --exclude='.git' adblock_out/ deploy_adblock/
+
+          cd deploy_adblock
+          
+          TIME_STR=$(python3 -c "from datetime import datetime, timedelta, timezone; now=datetime.now(timezone(timedelta(hours=8))); print(f\"{now.year}年{now.month}月{now.day}日{now.strftime('%H:%M:%S')}\")")
+
+          if [ -n "$(git status --porcelain)" ]; then
+            while IFS= read -r file; do
+              if [ -n "$file" ]; then
+                git add "$file"
+                filename=$(basename "$file")
+                MSG=$(python3 -c "import json; d=json.load(open('../commit_msgs.json')); print(d.get('$file', ''))")
+                
+                if [ -z "$MSG" ]; then
+                  MSG="${TIME_STR} - 更新 ${filename}"
+                fi
+                
+                git commit -m "$MSG"
+              fi
+            done < <(git status --porcelain | cut -c4-)
+            
+            git push origin HEAD:adblock
+            echo "::notice::adblock 分支已更新"
+          else
+            echo "::notice::adblock 分支无变更"
           fi

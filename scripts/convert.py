@@ -12,7 +12,7 @@ def load_config():
     if os.path.exists("config.json"):
         with open("config.json", "r", encoding="utf-8") as f:
             return json.load(f)
-    return {"settings": {}, "domain": {}, "ipcidr": {}, "classical": {}}
+    return {"settings": {}, "domain": {}, "ipcidr": {}, "classical": {}, "adblock": {}}
 
 RULES_CONFIG = load_config()
 
@@ -76,6 +76,7 @@ def setup_binaries():
 
 def setup_custom_rule_dirs():
     for action in ["include", "exclude"]:
+        # 基础分类目录
         for rule_type in ["domain", "ipcidr", "classical"]:
             dir_path = os.path.join("rules", action, rule_type)
             os.makedirs(dir_path, exist_ok=True)
@@ -87,8 +88,32 @@ def setup_custom_rule_dirs():
                     with open(file_path, "w", encoding="utf-8") as f:
                         f.write(f"# 自定义本地 {rule_type} 覆写规则 ({action}): {rule_name}\n")
                         f.write(f"# 每行一条规则\n")
-                        
-    print("[*] 已自动为所有规则生成对应的本地覆写模板文件。")
+        
+        # 专门的 adblock 目录
+        adblock_dir = os.path.join("rules", action, "adblock")
+        os.makedirs(adblock_dir, exist_ok=True)
+        adblock_file = os.path.join(adblock_dir, "adblock.txt")
+        if not os.path.exists(adblock_file):
+            with open(adblock_file, "w", encoding="utf-8") as f:
+                f.write(f"# 自定义本地 adblock 覆写规则 ({action})\n")
+                f.write(f"# 支持纯域名或 AdGuard 规则语法（例如: ||example.com^ 或 @@||example.com^）\n")
+
+    print("[*] 已自动生成所有本地 include/exclude 覆写模板文件。")
+
+def parse_adblock_local_file(filepath):
+    lines = []
+    domains = set()
+    if os.path.exists(filepath):
+        with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith('#') or line.startswith('!'):
+                    continue
+                lines.append(line)
+                clean_dom = line.lstrip('@@||').lstrip('||').rstrip('^').strip()
+                if clean_dom:
+                    domains.add(clean_dom)
+    return lines, domains
 
 def parse_mixed_rules_to_buckets(filename):
     domain_set = set()
@@ -151,7 +176,7 @@ def parse_mixed_rules_to_buckets(filename):
     with open(filename, 'r', encoding='utf-8', errors='ignore') as f:
         for line in f:
             line = line.strip()
-            if not line or line.startswith('#'): continue
+            if not line or line.startswith('#') or line.startswith('!'): continue
             if line.startswith("'") and line.endswith("'"): line = line[1:-1]
             if line.startswith('"') and line.endswith('"'): line = line[1:-1]
             if line.startswith('- '):
@@ -159,6 +184,11 @@ def parse_mixed_rules_to_buckets(filename):
                 if line.startswith("'") and line.endswith("'"): line = line[1:-1]
                 if line.startswith('"') and line.endswith('"'): line = line[1:-1]
             if line == 'payload:': continue
+
+            if line.startswith("||") or line.startswith("@@||"):
+                clean = line.lstrip('@@||').lstrip('||').rstrip('^').strip()
+                if clean: domain_set.add(f"+.{clean}")
+                continue
 
             if ',' in line:
                 parts = [p.strip() for p in line.split(',')]
@@ -355,6 +385,96 @@ def export_rule_files(rule_name, rules_set, rule_type, formats, domain_regex_set
     for ext, path in singbox_files.items():
         if ext not in fmt_lower and os.path.exists(path):
             os.remove(path)
+
+def process_adblock_section(global_commit_msgs):
+    adblock_cfg = RULES_CONFIG.get("adblock", {})
+    if not adblock_cfg:
+        return
+
+    os.makedirs("adblock_out/mihomo", exist_ok=True)
+    os.makedirs("adblock_out/singbox", exist_ok=True)
+
+    inc_lines, inc_doms = parse_adblock_local_file("rules/include/adblock/adblock.txt")
+    exc_lines, exc_doms = parse_adblock_local_file("rules/exclude/adblock/adblock.txt")
+
+    now = datetime.now(timezone(timedelta(hours=8)))
+    time_str = f"{now.year}-{now.month:02d}-{now.day:02d} {now.strftime('%H:%M:%S')}"
+
+    # 1. Sing-Box AdBlock 处理 (专有 AdGuard 上游，直接且仅输出 .srs)
+    if "sing-box" in adblock_cfg or "singbox" in adblock_cfg:
+        sb_key = "sing-box" if "sing-box" in adblock_cfg else "singbox"
+        s_cfg = adblock_cfg[sb_key]
+        urls = s_cfg.get("include", {}).get("urls", [])
+
+        raw_lines = []
+        for i, url in enumerate(urls):
+            temp_dl = f"temp_workspace/adblock_singbox_{i}.txt"
+            try:
+                curl_download(url, temp_dl)
+                with open(temp_dl, 'r', encoding='utf-8', errors='ignore') as f:
+                    for line in f:
+                        line = line.strip()
+                        if line and not line.startswith('#') and not line.startswith('!'):
+                            raw_lines.append(line)
+            except Exception as e:
+                print(f"[-] 下载 sing-box adblock 上游失败: {e}")
+
+        filtered_lines = [
+            l for l in raw_lines 
+            if l.lstrip('@@||').lstrip('||').rstrip('^').strip() not in exc_doms
+        ]
+        filtered_lines.extend(inc_lines)
+
+        temp_adg = "temp_workspace/final_adguard_rules.txt"
+        with open(temp_adg, "w", encoding="utf-8") as f:
+            for line in filtered_lines:
+                f.write(f"{line}\n")
+
+        srs_output = "adblock_out/singbox/adblock.srs"
+        os.system(f"./sing-box rule-set convert --type adguard --output {srs_output} {temp_adg}")
+
+        if os.path.exists(temp_adg):
+            os.remove(temp_adg)
+
+        global_commit_msgs["singbox/adblock.srs"] = f"{time_str} - 更新 adblock/sing-box (.srs): 共 {len(filtered_lines)} 条"
+
+    # 2. Mihomo AdBlock 处理 (输出 .mrs 及 .yaml)
+    if "mihomo" in adblock_cfg:
+        m_cfg = adblock_cfg["mihomo"]
+        urls = m_cfg.get("include", {}).get("urls", [])
+        m_domains = set()
+
+        for i, url in enumerate(urls):
+            temp_dl = f"temp_workspace/adblock_mihomo_{i}.dl"
+            temp_txt = f"temp_workspace/adblock_mihomo_{i}.txt"
+            try:
+                curl_download(url, temp_dl)
+                if url.endswith('.mrs'):
+                    os.system(f"./mihomo convert-ruleset domain mrs {temp_dl} {temp_txt}")
+                else:
+                    shutil.copy(temp_dl, temp_txt)
+                
+                d_set, _, _ = parse_mixed_rules_to_buckets(temp_txt)
+                m_domains |= d_set
+            except Exception as e:
+                print(f"[-] 下载或解析 mihomo adblock 失败: {e}")
+
+        for d in inc_doms:
+            m_domains.add(f"+.{d}" if not d.startswith('+.') else d)
+        for d in exc_doms:
+            m_domains.discard(d)
+            m_domains.discard(f"+.{d}")
+
+        yaml_path = "adblock_out/mihomo/adblock.yaml"
+        mrs_path  = "adblock_out/mihomo/adblock.mrs"
+
+        with open(yaml_path, 'w', encoding='utf-8') as f:
+            f.write("payload:\n")
+            for dom in sorted(m_domains):
+                f.write(f"  - '{dom}'\n")
+
+        os.system(f"./mihomo convert-ruleset domain yaml {yaml_path} {mrs_path}")
+        global_commit_msgs["mihomo/adblock.mrs"] = f"{time_str} - 更新 adblock/mihomo (.mrs): 共 {len(m_domains)} 条"
 
 def generate_change_report(mihomo_items, singbox_items, commit_msgs):
     now = datetime.now(timezone(timedelta(hours=8)))
@@ -578,7 +698,6 @@ def main():
 
     print(f"\n[*] 开始第二阶段：解析内联引用 (inline_include / inline_exclude)...")
 
-    # 循环解析以支持多层嵌套及跨类型引用
     changed = True
     pass_count = 0
     max_passes = 10
@@ -595,7 +714,6 @@ def main():
             
             current = rule_cache[cache_key]
 
-            # 1. 处理 inline_include
             for target_str in current["inline_include"]:
                 has_prefix = ":" in target_str
                 if has_prefix:
@@ -606,7 +724,6 @@ def main():
                 target_names = [n.strip() for n in names_str.split(",") if n.strip()]
 
                 for t_name in target_names:
-                    # 显式指定前缀则只查该分类；未指定前缀则匹配 domain、ipcidr、classical 中的所有同名规则
                     target_keys = [(t_type, t_name)] if has_prefix else [(cat, t_name) for cat in ALL_CATEGORIES]
 
                     for target_key in target_keys:
@@ -626,7 +743,6 @@ def main():
                                 len(current["regex"]) != reg_len_before):
                                 changed = True
 
-            # 2. 处理 inline_exclude
             for target_str in current["inline_exclude"]:
                 has_prefix = ":" in target_str
                 if has_prefix:
@@ -759,6 +875,9 @@ def main():
 
                 mihomo_items.append({"category": "geoip", "name": rule_name, "formats": formats, "total": len(collapsed_ip_set)})
                 singbox_items.append({"category": "geoip", "name": rule_name, "formats": formats, "total": len(collapsed_ip_set)})
+
+    print(f"\n[*] 开始第四阶段：专门处理 AdBlock 分类...")
+    process_adblock_section(global_commit_msgs)
 
     generate_change_report(mihomo_items, singbox_items, global_commit_msgs)
     

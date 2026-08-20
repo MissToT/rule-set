@@ -1,2 +1,4 @@
 # 自定义本地 adblock 覆写规则 (exclude)
-# 支持纯域名或 AdGuard 规则语法（例如: ||example.com^ 或 @@||example.com^）
+# 支持纯域名、 AdGuard 语法、 +.example.com 及 DOMAIN-SUFFIX,example.com 写法
++.px.ucweb.com
+px.ucweb.com

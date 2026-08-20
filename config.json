@@ -111,8 +111,7 @@
         "inline": [],
         "urls": [
           "https://github.com/QuixoticHeart/rule-set/blob/ruleset/singbox/version2/cncidr.srs",
-          "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geoip/cn.srs",
-          "https://github.com/SagerNet/sing-geoip/blob/rule-set/geoip-cn.srs"
+          "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geoip/cn.srs"
         ]
       },
       "exclude": {

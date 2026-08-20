@@ -1,0 +1,2 @@
+# 自定义本地 adblock 覆写规则 (exclude)
+# 支持纯域名、AdGuard 语法、+.example.com、DOMAIN-KEYWORD,google 以及 DOMAIN-SUFFIX,example.com

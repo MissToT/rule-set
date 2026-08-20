@@ -1,6 +1,6 @@
 ! Title: AdGuard Rule List
-! Updated: 2026-08-20 18:57:30
-! Total Rules: 99832
+! Updated: 2026-08-20 18:59:44
+! Total Rules: 99831
 @@||ad.azure.com^
 @@||ads.taboola.com^
 @@||autocomplete.clearbit.com^
@@ -87058,7 +87058,6 @@
 ||cms.ucweb.com^
 ||hk.napi.ucweb.com^
 ||kwurl.ucweb.com^
-||px.ucweb.com^
 ||rescn.u3.ucweb.com^
 ||sea.napi.ucweb.com^
 ||uc.ucweb.com^

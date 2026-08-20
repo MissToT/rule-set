@@ -94,41 +94,51 @@ def setup_custom_rule_dirs():
         if not os.path.exists(adblock_file):
             with open(adblock_file, "w", encoding="utf-8") as f:
                 f.write(f"# 自定义本地 adblock 覆写规则 ({action})\n")
-                f.write(f"# 支持纯域名、 AdGuard 语法、 +.example.com 及 DOMAIN-SUFFIX,example.com 写法\n")
+                f.write(f"# 支持纯域名、AdGuard 语法、+.example.com、DOMAIN-KEYWORD,google 以及 DOMAIN-SUFFIX,example.com\n")
 
     print("[*] 已自动生成所有本地 include/exclude 覆写模板文件。")
+
+PREFIX_REGEX = re.compile(
+    r'^(?:@@\|\||\|\||\+\.|\.|DOMAIN-KEYWORD,|DOMAIN-SUFFIX,|DOMAIN,)', 
+    re.IGNORECASE
+)
 
 def parse_adblock_local_file(filepath):
     raw_ag_lines = []
     clean_domains = set()
-    if os.path.exists(filepath):
-        with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
-            for line in f:
-                line = line.strip()
-                if not line or line.startswith('#') or line.startswith('!'):
-                    continue
-                
-                dom = line
-                if dom.startswith("@@||"):
-                    dom = dom[4:]
-                elif dom.startswith("||"):
-                    dom = dom[2:]
-                elif dom.startswith("+."):
-                    dom = dom[2:]
-                elif dom.startswith("."):
-                    dom = dom[1:]
-                elif dom.upper().startswith("DOMAIN-SUFFIX,"):
-                    dom = dom[14:]
-                elif dom.upper().startswith("DOMAIN,"):
-                    dom = dom[7:]
-                
-                dom = dom.rstrip('^').strip()
-                if dom:
-                    clean_domains.add(dom)
-                    if line.startswith("@@"):
-                        raw_ag_lines.append(f"@@||{dom}^")
+    
+    if not os.path.exists(filepath):
+        return raw_ag_lines, clean_domains
+
+    with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith(('#', '!')):
+                continue
+            
+            # 1. 提取白名单标记 @@
+            is_whitelist = line.startswith('@@')
+            work_line = line[2:] if is_whitelist else line
+            prefix = "@@" if is_whitelist else ""
+
+            # 2. 通配符或 DOMAIN-KEYWORD, 处理
+            if '*' in work_line or work_line.upper().startswith("DOMAIN-KEYWORD,"):
+                clean_kw = PREFIX_REGEX.sub('', work_line).rstrip('^').strip('*').strip()
+                if clean_kw:
+                    clean_domains.add(clean_kw)
+                    if work_line.startswith("||") or work_line.startswith("*"):
+                        formatted = work_line if work_line.endswith('^') else f"{work_line}^"
                     else:
-                        raw_ag_lines.append(f"||{dom}^")
+                        formatted = f"||*{clean_kw}*^"
+                    raw_ag_lines.append(f"{prefix}{formatted}")
+                continue
+
+            # 3. 普通域名及后缀处理
+            clean_dom = PREFIX_REGEX.sub('', work_line).rstrip('^').strip()
+            if clean_dom:
+                clean_domains.add(clean_dom)
+                raw_ag_lines.append(f"{prefix}||{clean_dom}^")
+
     return raw_ag_lines, clean_domains
 
 def parse_mixed_rules_to_buckets(filename):
@@ -415,7 +425,7 @@ def process_adblock_section(global_commit_msgs):
     now = datetime.now(timezone(timedelta(hours=8)))
     time_str = f"{now.year}-{now.month:02d}-{now.day:02d} {now.strftime('%H:%M:%S')}"
 
-    # 1. 收集并处理 AdGuard 规则，输出为 adblock_out/adguard.txt
+    # 1. 处理下载 AdGuard 规则，输出为 adblock_out/adguard.txt
     raw_lines = []
     urls = []
     if "sing-box" in adblock_cfg or "singbox" in adblock_cfg:
@@ -439,10 +449,9 @@ def process_adblock_section(global_commit_msgs):
     # 过滤排除域名并补充 include 本地规则
     filtered_lines = [
         l for l in raw_lines 
-        if l.lstrip('@@||').lstrip('||').rstrip('^').strip() not in exc_doms
+        if PREFIX_REGEX.sub('', l.lstrip('@@')).rstrip('^').strip('*').strip() not in exc_doms
     ]
     
-    # 确保加入本地 include 规则
     for l in inc_lines:
         if l not in filtered_lines:
             filtered_lines.append(l)

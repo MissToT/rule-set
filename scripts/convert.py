@@ -281,7 +281,7 @@ def parse_mixed_rules_to_buckets(filename):
 def export_bypass_txt_files(v4_collapsed, v6_collapsed, commit_msgs):
     os.makedirs("bypass_out", exist_ok=True)
     now = datetime.now(timezone(timedelta(hours=8)))
-    time_str = f"{now.year}-{now.month:02d}-{now.day:02d} {now.strftime('%H:%M:%S')}"
+    time_str = now.strftime('%Y-%m-%d %H:%M:%S')
 
     def process_bypass_file(filename, collapsed_nets):
         filepath = os.path.join("bypass_out", filename)
@@ -423,7 +423,7 @@ def process_adblock_section(global_commit_msgs):
     exc_lines, exc_doms = parse_adblock_local_file("rules/exclude/adblock/adblock.txt")
 
     now = datetime.now(timezone(timedelta(hours=8)))
-    time_str = f"{now.year}-{now.month:02d}-{now.day:02d} {now.strftime('%H:%M:%S')}"
+    time_str = now.strftime('%Y-%m-%d %H:%M:%S')
 
     # 1. 处理下载 AdGuard 规则，输出为 adblock_out/adguard.txt
     raw_lines = []
@@ -466,13 +466,13 @@ def process_adblock_section(global_commit_msgs):
 
     global_commit_msgs["adguard.txt"] = f"{time_str} - 更新 adguard.txt: 共 {len(filtered_lines)} 条"
 
-    # 2. 生成 sing-box adblock.srs
+    # 2. 生成 sing-box.srs
     if "sing-box" in adblock_cfg or "singbox" in adblock_cfg:
-        srs_output = "adblock_out/adblock.srs"
+        srs_output = "adblock_out/sing-box.srs"
         os.system(f"./sing-box rule-set convert --type adguard --output {srs_output} {adguard_txt_path}")
-        global_commit_msgs["adblock.srs"] = f"{time_str} - 更新 adblock (.srs): 共 {len(filtered_lines)} 条"
+        global_commit_msgs["sing-box.srs"] = f"{time_str} - 更新 sing-box.srs: 共 {len(filtered_lines)} 条"
 
-    # 3. 生成 Mihomo adblock.yaml / adblock.mrs
+    # 3. 生成 Mihomo mihomo.yaml / mihomo.mrs
     if "mihomo" in adblock_cfg:
         m_cfg = adblock_cfg["mihomo"]
         m_urls = m_cfg.get("include", {}).get("urls", [])
@@ -499,8 +499,8 @@ def process_adblock_section(global_commit_msgs):
             m_domains.discard(d)
             m_domains.discard(f"+.{d}")
 
-        yaml_path = "adblock_out/adblock.yaml"
-        mrs_path  = "adblock_out/adblock.mrs"
+        yaml_path = "adblock_out/mihomo.yaml"
+        mrs_path  = "adblock_out/mihomo.mrs"
 
         with open(yaml_path, 'w', encoding='utf-8') as f:
             f.write("payload:\n")
@@ -508,11 +508,12 @@ def process_adblock_section(global_commit_msgs):
                 f.write(f"  - '{dom}'\n")
 
         os.system(f"./mihomo convert-ruleset domain yaml {yaml_path} {mrs_path}")
-        global_commit_msgs["adblock.mrs"] = f"{time_str} - 更新 adblock (.mrs): 共 {len(m_domains)} 条"
+        global_commit_msgs["mihomo.yaml"] = f"{time_str} - 更新 mihomo.yaml: 共 {len(m_domains)} 条"
+        global_commit_msgs["mihomo.mrs"] = f"{time_str} - 更新 mihomo.mrs: 共 {len(m_domains)} 条"
 
 def generate_change_report(mihomo_items, singbox_items, commit_msgs):
     now = datetime.now(timezone(timedelta(hours=8)))
-    time_str = f"{now.year}-{now.month:02d}-{now.day:02d} {now.strftime('%H:%M:%S')}"
+    time_str = now.strftime('%Y-%m-%d %H:%M:%S')
     
     def build_markdown_report(title, items, client_type):
         lines = [
@@ -631,7 +632,7 @@ def main():
     singbox_items = []
     global_commit_msgs = {}
     now = datetime.now(timezone(timedelta(hours=8)))
-    time_str = f"{now.year}年{now.month}月{now.day}日{now.strftime('%H:%M:%S')}"
+    time_str = now.strftime('%Y-%m-%d %H:%M:%S')
 
     settings = RULES_CONFIG.get("settings", {})
     global_enable_local = settings.get("enable_local", True)

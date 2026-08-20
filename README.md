@@ -1,14 +1,14 @@
 # Sing-box 代理规则集
 
-最后更新: 2026-08-20 04:22:28 (UTC+8)
+最后更新: 2026-08-20 14:05:01 (UTC+8)
 
 ## GeoSite 域名规则
 
 | 规则名称 | 格式 | 条目数 |
 | :--- | :---: | :---: |
 | adblock | [SRS](geo/geosite/adblock.srs) / [JSON](geo/geosite/adblock.json) | 100,412 |
-| ai | [SRS](geo/geosite/ai.srs) / [JSON](geo/geosite/ai.json) | 174 |
-| china | [SRS](geo/geosite/china.srs) / [JSON](geo/geosite/china.json) | 112,936 |
+| ai | [SRS](geo/geosite/ai.srs) / [JSON](geo/geosite/ai.json) | 180 |
+| china | [SRS](geo/geosite/china.srs) / [JSON](geo/geosite/china.json) | 116,123 |
 | cloudflare | [SRS](geo/geosite/cloudflare.srs) / [JSON](geo/geosite/cloudflare.json) | 57 |
 | cloudflare-cn | [SRS](geo/geosite/cloudflare-cn.srs) / [JSON](geo/geosite/cloudflare-cn.json) | 19 |
 | ehentai | [SRS](geo/geosite/ehentai.srs) / [JSON](geo/geosite/ehentai.json) | 8 |
@@ -21,10 +21,10 @@
 | googlefcm | [SRS](geo/geosite/googlefcm.srs) / [JSON](geo/geosite/googlefcm.json) | 7 |
 | japan | [SRS](geo/geosite/japan.srs) / [JSON](geo/geosite/japan.json) | 40 |
 | microsoft | [SRS](geo/geosite/microsoft.srs) / [JSON](geo/geosite/microsoft.json) | 560 |
-| microsoft-cn | [SRS](geo/geosite/microsoft-cn.srs) / [JSON](geo/geosite/microsoft-cn.json) | 190 |
+| microsoft-cn | [SRS](geo/geosite/microsoft-cn.srs) / [JSON](geo/geosite/microsoft-cn.json) | 189 |
 | mihoyo-cn | [SRS](geo/geosite/mihoyo-cn.srs) / [JSON](geo/geosite/mihoyo-cn.json) | 17 |
 | private | [SRS](geo/geosite/private.srs) / [JSON](geo/geosite/private.json) | 131 |
-| proxy | [SRS](geo/geosite/proxy.srs) / [JSON](geo/geosite/proxy.json) | 30,969 |
+| proxy | [SRS](geo/geosite/proxy.srs) / [JSON](geo/geosite/proxy.json) | 30,981 |
 | taiwan | [SRS](geo/geosite/taiwan.srs) / [JSON](geo/geosite/taiwan.json) | 18 |
 | telegram | [SRS](geo/geosite/telegram.srs) / [JSON](geo/geosite/telegram.json) | 21 |
 | tiktok | [SRS](geo/geosite/tiktok.srs) / [JSON](geo/geosite/tiktok.json) | 36 |
@@ -36,7 +36,7 @@
 | 规则名称 | 格式 | 条目数 |
 | :--- | :---: | :---: |
 | ai | [SRS](geo/geoip/ai.srs) / [JSON](geo/geoip/ai.json) | 68 |
-| china | [SRS](geo/geoip/china.srs) / [JSON](geo/geoip/china.json) | 18,131 |
+| china | [SRS](geo/geoip/china.srs) / [JSON](geo/geoip/china.json) | 17,465 |
 | cloudflare | [SRS](geo/geoip/cloudflare.srs) / [JSON](geo/geoip/cloudflare.json) | 608 |
 | google | [SRS](geo/geoip/google.srs) / [JSON](geo/geoip/google.json) | 2,948 |
 | private | [SRS](geo/geoip/private.srs) / [JSON](geo/geoip/private.json) | 14 |

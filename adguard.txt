@@ -1,5 +1,5 @@
 ! Title: AdGuard Rule List
-! Updated: 2026-08-22 23:27:11
+! Updated: 2026-08-23 04:18:09
 ! Total Rules: 99831
 @@||ad.azure.com^
 @@||ads.taboola.com^

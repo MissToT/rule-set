@@ -1,13 +1,13 @@
 # Mihomo 代理规则集
 
-最后更新: 2026-08-25 04:26:00 (UTC+8)
+最后更新: 2026-08-26 04:24:25 (UTC+8)
 
 ## GeoSite 域名规则
 
 | 规则名称 | 格式 | 条目数 |
 | :--- | :---: | :---: |
 | ai | [MRS](geo/geosite/ai.mrs) / [YAML](geo/geosite/ai.yaml) | 179 |
-| china | [MRS](geo/geosite/china.mrs) / [YAML](geo/geosite/china.yaml) | 116,142 |
+| china | [MRS](geo/geosite/china.mrs) / [YAML](geo/geosite/china.yaml) | 116,206 |
 | cloudflare | [MRS](geo/geosite/cloudflare.mrs) / [YAML](geo/geosite/cloudflare.yaml) | 57 |
 | cloudflare-cn | [MRS](geo/geosite/cloudflare-cn.mrs) / [YAML](geo/geosite/cloudflare-cn.yaml) | 19 |
 | ehentai | [MRS](geo/geosite/ehentai.mrs) / [YAML](geo/geosite/ehentai.yaml) | 8 |
@@ -35,7 +35,7 @@
 | 规则名称 | 格式 | 条目数 |
 | :--- | :---: | :---: |
 | ai | [MRS](geo/geoip/ai.mrs) / [YAML](geo/geoip/ai.yaml) | 68 |
-| china | [MRS](geo/geoip/china.mrs) / [YAML](geo/geoip/china.yaml) | 17,495 |
+| china | [MRS](geo/geoip/china.mrs) / [YAML](geo/geoip/china.yaml) | 17,471 |
 | cloudflare | [MRS](geo/geoip/cloudflare.mrs) / [YAML](geo/geoip/cloudflare.yaml) | 596 |
 | google | [MRS](geo/geoip/google.mrs) / [YAML](geo/geoip/google.yaml) | 2,979 |
 | private | [MRS](geo/geoip/private.mrs) / [YAML](geo/geoip/private.yaml) | 14 |

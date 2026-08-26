@@ -11,3 +11,6 @@ p.sda1.dev
 +.netease.im
 # 守候订阅域名
 sub1.sntp.me
+# kl
++.klz9.com
+j1.jfimv2.xyz

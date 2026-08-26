@@ -1,6 +1,6 @@
 # Mihomo 代理规则集
 
-最后更新: 2026-08-27 01:41:15 (UTC+8)
+最后更新: 2026-08-27 06:41:37 (UTC+8)
 
 ## GeoSite 域名规则
 
@@ -18,7 +18,7 @@
 | games | [MRS](geo/geosite/games.mrs) / [YAML](geo/geosite/games.yaml) | 1,338 |
 | google | [MRS](geo/geosite/google.mrs) / [YAML](geo/geosite/google.yaml) | 1,045 |
 | googlefcm | [MRS](geo/geosite/googlefcm.mrs) / [YAML](geo/geosite/googlefcm.yaml) | 7 |
-| japan | [MRS](geo/geosite/japan.mrs) / [YAML](geo/geosite/japan.yaml) | 40 |
+| japan | [MRS](geo/geosite/japan.mrs) / [YAML](geo/geosite/japan.yaml) | 30 |
 | microsoft | [MRS](geo/geosite/microsoft.mrs) / [YAML](geo/geosite/microsoft.yaml) | 560 |
 | microsoft-cn | [MRS](geo/geosite/microsoft-cn.mrs) / [YAML](geo/geosite/microsoft-cn.yaml) | 189 |
 | mihoyo-cn | [MRS](geo/geosite/mihoyo-cn.mrs) / [YAML](geo/geosite/mihoyo-cn.yaml) | 16 |

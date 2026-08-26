@@ -1,6 +1,6 @@
 # Sing-box 代理规则集
 
-最后更新: 2026-08-27 01:41:15 (UTC+8)
+最后更新: 2026-08-27 06:41:37 (UTC+8)
 
 ## GeoSite 域名规则
 
@@ -18,7 +18,7 @@
 | games | [SRS](geo/geosite/games.srs) / [JSON](geo/geosite/games.json) | 1,341 |
 | google | [SRS](geo/geosite/google.srs) / [JSON](geo/geosite/google.json) | 1,047 |
 | googlefcm | [SRS](geo/geosite/googlefcm.srs) / [JSON](geo/geosite/googlefcm.json) | 7 |
-| japan | [SRS](geo/geosite/japan.srs) / [JSON](geo/geosite/japan.json) | 40 |
+| japan | [SRS](geo/geosite/japan.srs) / [JSON](geo/geosite/japan.json) | 30 |
 | microsoft | [SRS](geo/geosite/microsoft.srs) / [JSON](geo/geosite/microsoft.json) | 560 |
 | microsoft-cn | [SRS](geo/geosite/microsoft-cn.srs) / [JSON](geo/geosite/microsoft-cn.json) | 189 |
 | mihoyo-cn | [SRS](geo/geosite/mihoyo-cn.srs) / [JSON](geo/geosite/mihoyo-cn.json) | 17 |

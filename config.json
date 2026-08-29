@@ -347,7 +347,8 @@
       "include": {
         "inline": [],
         "urls": [
-          "https://anti-ad.net/mihomo.mrs"
+          "https://anti-ad.net/mihomo.mrs",
+          "https://github.com/MetaCubeX/meta-rules-dat/blob/meta/geo/geosite/18comic.yaml"
         ]
       },
       "exclude": {
@@ -360,7 +361,8 @@
       "include": {
         "inline": [],
         "urls": [
-          "https://anti-ad.net/adguard.txt"
+          "https://anti-ad.net/adguard.txt",
+          "https://github.com/MetaCubeX/meta-rules-dat/blob/meta/geo/geosite/18comic.yaml"
         ]
       },
       "exclude": {

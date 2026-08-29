@@ -362,7 +362,7 @@
         "inline": [],
         "urls": [
           "https://anti-ad.net/adguard.txt",
-          "https://github.com/MetaCubeX/meta-rules-dat/blob/meta/geo/geosite/18comic.yaml"
+          "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/18comic.json"
         ]
       },
       "exclude": {

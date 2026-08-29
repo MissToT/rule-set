@@ -1,6 +1,6 @@
 ! Title: AdGuard Rule List
-! Updated: 2026-08-29 13:20:45
-! Total Rules: 100215
+! Updated: 2026-08-29 13:55:11
+! Total Rules: 100216
 @@||ad.azure.com^
 @@||ads.taboola.com^
 @@||autocomplete.clearbit.com^
@@ -100216,3 +100216,4 @@
 ||zzzmjfixezere.site^
 ||zzzmxvoxooaat.site^
 ||distantalizing.xyz^
+||klz9.com/app/manga/uploads/ads/*^

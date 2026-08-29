@@ -1,11 +1,12 @@
 # Mihomo 代理规则集
 
-最后更新: 2026-08-29 13:06:34 (UTC+8)
+最后更新: 2026-08-29 13:12:17 (UTC+8)
 
 ## GeoSite 域名规则
 
 | 规则名称 | 格式 | 条目数 |
 | :--- | :---: | :---: |
+| adblock | [MRS](geo/geosite/adblock.mrs) / [YAML](geo/geosite/adblock.yaml) | 24 |
 | ai | [MRS](geo/geosite/ai.mrs) / [YAML](geo/geosite/ai.yaml) | 179 |
 | china | [MRS](geo/geosite/china.mrs) / [YAML](geo/geosite/china.yaml) | 116,715 |
 | cloudflare | [MRS](geo/geosite/cloudflare.mrs) / [YAML](geo/geosite/cloudflare.yaml) | 57 |
@@ -13,6 +14,7 @@
 | ehentai | [MRS](geo/geosite/ehentai.mrs) / [YAML](geo/geosite/ehentai.yaml) | 8 |
 | emby | [MRS](geo/geosite/emby.mrs) | 131 |
 | emby-cn | [MRS](geo/geosite/emby-cn.mrs) | 38 |
+| fake-ip | [MRS](geo/geosite/fake-ip.mrs) / [YAML](geo/geosite/fake-ip.yaml) | 7 |
 | fake-ip-filter | [MRS](geo/geosite/fake-ip-filter.mrs) / [YAML](geo/geosite/fake-ip-filter.yaml) | 113 |
 | game-platforms-download | [MRS](geo/geosite/game-platforms-download.mrs) / [YAML](geo/geosite/game-platforms-download.yaml) | 491 |
 | games | [MRS](geo/geosite/games.mrs) / [YAML](geo/geosite/games.yaml) | 1,338 |

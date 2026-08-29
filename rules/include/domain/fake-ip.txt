@@ -1,2 +1,11 @@
 # 自定义本地 domain 覆写规则 (include): fake-ip
 # 每行一条规则，支持 Mihomo / Sing-box 格式
+# 图床
+p.sda1.dev
+# kl
++.klz9.com
++.jfimv2.xyz
+j1.jfimv2.xyz
+j2.jfimv2.xyz
+j3.jfimv2.xyz
+j4.jfimv2.xyz

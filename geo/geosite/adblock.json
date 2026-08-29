@@ -1,0 +1,35 @@
+{
+  "version": 2,
+  "rules": [
+    {
+      "domain": [
+        "a.tiktokmod.pro",
+        "reqhfg-launches.appsflyersdk.com",
+        "update.9mod.com"
+      ],
+      "domain_suffix": [
+        "caddyserver.com.cn",
+        "cupy.cn",
+        "dmlr.cn",
+        "git-scm.cn",
+        "gptr.com.cn",
+        "graphrag.com.cn",
+        "holybible.com.cn",
+        "langflow.cn",
+        "llmd.cn",
+        "mdn.org.cn",
+        "open-source.com.cn",
+        "openwebui.cn",
+        "openwebui.com.cn",
+        "pptr.cn",
+        "pytest.cn",
+        "rspack.cn",
+        "stackoverflow.com.cn",
+        "tauri.org.cn",
+        "tortoisesvn.cn",
+        "v2ex.cn",
+        "wordpresstheme.cn"
+      ]
+    }
+  ]
+}

@@ -13,4 +13,8 @@ p.sda1.dev
 sub1.sntp.me
 # kl
 +.klz9.com
++.jfimv2.xyz
 j1.jfimv2.xyz
+j2.jfimv2.xyz
+j3.jfimv2.xyz
+j4.jfimv2.xyz

@@ -1,11 +1,12 @@
 # Sing-box 代理规则集
 
-最后更新: 2026-08-29 13:06:34 (UTC+8)
+最后更新: 2026-08-29 13:12:17 (UTC+8)
 
 ## GeoSite 域名规则
 
 | 规则名称 | 格式 | 条目数 |
 | :--- | :---: | :---: |
+| adblock | [SRS](geo/geosite/adblock.srs) / [JSON](geo/geosite/adblock.json) | 24 |
 | ai | [SRS](geo/geosite/ai.srs) / [JSON](geo/geosite/ai.json) | 180 |
 | china | [SRS](geo/geosite/china.srs) / [JSON](geo/geosite/china.json) | 116,723 |
 | cloudflare | [SRS](geo/geosite/cloudflare.srs) / [JSON](geo/geosite/cloudflare.json) | 57 |
@@ -13,6 +14,7 @@
 | ehentai | [SRS](geo/geosite/ehentai.srs) / [JSON](geo/geosite/ehentai.json) | 8 |
 | emby | [SRS](geo/geosite/emby.srs) | 131 |
 | emby-cn | [SRS](geo/geosite/emby-cn.srs) | 38 |
+| fake-ip | [SRS](geo/geosite/fake-ip.srs) / [JSON](geo/geosite/fake-ip.json) | 7 |
 | fake-ip-filter | [SRS](geo/geosite/fake-ip-filter.srs) / [JSON](geo/geosite/fake-ip-filter.json) | 145 |
 | game-platforms-download | [SRS](geo/geosite/game-platforms-download.srs) / [JSON](geo/geosite/game-platforms-download.json) | 491 |
 | games | [SRS](geo/geosite/games.srs) / [JSON](geo/geosite/games.json) | 1,341 |

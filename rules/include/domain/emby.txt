@@ -47,6 +47,7 @@ faemby.vip
 # HG
 emby.dnscf.dpdns.org
 # mirai
++.miraiemby.com
 mi.miraiemby.com
 stream-1.miraiemby.com
 dm.jiedaibao.gs

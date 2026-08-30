@@ -49,12 +49,7 @@ emby.dnscf.dpdns.org
 # mirai
 +.miraiemby.com
 mi.miraiemby.com
-mi2.miraiemby.com
-mi3.miraiemby.com
-vip1.miraiemby.com
 stream-1.miraiemby.com
-stream-2.miraiemby.com
-stream-3.miraiemby.com
 dm.jiedaibao.gs
 dm.moxiuu.com
 # embyhello

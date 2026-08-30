@@ -18,7 +18,7 @@
         ]
       },
       "exclude": {
-        "inline": [],
+        "inline": ["emby"],
         "urls": []
       }
     },

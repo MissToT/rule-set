@@ -1,6 +1,6 @@
 ! Title: AdGuard Rule List
-! Updated: 2026-09-04 06:14:13
-! Total Rules: 100469
+! Updated: 2026-09-05 00:57:46
+! Total Rules: 100493
 @@||ad.azure.com^
 @@||ads.taboola.com^
 @@||autocomplete.clearbit.com^
@@ -100470,3 +100470,27 @@
 ||jmcomic1.mobi^
 ||jmcomic1.rocks^
 ||jmcomic2.moe^
+||reqhfg-launches.appsflyersdk.com^
+||update.9mod.com^
+||a.tiktokmod.pro^
+||open-source.com.cn^
+||rspack.cn^
+||tauri.org.cn^
+||dmlr.cn^
+||pytest.cn^
+||llmd.cn^
+||pptr.cn^
+||gptr.com.cn^
+||langflow.cn^
+||tortoisesvn.cn^
+||stackoverflow.com.cn^
+||holybible.com.cn^
+||v2ex.cn^
+||wordpresstheme.cn^
+||cupy.cn^
+||openwebui.cn^
+||openwebui.com.cn^
+||caddyserver.com.cn^
+||git-scm.cn^
+||mdn.org.cn^
+||graphrag.com.cn^

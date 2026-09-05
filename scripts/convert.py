@@ -105,10 +105,11 @@ PREFIX_REGEX = re.compile(
 
 def parse_adblock_local_file(filepath):
     raw_ag_lines = []
-    clean_domains = set()
+    exact_domains = set()
+    suffix_domains = set()
     
     if not os.path.exists(filepath):
-        return raw_ag_lines, clean_domains
+        return raw_ag_lines, exact_domains, suffix_domains
 
     with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
         for line in f:
@@ -120,10 +121,11 @@ def parse_adblock_local_file(filepath):
             work_line = line[2:] if is_whitelist else line
             prefix = "@@" if is_whitelist else ""
 
+            # 关键词匹配
             if '*' in work_line or work_line.upper().startswith("DOMAIN-KEYWORD,"):
                 clean_kw = PREFIX_REGEX.sub('', work_line).rstrip('^').strip('*').strip()
                 if clean_kw:
-                    clean_domains.add(clean_kw)
+                    suffix_domains.add(f"*{clean_kw}*")
                     if work_line.startswith("||") or work_line.startswith("*"):
                         formatted = work_line if work_line.endswith('^') else f"{work_line}^"
                     else:
@@ -131,12 +133,23 @@ def parse_adblock_local_file(filepath):
                     raw_ag_lines.append(f"{prefix}{formatted}")
                 continue
 
+            # 判断是否带有显式的后缀匹配前缀 (+. / . / || / DOMAIN-SUFFIX,)
+            is_suffix = (
+                work_line.startswith('+.') or 
+                work_line.startswith('.') or 
+                work_line.startswith('||') or 
+                work_line.upper().startswith('DOMAIN-SUFFIX,')
+            )
+
             clean_dom = PREFIX_REGEX.sub('', work_line).rstrip('^').strip()
             if clean_dom:
-                clean_domains.add(clean_dom)
+                if is_suffix:
+                    suffix_domains.add(clean_dom)
+                else:
+                    exact_domains.add(clean_dom)
                 raw_ag_lines.append(f"{prefix}||{clean_dom}^")
 
-    return raw_ag_lines, clean_domains
+    return raw_ag_lines, exact_domains, suffix_domains
 
 def domain_buckets_to_adguard(domain_set, domain_regex_set):
     """将通用的域名和正则集合转换为标准 AdGuard 格式规则"""
@@ -439,8 +452,9 @@ def process_adblock_section(global_commit_msgs):
 
     os.makedirs("adblock_out", exist_ok=True)
 
-    inc_lines, inc_doms = parse_adblock_local_file("rules/include/adblock/adblock.txt")
-    exc_lines, exc_doms = parse_adblock_local_file("rules/exclude/adblock/adblock.txt")
+    # 1. 接收三元组返回值
+    inc_lines, inc_exact_doms, inc_suffix_doms = parse_adblock_local_file("rules/include/adblock/adblock.txt")
+    exc_lines, exc_exact_doms, exc_suffix_doms = parse_adblock_local_file("rules/exclude/adblock/adblock.txt")
 
     now = datetime.now(timezone(timedelta(hours=8)))
     time_str = now.strftime('%Y-%m-%d %H:%M:%S')
@@ -503,9 +517,11 @@ def process_adblock_section(global_commit_msgs):
         except Exception as e:
             print(f"[-] 下载或转换 adblock 上游失败 [{url}]: {e}")
 
+    # 2. AdGuard 通用行过滤
+    exc_all_clean = exc_exact_doms | exc_suffix_doms
     filtered_lines = [
         l for l in raw_lines 
-        if PREFIX_REGEX.sub('', l.lstrip('@@')).rstrip('^').strip('*').strip() not in exc_doms
+        if PREFIX_REGEX.sub('', l.lstrip('@@')).rstrip('^').strip('*').strip() not in exc_all_clean
     ]
     
     for l in inc_lines:
@@ -527,6 +543,7 @@ def process_adblock_section(global_commit_msgs):
         os.system(f"./sing-box rule-set convert --type adguard --output {srs_output} {adguard_txt_path}")
         global_commit_msgs["sing-box.srs"] = f"{time_str} - 更新 sing-box.srs: 共 {len(filtered_lines)} 条"
 
+    # 3. 处理 Mihomo 输出
     if "mihomo" in adblock_cfg:
         m_cfg = adblock_cfg["mihomo"]
         m_urls = m_cfg.get("include", {}).get("urls", [])
@@ -547,9 +564,19 @@ def process_adblock_section(global_commit_msgs):
             except Exception as e:
                 print(f"[-] 下载或解析 mihomo adblock 失败: {e}")
 
-        for d in inc_doms:
-            m_domains.add(f"+.{d}" if not d.startswith('+.') else d)
-        for d in exc_doms:
+        # 包含纯域名（原样加入）
+        for d in inc_exact_doms:
+            m_domains.add(d)
+
+        # 包含后缀域名（补上 +. 前缀）
+        for d in inc_suffix_doms:
+            m_domains.add(d if d.startswith('+.') else f"+.{d}")
+
+        # 排除规则处理
+        for d in exc_exact_doms:
+            m_domains.discard(d)
+
+        for d in exc_suffix_doms:
             m_domains.discard(d)
             m_domains.discard(f"+.{d}")
 

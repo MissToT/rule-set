@@ -1,3 +1,5 @@
+# hills
+api.hills.im
 # nya
 ap-cn01.emby.bangumi.ca
 ap-cn02.emby.bangumi.ca

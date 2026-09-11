@@ -1,6 +1,6 @@
 # Mihomo 代理规则集
 
-最后更新: 2026-09-11 06:14:19 (UTC+8)
+最后更新: 2026-09-12 06:13:03 (UTC+8)
 
 ## GeoSite 域名规则
 
@@ -37,12 +37,12 @@
 
 | 规则名称 | 格式 | 条目数 |
 | :--- | :---: | :---: |
-| ai | [MRS](geo/geoip/ai.mrs) / [YAML](geo/geoip/ai.yaml) | 69 |
-| china | [MRS](geo/geoip/china.mrs) / [YAML](geo/geoip/china.yaml) | 17,473 |
-| cloudflare | [MRS](geo/geoip/cloudflare.mrs) / [YAML](geo/geoip/cloudflare.yaml) | 597 |
-| google | [MRS](geo/geoip/google.mrs) / [YAML](geo/geoip/google.yaml) | 3,048 |
+| ai | [MRS](geo/geoip/ai.mrs) / [YAML](geo/geoip/ai.yaml) | 66 |
+| china | [MRS](geo/geoip/china.mrs) / [YAML](geo/geoip/china.yaml) | 17,475 |
+| cloudflare | [MRS](geo/geoip/cloudflare.mrs) / [YAML](geo/geoip/cloudflare.yaml) | 607 |
+| google | [MRS](geo/geoip/google.mrs) / [YAML](geo/geoip/google.yaml) | 3,053 |
 | private | [MRS](geo/geoip/private.mrs) / [YAML](geo/geoip/private.yaml) | 14 |
-| proxy | [MRS](geo/geoip/proxy.mrs) / [YAML](geo/geoip/proxy.yaml) | 3,816 |
+| proxy | [MRS](geo/geoip/proxy.mrs) / [YAML](geo/geoip/proxy.yaml) | 3,828 |
 | telegram | [MRS](geo/geoip/telegram.mrs) / [YAML](geo/geoip/telegram.yaml) | 8 |
 | twitter | [MRS](geo/geoip/twitter.mrs) / [YAML](geo/geoip/twitter.yaml) | 17 |
 

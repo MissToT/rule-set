@@ -1,6 +1,6 @@
 # Sing-box 代理规则集
 
-最后更新: 2026-09-15 06:55:52 (UTC+8)
+最后更新: 2026-09-15 14:11:34 (UTC+8)
 
 ## GeoSite 域名规则
 
@@ -25,11 +25,11 @@
 | microsoft-cn | [SRS](geo/geosite/microsoft-cn.srs) / [JSON](geo/geosite/microsoft-cn.json) | 189 |
 | mihoyo-cn | [SRS](geo/geosite/mihoyo-cn.srs) / [JSON](geo/geosite/mihoyo-cn.json) | 17 |
 | private | [SRS](geo/geosite/private.srs) / [JSON](geo/geosite/private.json) | 131 |
-| proxy | [SRS](geo/geosite/proxy.srs) / [JSON](geo/geosite/proxy.json) | 31,007 |
+| proxy | [SRS](geo/geosite/proxy.srs) / [JSON](geo/geosite/proxy.json) | 31,008 |
 | sniffer-filter | [SRS](geo/geosite/sniffer-filter.srs) / [JSON](geo/geosite/sniffer-filter.json) | 7 |
 | taiwan | [SRS](geo/geosite/taiwan.srs) / [JSON](geo/geosite/taiwan.json) | 18 |
 | telegram | [SRS](geo/geosite/telegram.srs) / [JSON](geo/geosite/telegram.json) | 21 |
-| tiktok | [SRS](geo/geosite/tiktok.srs) / [JSON](geo/geosite/tiktok.json) | 36 |
+| tiktok | [SRS](geo/geosite/tiktok.srs) / [JSON](geo/geosite/tiktok.json) | 37 |
 | twitter | [SRS](geo/geosite/twitter.srs) / [JSON](geo/geosite/twitter.json) | 24 |
 | youtube | [SRS](geo/geosite/youtube.srs) / [JSON](geo/geosite/youtube.json) | 178 |
 
@@ -38,7 +38,7 @@
 | 规则名称 | 格式 | 条目数 |
 | :--- | :---: | :---: |
 | ai | [SRS](geo/geoip/ai.srs) / [JSON](geo/geoip/ai.json) | 66 |
-| china | [SRS](geo/geoip/china.srs) / [JSON](geo/geoip/china.json) | 17,474 |
+| china | [SRS](geo/geoip/china.srs) / [JSON](geo/geoip/china.json) | 17,475 |
 | cloudflare | [SRS](geo/geoip/cloudflare.srs) / [JSON](geo/geoip/cloudflare.json) | 607 |
 | google | [SRS](geo/geoip/google.srs) / [JSON](geo/geoip/google.json) | 3,053 |
 | private | [SRS](geo/geoip/private.srs) / [JSON](geo/geoip/private.json) | 14 |

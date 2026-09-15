@@ -348,7 +348,6 @@
         "inline": [],
         "urls": [
           "https://anti-ad.net/mihomo.mrs",
-          "https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/ultimate.txt",
           "https://github.com/MetaCubeX/meta-rules-dat/blob/meta/geo/geosite/18comic.yaml"
         ]
       },
@@ -363,7 +362,6 @@
         "inline": [],
         "urls": [
           "https://anti-ad.net/adguard.txt",
-          "https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/ultimate.txt",
           "https://github.com/MetaCubeX/meta-rules-dat/blob/sing/geo/geosite/18comic.json"
         ]
       },

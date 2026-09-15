@@ -1,6 +1,6 @@
 # Mihomo 代理规则集
 
-最后更新: 2026-09-15 06:55:52 (UTC+8)
+最后更新: 2026-09-15 14:11:34 (UTC+8)
 
 ## GeoSite 域名规则
 
@@ -25,11 +25,11 @@
 | microsoft-cn | [MRS](geo/geosite/microsoft-cn.mrs) / [YAML](geo/geosite/microsoft-cn.yaml) | 189 |
 | mihoyo-cn | [MRS](geo/geosite/mihoyo-cn.mrs) / [YAML](geo/geosite/mihoyo-cn.yaml) | 16 |
 | private | [MRS](geo/geosite/private.mrs) / [YAML](geo/geosite/private.yaml) | 130 |
-| proxy | [MRS](geo/geosite/proxy.mrs) / [YAML](geo/geosite/proxy.yaml) | 30,866 |
+| proxy | [MRS](geo/geosite/proxy.mrs) / [YAML](geo/geosite/proxy.yaml) | 30,867 |
 | sniffer-filter | [MRS](geo/geosite/sniffer-filter.mrs) / [YAML](geo/geosite/sniffer-filter.yaml) | 7 |
 | taiwan | [MRS](geo/geosite/taiwan.mrs) / [YAML](geo/geosite/taiwan.yaml) | 18 |
 | telegram | [MRS](geo/geosite/telegram.mrs) / [YAML](geo/geosite/telegram.yaml) | 21 |
-| tiktok | [MRS](geo/geosite/tiktok.mrs) / [YAML](geo/geosite/tiktok.yaml) | 36 |
+| tiktok | [MRS](geo/geosite/tiktok.mrs) / [YAML](geo/geosite/tiktok.yaml) | 37 |
 | twitter | [MRS](geo/geosite/twitter.mrs) / [YAML](geo/geosite/twitter.yaml) | 24 |
 | youtube | [MRS](geo/geosite/youtube.mrs) / [YAML](geo/geosite/youtube.yaml) | 178 |
 
@@ -38,7 +38,7 @@
 | 规则名称 | 格式 | 条目数 |
 | :--- | :---: | :---: |
 | ai | [MRS](geo/geoip/ai.mrs) / [YAML](geo/geoip/ai.yaml) | 66 |
-| china | [MRS](geo/geoip/china.mrs) / [YAML](geo/geoip/china.yaml) | 17,474 |
+| china | [MRS](geo/geoip/china.mrs) / [YAML](geo/geoip/china.yaml) | 17,475 |
 | cloudflare | [MRS](geo/geoip/cloudflare.mrs) / [YAML](geo/geoip/cloudflare.yaml) | 607 |
 | google | [MRS](geo/geoip/google.mrs) / [YAML](geo/geoip/google.yaml) | 3,053 |
 | private | [MRS](geo/geoip/private.mrs) / [YAML](geo/geoip/private.yaml) | 14 |

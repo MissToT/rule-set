@@ -114,7 +114,7 @@ def parse_adblock_local_file(filepath):
     with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
         for line in f:
             line = line.strip()
-            if not line or line.startswith(('#', '!')):
+            if not line or line.startswith(('#', '!', '[')):
                 continue
             
             is_whitelist = line.startswith('@@')
@@ -235,7 +235,7 @@ def parse_mixed_rules_to_buckets(filename):
     with open(filename, 'r', encoding='utf-8', errors='ignore') as f:
         for line in f:
             line = line.strip()
-            if not line or line.startswith('#') or line.startswith('!'): continue
+            if not line or line.startswith(('#', '!', '[')): continue
             if line.startswith("'") and line.endswith("'"): line = line[1:-1]
             if line.startswith('"') and line.endswith('"'): line = line[1:-1]
             if line.startswith('- '):

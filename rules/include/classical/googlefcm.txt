@@ -1,2 +1,5 @@
 # 自定义本地 classical 覆写规则 (include): googlefcm
 # 每行一条规则，支持 Mihomo / Sing-box 格式
+alt7-mtalk.google.com
+alt8-mtalk.google.com
+alt9-mtalk.google.com

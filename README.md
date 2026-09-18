@@ -1,6 +1,6 @@
 # Mihomo 代理规则集
 
-最后更新: 2026-09-18 19:29:03 (UTC+8)
+最后更新: 2026-09-18 19:58:45 (UTC+8)
 
 ## GeoSite 域名规则
 
@@ -8,7 +8,7 @@
 | :--- | :---: | :---: |
 | adblock | [MRS](geo/geosite/adblock.mrs) / [YAML](geo/geosite/adblock.yaml) | 24 |
 | ai | [MRS](geo/geosite/ai.mrs) / [YAML](geo/geosite/ai.yaml) | 179 |
-| china | [MRS](geo/geosite/china.mrs) / [YAML](geo/geosite/china.yaml) | 115,574 |
+| china | [MRS](geo/geosite/china.mrs) / [YAML](geo/geosite/china.yaml) | 115,838 |
 | cloudflare | [MRS](geo/geosite/cloudflare.mrs) / [YAML](geo/geosite/cloudflare.yaml) | 57 |
 | cloudflare-cn | [MRS](geo/geosite/cloudflare-cn.mrs) / [YAML](geo/geosite/cloudflare-cn.yaml) | 19 |
 | ehentai | [MRS](geo/geosite/ehentai.mrs) / [YAML](geo/geosite/ehentai.yaml) | 8 |
@@ -17,7 +17,7 @@
 | fake-ip | [MRS](geo/geosite/fake-ip.mrs) / [YAML](geo/geosite/fake-ip.yaml) | 7 |
 | fake-ip-filter | [MRS](geo/geosite/fake-ip-filter.mrs) / [YAML](geo/geosite/fake-ip-filter.yaml) | 114 |
 | game-platforms-download | [MRS](geo/geosite/game-platforms-download.mrs) / [YAML](geo/geosite/game-platforms-download.yaml) | 491 |
-| games | [MRS](geo/geosite/games.mrs) / [YAML](geo/geosite/games.yaml) | 847 |
+| games | [MRS](geo/geosite/games.mrs) / [YAML](geo/geosite/games.yaml) | 1,338 |
 | google | [MRS](geo/geosite/google.mrs) / [YAML](geo/geosite/google.yaml) | 1,045 |
 | googlefcm | [MRS](geo/geosite/googlefcm.mrs) / [YAML](geo/geosite/googlefcm.yaml) | 10 |
 | japan | [MRS](geo/geosite/japan.mrs) / [YAML](geo/geosite/japan.yaml) | 40 |
@@ -25,7 +25,7 @@
 | microsoft-cn | [MRS](geo/geosite/microsoft-cn.mrs) / [YAML](geo/geosite/microsoft-cn.yaml) | 189 |
 | mihoyo-cn | [MRS](geo/geosite/mihoyo-cn.mrs) / [YAML](geo/geosite/mihoyo-cn.yaml) | 16 |
 | private | [MRS](geo/geosite/private.mrs) / [YAML](geo/geosite/private.yaml) | 130 |
-| proxy | [MRS](geo/geosite/proxy.mrs) / [YAML](geo/geosite/proxy.yaml) | 27,473 |
+| proxy | [MRS](geo/geosite/proxy.mrs) / [YAML](geo/geosite/proxy.yaml) | 30,871 |
 | sniffer-filter | [MRS](geo/geosite/sniffer-filter.mrs) / [YAML](geo/geosite/sniffer-filter.yaml) | 7 |
 | taiwan | [MRS](geo/geosite/taiwan.mrs) / [YAML](geo/geosite/taiwan.yaml) | 18 |
 | telegram | [MRS](geo/geosite/telegram.mrs) / [YAML](geo/geosite/telegram.yaml) | 21 |
@@ -42,7 +42,7 @@
 | cloudflare | [MRS](geo/geoip/cloudflare.mrs) / [YAML](geo/geoip/cloudflare.yaml) | 710 |
 | google | [MRS](geo/geoip/google.mrs) / [YAML](geo/geoip/google.yaml) | 8,360 |
 | private | [MRS](geo/geoip/private.mrs) / [YAML](geo/geoip/private.yaml) | 18 |
-| proxy | [MRS](geo/geoip/proxy.mrs) / [YAML](geo/geoip/proxy.yaml) | 113 |
+| proxy | [MRS](geo/geoip/proxy.mrs) / [YAML](geo/geoip/proxy.yaml) | 9,306 |
 | telegram | [MRS](geo/geoip/telegram.mrs) / [YAML](geo/geoip/telegram.yaml) | 12 |
 | twitter | [MRS](geo/geoip/twitter.mrs) / [YAML](geo/geoip/twitter.yaml) | 19 |
 

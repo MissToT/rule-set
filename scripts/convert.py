@@ -976,9 +976,17 @@ def main():
                 singbox_items.append({"category": "geosite", "name": rule_name, "formats": formats, "total": len(singbox_domain_set)})
 
             if mixed_ip_set:
-                v4_nets = [ipaddress.ip_network(x, strict=False) for x in mixed_ip_set if ipaddress.ip_network(x, strict=False).version == 4]
+                v4_nets, v6_nets = [], []
+                for item in mixed_ip_set:
+                    try:
+                        net = ipaddress.ip_network(item.strip(), strict=False)
+                        if net.version == 4: v4_nets.append(net)
+                        else: v6_nets.append(net)
+                    except ValueError:
+                        continue
                 v4_collapsed = sorted(ipaddress.collapse_addresses(v4_nets))
-                collapsed_ip_set = set(str(n) for n in v4_collapsed)
+                v6_collapsed = sorted(ipaddress.collapse_addresses(v6_nets))
+                collapsed_ip_set = set(str(n) for n in (v4_collapsed + v6_collapsed))
 
                 export_rule_files(rule_name, collapsed_ip_set, "ipcidr", formats)
 

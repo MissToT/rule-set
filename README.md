@@ -1,6 +1,6 @@
 # Sing-box 代理规则集
 
-最后更新: 2026-09-18 19:09:10 (UTC+8)
+最后更新: 2026-09-18 19:29:03 (UTC+8)
 
 ## GeoSite 域名规则
 
@@ -8,7 +8,7 @@
 | :--- | :---: | :---: |
 | adblock | [SRS](geo/geosite/adblock.srs) / [JSON](geo/geosite/adblock.json) | 24 |
 | ai | [SRS](geo/geosite/ai.srs) / [JSON](geo/geosite/ai.json) | 180 |
-| china | [SRS](geo/geosite/china.srs) / [JSON](geo/geosite/china.json) | 115,846 |
+| china | [SRS](geo/geosite/china.srs) / [JSON](geo/geosite/china.json) | 115,581 |
 | cloudflare | [SRS](geo/geosite/cloudflare.srs) / [JSON](geo/geosite/cloudflare.json) | 57 |
 | cloudflare-cn | [SRS](geo/geosite/cloudflare-cn.srs) / [JSON](geo/geosite/cloudflare-cn.json) | 19 |
 | ehentai | [SRS](geo/geosite/ehentai.srs) / [JSON](geo/geosite/ehentai.json) | 8 |
@@ -17,7 +17,7 @@
 | fake-ip | [SRS](geo/geosite/fake-ip.srs) / [JSON](geo/geosite/fake-ip.json) | 7 |
 | fake-ip-filter | [SRS](geo/geosite/fake-ip-filter.srs) / [JSON](geo/geosite/fake-ip-filter.json) | 146 |
 | game-platforms-download | [SRS](geo/geosite/game-platforms-download.srs) / [JSON](geo/geosite/game-platforms-download.json) | 491 |
-| games | [SRS](geo/geosite/games.srs) / [JSON](geo/geosite/games.json) | 1,341 |
+| games | [SRS](geo/geosite/games.srs) / [JSON](geo/geosite/games.json) | 850 |
 | google | [SRS](geo/geosite/google.srs) / [JSON](geo/geosite/google.json) | 1,047 |
 | googlefcm | [SRS](geo/geosite/googlefcm.srs) / [JSON](geo/geosite/googlefcm.json) | 10 |
 | japan | [SRS](geo/geosite/japan.srs) / [JSON](geo/geosite/japan.json) | 40 |
@@ -25,7 +25,7 @@
 | microsoft-cn | [SRS](geo/geosite/microsoft-cn.srs) / [JSON](geo/geosite/microsoft-cn.json) | 189 |
 | mihoyo-cn | [SRS](geo/geosite/mihoyo-cn.srs) / [JSON](geo/geosite/mihoyo-cn.json) | 17 |
 | private | [SRS](geo/geosite/private.srs) / [JSON](geo/geosite/private.json) | 131 |
-| proxy | [SRS](geo/geosite/proxy.srs) / [JSON](geo/geosite/proxy.json) | 31,012 |
+| proxy | [SRS](geo/geosite/proxy.srs) / [JSON](geo/geosite/proxy.json) | 27,608 |
 | sniffer-filter | [SRS](geo/geosite/sniffer-filter.srs) / [JSON](geo/geosite/sniffer-filter.json) | 7 |
 | taiwan | [SRS](geo/geosite/taiwan.srs) / [JSON](geo/geosite/taiwan.json) | 18 |
 | telegram | [SRS](geo/geosite/telegram.srs) / [JSON](geo/geosite/telegram.json) | 21 |
@@ -42,7 +42,7 @@
 | cloudflare | [SRS](geo/geoip/cloudflare.srs) / [JSON](geo/geoip/cloudflare.json) | 710 |
 | google | [SRS](geo/geoip/google.srs) / [JSON](geo/geoip/google.json) | 8,360 |
 | private | [SRS](geo/geoip/private.srs) / [JSON](geo/geoip/private.json) | 18 |
-| proxy | [SRS](geo/geoip/proxy.srs) / [JSON](geo/geoip/proxy.json) | 9,306 |
+| proxy | [SRS](geo/geoip/proxy.srs) / [JSON](geo/geoip/proxy.json) | 113 |
 | telegram | [SRS](geo/geoip/telegram.srs) / [JSON](geo/geoip/telegram.json) | 12 |
 | twitter | [SRS](geo/geoip/twitter.srs) / [JSON](geo/geoip/twitter.json) | 19 |
 

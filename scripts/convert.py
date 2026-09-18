@@ -174,47 +174,47 @@ def domain_buckets_to_adguard(domain_set, domain_regex_set):
         ag_lines.append(f"/{r}/")
     return ag_lines
 
-def subtract_ip_networks(base_set, exclude_set):  
-    """按网段包含关系做差集，而不是简单的字符串精确匹配。  
-    支持 exclude 网段是 base 网段子集的场景（例如从 /24 里排除某个 /32）。  
-    """  
-    if not base_set or not exclude_set:  
-        return set(base_set)  
-  
-    base_nets = []  
-    for x in base_set:  
-        try:  
-            base_nets.append(ipaddress.ip_network(x, strict=False))  
-        except ValueError:  
-            continue  
-  
-    exclude_nets = []  
-    for x in exclude_set:  
-        try:  
-            exclude_nets.append(ipaddress.ip_network(x, strict=False))  
-        except ValueError:  
-            continue  
-  
-    result_nets = base_nets  
-    for ex_net in exclude_nets:  
-        new_result = []  
-        for net in result_nets:  
-            if net.version != ex_net.version:  
-                new_result.append(net)  
-                continue  
-            if net.subnet_of(ex_net):  
-                # 整个网段都被排除，直接丢弃  
-                continue  
-            if ex_net.subnet_of(net):  
-                # exclude 网段是 base 网段的子集，挖洞后保留剩余部分  
-                new_result.extend(net.address_exclude(ex_net))  
-            elif net.overlaps(ex_net):  
-                # 非对齐的部分重叠（理论上少见），保守起见保留原网段，避免误删  
-                new_result.append(net)  
-            else:  
-                new_result.append(net)  
-        result_nets = new_result  
-  
+def subtract_ip_networks(base_set, exclude_set):
+    """按网段包含关系做差集，而不是简单的字符串精确匹配。
+    支持 exclude 网段是 base 网段子集的场景（例如从 /24 里排除某个 /32）。
+    """
+    if not base_set or not exclude_set:
+        return set(base_set)
+
+    base_nets = []
+    for x in base_set:
+        try:
+            base_nets.append(ipaddress.ip_network(x, strict=False))
+        except ValueError:
+            continue
+
+    exclude_nets = []
+    for x in exclude_set:
+        try:
+            exclude_nets.append(ipaddress.ip_network(x, strict=False))
+        except ValueError:
+            continue
+
+    result_nets = base_nets
+    for ex_net in exclude_nets:
+        new_result = []
+        for net in result_nets:
+            if net.version != ex_net.version:
+                new_result.append(net)
+                continue
+            if net.subnet_of(ex_net):
+                # 整个网段都被排除，直接丢弃
+                continue
+            if ex_net.subnet_of(net):
+                # exclude 网段是 base 网段的子集，挖洞后保留剩余部分
+                new_result.extend(net.address_exclude(ex_net))
+            elif net.overlaps(ex_net):
+                # 非对齐的部分重叠（理论上少见），保守起见保留原网段，避免误删
+                new_result.append(net)
+            else:
+                new_result.append(net)
+        result_nets = new_result
+
     return set(str(n) for n in result_nets)
 
 def parse_mixed_rules_to_buckets(filename):

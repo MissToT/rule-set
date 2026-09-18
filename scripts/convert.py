@@ -245,7 +245,11 @@ def parse_mixed_rules_to_buckets(filename):
             if line == 'payload:': continue
 
             if line.startswith("||") or line.startswith("@@||"):
-                clean = line.lstrip('@@||').lstrip('||').rstrip('^').strip()
+                if line.startswith("@@||"):
+                    clean = line[4:]
+                else:
+                    clean = line[2:]
+                clean = clean.rstrip('^').strip()
                 if clean: domain_set.add(f"+.{clean}")
                 continue
 
@@ -346,6 +350,14 @@ def export_rule_files(rule_name, rules_set, rule_type, formats, domain_regex_set
     if domain_regex_set is None:
         domain_regex_set = set()
     is_ip = (rule_type == "ipcidr")
+    def _ip_sort_key(x):
+        net = ipaddress.ip_network(x, strict=False)
+        return (net.version, net)
+
+    def sorted_rules(s):
+        if is_ip:
+            return sorted(s, key=_ip_sort_key)
+        return sorted(s)
     mihomo_dir  = f"mihomo_out/geo/{'geoip' if is_ip else 'geosite'}"
     singbox_dir = f"singbox_out/geo/{'geoip' if is_ip else 'geosite'}"
     os.makedirs(mihomo_dir,  exist_ok=True)
@@ -365,7 +377,7 @@ def export_rule_files(rule_name, rules_set, rule_type, formats, domain_regex_set
     if "yaml" in fmt_lower:
         with open(mihomo_files["yaml"], 'w', encoding='utf-8') as f:
             f.write("payload:\n")
-            for rule in sorted(rules_set):
+            for rule in sorted_rules(rules_set):
                 f.write(f"  - '{rule}'\n")
 
     if "mrs" in fmt_lower:
@@ -374,7 +386,7 @@ def export_rule_files(rule_name, rules_set, rule_type, formats, domain_regex_set
         if not os.path.exists(yaml_path):
             with open(yaml_path, 'w', encoding='utf-8') as f:
                 f.write("payload:\n")
-                for rule in sorted(rules_set):
+                for rule in sorted_rules(rules_set):
                     f.write(f"  - '{rule}'\n")
             temp_yaml_created = True
         
@@ -387,7 +399,7 @@ def export_rule_files(rule_name, rules_set, rule_type, formats, domain_regex_set
     if "json" in fmt_lower:
         with open(singbox_files["json"], 'w', encoding='utf-8') as f:
             if is_ip:
-                json.dump({"version": 2, "rules": [{"ip_cidr": sorted(list(rules_set))}]}, f, indent=2, ensure_ascii=False)
+                json.dump({"version": 2, "rules": [{"ip_cidr": sorted_rules(rules_set)}]}, f, indent=2, ensure_ascii=False)
             else:
                 domains, suffixes, keywords = [], [], []
                 for r in sorted(rules_set):
@@ -414,7 +426,7 @@ def export_rule_files(rule_name, rules_set, rule_type, formats, domain_regex_set
         if not os.path.exists(json_path):
             if is_ip:
                 with open(json_path, 'w', encoding='utf-8') as f:
-                    json.dump({"version": 2, "rules": [{"ip_cidr": sorted(list(rules_set))}]}, f, indent=2, ensure_ascii=False)
+                    json.dump({"version": 2, "rules": [{"ip_cidr": sorted_rules(rules_set)}]}, f, indent=2, ensure_ascii=False)
             else:
                 domains, suffixes, keywords = [], [], []
                 for r in sorted(rules_set):

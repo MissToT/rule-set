@@ -514,89 +514,111 @@ def process_adblock_section(global_commit_msgs):
     now = datetime.now(timezone(timedelta(hours=8)))
     time_str = now.strftime('%Y-%m-%d %H:%M:%S')
 
-    raw_lines = []
-    urls = []
-    if "sing-box" in adblock_cfg or "singbox" in adblock_cfg:
-        sb_key = "sing-box" if "sing-box" in adblock_cfg else "singbox"
-        urls.extend(adblock_cfg[sb_key].get("include", {}).get("urls", []))
-    elif "adguard" in adblock_cfg:
-        urls.extend(adblock_cfg["adguard"].get("include", {}).get("urls", []))
-
-    for i, url in enumerate(urls):
-        temp_dl = f"temp_workspace/adblock_raw_{i}.dl"
-        temp_txt = f"temp_workspace/adblock_raw_{i}.txt"
-        try:
-            curl_download(url, temp_dl)
-            url_lower = url.lower()
-
-            is_json = url_lower.endswith('.json')
-            is_srs = url_lower.endswith('.srs')
-            is_mrs = url_lower.endswith('.mrs')
-            is_yaml = url_lower.endswith('.yaml') or url_lower.endswith('.yml')
-
-            if not (is_json or is_srs or is_mrs or is_yaml):
-                try:
-                    with open(temp_dl, 'r', encoding='utf-8', errors='ignore') as f_check:
-                        header = f_check.read(512).strip()
-                        if header.startswith('{') or header.startswith('['):
-                            is_json = True
-                        elif header.startswith('payload:'):
-                            is_yaml = True
-                except Exception:
-                    pass
-
-            if is_srs:
-                temp_json = f"temp_workspace/adblock_raw_{i}.json"
-                ret = os.system(f"./sing-box rule-set decompile {temp_dl} --output {temp_json}")
-                if ret == 0 and os.path.exists(temp_json):
-                    temp_txt = temp_json
-                else:
-                    temp_txt = temp_dl
-            elif is_mrs:
-                ret = os.system(f"./mihomo convert-ruleset domain mrs {temp_dl} {temp_txt}")
-                if ret != 0 or not os.path.exists(temp_txt):
-                    temp_txt = temp_dl
-            else:
-                temp_txt = temp_dl
-
-            if is_json or is_srs or is_mrs or is_yaml:
-                d_set, ip_set, dr_set = parse_mixed_rules_to_buckets(temp_txt)
-                ag_converted = domain_buckets_to_adguard(d_set, dr_set)
-                raw_lines.extend(ag_converted)
-            else:
-                with open(temp_txt, 'r', encoding='utf-8', errors='ignore') as f:
-                    for line in f:
-                        line = line.strip()
-                        if line and not line.startswith('#') and not line.startswith('!'):
-                            raw_lines.append(line)
-        except Exception as e:
-            print(f"[-] 下载或转换 adblock 上游失败 [{url}]: {e}")
-
-    # 2. AdGuard 通用行过滤
-    exc_all_clean = exc_exact_doms | exc_suffix_doms
-    filtered_lines = [
-        l for l in raw_lines 
-        if PREFIX_REGEX.sub('', l.lstrip('@@')).rstrip('^').strip('*').strip() not in exc_all_clean
-    ]
-    
-    for l in inc_lines:
-        if l not in filtered_lines:
-            filtered_lines.append(l)
-
-    adguard_txt_path = "adblock_out/adguard.txt"
-    with open(adguard_txt_path, "w", encoding="utf-8") as f:
-        f.write(f"! Title: AdGuard Rule List\n")
-        f.write(f"! Updated: {time_str}\n")
-        f.write(f"! Total Rules: {len(filtered_lines)}\n")
-        for line in filtered_lines:
-            f.write(f"{line}\n")
-
-    global_commit_msgs["adguard.txt"] = f"{time_str} - 更新 adguard.txt: 共 {len(filtered_lines)} 条"
-
-    if "sing-box" in adblock_cfg or "singbox" in adblock_cfg:
-        srs_output = "adblock_out/sing-box.srs"
-        os.system(f"./sing-box rule-set convert --type adguard --output {srs_output} {adguard_txt_path}")
-        global_commit_msgs["sing-box.srs"] = f"{time_str} - 更新 sing-box.srs: 共 {len(filtered_lines)} 条"
+# ---- 1. adguard.txt：只处理真正的 AdGuard 过滤器文本来源 ----  
+raw_lines = []  
+adguard_urls = adblock_cfg.get("adguard", {}).get("include", {}).get("urls", [])  
+  
+for i, url in enumerate(adguard_urls):  
+    temp_dl = f"temp_workspace/adblock_raw_{i}.dl"  
+    try:  
+        curl_download(url, temp_dl)  
+        # adguard 来源假定就是纯文本过滤器语法，直接按行读取，不做格式转换  
+        with open(temp_dl, 'r', encoding='utf-8', errors='ignore') as f:  
+            for line in f:  
+                line = line.strip()  
+                if line and not line.startswith('#') and not line.startswith('!'):  
+                    raw_lines.append(line)  
+    except Exception as e:  
+        print(f"[-] 下载 adguard 上游失败 [{url}]: {e}")  
+  
+exc_all_clean = exc_exact_doms | exc_suffix_doms  
+filtered_lines = [  
+    l for l in raw_lines  
+    if PREFIX_REGEX.sub('', l.lstrip('@@')).rstrip('^').strip('*').strip() not in exc_all_clean  
+]  
+for l in inc_lines:  
+    if l not in filtered_lines:  
+        filtered_lines.append(l)  
+  
+if adguard_urls or "adguard" in adblock_cfg:  
+    adguard_txt_path = "adblock_out/adguard.txt"  
+    with open(adguard_txt_path, "w", encoding="utf-8") as f:  
+        f.write(f"! Title: AdGuard Rule List\n")  
+        f.write(f"! Updated: {time_str}\n")  
+        f.write(f"! Total Rules: {len(filtered_lines)}\n")  
+        for line in filtered_lines:  
+            f.write(f"{line}\n")  
+    global_commit_msgs["adguard.txt"] = f"{time_str} - 更新 adguard.txt: 共 {len(filtered_lines)} 条"  
+  
+# ---- 2. sing-box：普通规则集格式，独立于 adguard.txt ----  
+if "sing-box" in adblock_cfg or "singbox" in adblock_cfg:  
+    sb_key = "sing-box" if "sing-box" in adblock_cfg else "singbox"  
+    sb_urls = adblock_cfg[sb_key].get("include", {}).get("urls", [])  
+    sb_domains = set()  
+    sb_regex = set()  
+  
+    for i, url in enumerate(sb_urls):  
+        temp_dl = f"temp_workspace/adblock_sb_{i}.dl"  
+        temp_txt = f"temp_workspace/adblock_sb_{i}.txt"  
+        try:  
+            curl_download(url, temp_dl)  
+            url_lower = url.lower()  
+            if url_lower.endswith('.srs'):  
+                temp_json = f"temp_workspace/adblock_sb_{i}.json"  
+                ret = os.system(f"./sing-box rule-set decompile {temp_dl} --output {temp_json}")  
+                temp_txt = temp_json if ret == 0 and os.path.exists(temp_json) else temp_dl  
+            elif url_lower.endswith('.mrs'):  
+                ret = os.system(f"./mihomo convert-ruleset domain mrs {temp_dl} {temp_txt}")  
+                if ret != 0 or not os.path.exists(temp_txt):  
+                    temp_txt = temp_dl  
+            else:  
+                temp_txt = temp_dl  
+  
+            d_set, _, dr_set = parse_mixed_rules_to_buckets(temp_txt)  
+            sb_domains |= d_set  
+            sb_regex |= dr_set  
+        except Exception as e:  
+            print(f"[-] 下载或解析 sing-box adblock 失败 [{url}]: {e}")  
+  
+    # 合并本地 include（后缀域名补 +. 前缀，与 mihomo 分支保持一致的语义）  
+    for d in inc_exact_doms:  
+        sb_domains.add(d)  
+    for d in inc_suffix_doms:  
+        sb_domains.add(d if d.startswith('+.') else f"+.{d}")  
+  
+    # 排除  
+    for d in exc_exact_doms:  
+        sb_domains.discard(d)  
+    for d in exc_suffix_doms:  
+        sb_domains.discard(d)  
+        sb_domains.discard(f"+.{d}")  
+  
+    # 分桶：domain / domain_suffix / domain_keyword  
+    domains, suffixes, keywords = [], [], []  
+    for r in sorted(sb_domains):  
+        if r.startswith('*') and r.endswith('*'):  
+            keywords.append(r[1:-1])  
+        elif r.startswith('+.'):  
+            suffixes.append(r[2:])  
+        elif r.startswith('.'):  
+            suffixes.append(r[1:])  
+        else:  
+            domains.append(r)  
+  
+    rule_obj = {}  
+    if domains: rule_obj["domain"] = domains  
+    if suffixes: rule_obj["domain_suffix"] = suffixes  
+    if keywords: rule_obj["domain_keyword"] = keywords  
+    if sb_regex: rule_obj["domain_regex"] = sorted(sb_regex)  
+  
+    json_path = "adblock_out/sing-box.json"  
+    srs_path = "adblock_out/sing-box.srs"  
+    with open(json_path, 'w', encoding='utf-8') as f:  
+        json.dump({"version": 2, "rules": [rule_obj]}, f, indent=2, ensure_ascii=False)  
+  
+    os.system(f"./sing-box rule-set compile --output {srs_path} {json_path}")  
+    global_commit_msgs["sing-box.json"] = f"{time_str} - 更新 sing-box.json: 共 {len(sb_domains)} 条"  
+    global_commit_msgs["sing-box.srs"] = f"{time_str} - 更新 sing-box.srs: 共 {len(sb_domains)} 条"
 
     # 3. 处理 Mihomo 输出
     if "mihomo" in adblock_cfg:

@@ -906,6 +906,8 @@ payload:
   - 'g1.gstatic.com'
   - 'g2.gstatic.com'
   - 'g3.gstatic.com'
+  - 'geminiweb-pa.clients.google.com'
+  - 'geminiweb-pa.clients6.google.com'
   - 'gongyichuangyi.net'
   - 'google-ohttp-relay-safebrowsing.fastly-edge.com'
   - 'googleapis-cn.com'

@@ -1,6 +1,6 @@
 # Mihomo 代理规则集
 
-最后更新: 2026-10-05 06:41:46 (UTC+8)
+最后更新: 2026-10-06 09:06:14 (UTC+8)
 
 ## GeoSite 域名规则
 
@@ -25,7 +25,7 @@
 | microsoft-cn | [MRS](geo/geosite/microsoft-cn.mrs) / [YAML](geo/geosite/microsoft-cn.yaml) | 189 |
 | mihoyo-cn | [MRS](geo/geosite/mihoyo-cn.mrs) / [YAML](geo/geosite/mihoyo-cn.yaml) | 16 |
 | private | [MRS](geo/geosite/private.mrs) / [YAML](geo/geosite/private.yaml) | 130 |
-| proxy | [MRS](geo/geosite/proxy.mrs) / [YAML](geo/geosite/proxy.yaml) | 30,893 |
+| proxy | [MRS](geo/geosite/proxy.mrs) / [YAML](geo/geosite/proxy.yaml) | 30,894 |
 | sniffer-filter | [MRS](geo/geosite/sniffer-filter.mrs) / [YAML](geo/geosite/sniffer-filter.yaml) | 7 |
 | taiwan | [MRS](geo/geosite/taiwan.mrs) / [YAML](geo/geosite/taiwan.yaml) | 18 |
 | telegram | [MRS](geo/geosite/telegram.mrs) / [YAML](geo/geosite/telegram.yaml) | 21 |

@@ -1,6 +1,6 @@
 # Sing-box 代理规则集
 
-最后更新: 2026-10-05 06:41:46 (UTC+8)
+最后更新: 2026-10-06 09:06:14 (UTC+8)
 
 ## GeoSite 域名规则
 
@@ -25,7 +25,7 @@
 | microsoft-cn | [SRS](geo/geosite/microsoft-cn.srs) / [JSON](geo/geosite/microsoft-cn.json) | 189 |
 | mihoyo-cn | [SRS](geo/geosite/mihoyo-cn.srs) / [JSON](geo/geosite/mihoyo-cn.json) | 17 |
 | private | [SRS](geo/geosite/private.srs) / [JSON](geo/geosite/private.json) | 131 |
-| proxy | [SRS](geo/geosite/proxy.srs) / [JSON](geo/geosite/proxy.json) | 31,034 |
+| proxy | [SRS](geo/geosite/proxy.srs) / [JSON](geo/geosite/proxy.json) | 31,035 |
 | sniffer-filter | [SRS](geo/geosite/sniffer-filter.srs) / [JSON](geo/geosite/sniffer-filter.json) | 7 |
 | taiwan | [SRS](geo/geosite/taiwan.srs) / [JSON](geo/geosite/taiwan.json) | 18 |
 | telegram | [SRS](geo/geosite/telegram.srs) / [JSON](geo/geosite/telegram.json) | 21 |

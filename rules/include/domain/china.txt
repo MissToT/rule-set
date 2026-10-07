@@ -1,5 +1,8 @@
 # Github加速镜像
 gh-proxy.com
+v6.gh-proxy.org
+axisnow.gh-proxy.org
++.gh-proxy.org
 # Pixiv加速镜像
 i.pixiv.re
 +.pixiv.re

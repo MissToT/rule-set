@@ -54,3 +54,5 @@ b.aurx.top
 c.aurx.top
 +.aurx.top
 cdn.aurx.top
+# 臻影
+gz.kingmedia.cc.cd

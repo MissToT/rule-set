@@ -70,3 +70,6 @@ dm.kingemby.xyz
 gy.meowfly.de
 # 小姨子
 gy1.66990000.xyz
+# 臻影
+emby.kingemby.xyz
++.kingemby.xyz

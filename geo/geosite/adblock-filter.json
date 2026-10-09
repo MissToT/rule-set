@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "rules": [
+    {
+      "domain": [
+        "apd-pcdnwxlogin.teg.tencent-cloud.net",
+        "px.ucweb.com"
+      ]
+    }
+  ]
+}

@@ -1,12 +1,12 @@
 # Sing-box 代理规则集
 
-最后更新: 2026-10-08 13:25:07 (UTC+8)
+最后更新: 2026-10-09 08:07:38 (UTC+8)
 
 ## GeoSite 域名规则
 
 | 规则名称 | 格式 | 条目数 |
 | :--- | :---: | :---: |
-| adblock | [SRS](geo/geosite/adblock.srs) / [JSON](geo/geosite/adblock.json) | 100,794 |
+| adblock | [SRS](geo/geosite/adblock.srs) / [JSON](geo/geosite/adblock.json) | 75 |
 | ai | [SRS](geo/geosite/ai.srs) / [JSON](geo/geosite/ai.json) | 189 |
 | china | [SRS](geo/geosite/china.srs) / [JSON](geo/geosite/china.json) | 116,134 |
 | cloudflare | [SRS](geo/geosite/cloudflare.srs) / [JSON](geo/geosite/cloudflare.json) | 57 |

@@ -1,3 +1,5 @@
 payload:
   - 'apd-pcdnwxlogin.teg.tencent-cloud.net'
+  - 'apd-pcdnwxnat.teg.tencent-cloud.net'
+  - 'apd-pcdnwxstat.teg.tencent-cloud.net'
   - 'px.ucweb.com'

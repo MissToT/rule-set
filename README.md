@@ -1,14 +1,14 @@
 # Sing-box 代理规则集
 
-最后更新: 2026-10-09 08:07:38 (UTC+8)
+最后更新: 2026-10-09 18:20:02 (UTC+8)
 
 ## GeoSite 域名规则
 
 | 规则名称 | 格式 | 条目数 |
 | :--- | :---: | :---: |
-| adblock | [SRS](geo/geosite/adblock.srs) / [JSON](geo/geosite/adblock.json) | 75 |
+| adblock | [SRS](geo/geosite/adblock.srs) / [JSON](geo/geosite/adblock.json) | 100,794 |
 | ai | [SRS](geo/geosite/ai.srs) / [JSON](geo/geosite/ai.json) | 189 |
-| china | [SRS](geo/geosite/china.srs) / [JSON](geo/geosite/china.json) | 116,134 |
+| china | [SRS](geo/geosite/china.srs) / [JSON](geo/geosite/china.json) | 116,463 |
 | cloudflare | [SRS](geo/geosite/cloudflare.srs) / [JSON](geo/geosite/cloudflare.json) | 57 |
 | cloudflare-cn | [SRS](geo/geosite/cloudflare-cn.srs) / [JSON](geo/geosite/cloudflare-cn.json) | 19 |
 | ehentai | [SRS](geo/geosite/ehentai.srs) / [JSON](geo/geosite/ehentai.json) | 8 |
@@ -21,11 +21,11 @@
 | google | [SRS](geo/geosite/google.srs) / [JSON](geo/geosite/google.json) | 1,051 |
 | googlefcm | [SRS](geo/geosite/googlefcm.srs) / [JSON](geo/geosite/googlefcm.json) | 10 |
 | japan | [SRS](geo/geosite/japan.srs) / [JSON](geo/geosite/japan.json) | 40 |
-| microsoft | [SRS](geo/geosite/microsoft.srs) / [JSON](geo/geosite/microsoft.json) | 560 |
+| microsoft | [SRS](geo/geosite/microsoft.srs) / [JSON](geo/geosite/microsoft.json) | 561 |
 | microsoft-cn | [SRS](geo/geosite/microsoft-cn.srs) / [JSON](geo/geosite/microsoft-cn.json) | 189 |
 | mihoyo-cn | [SRS](geo/geosite/mihoyo-cn.srs) / [JSON](geo/geosite/mihoyo-cn.json) | 17 |
 | private | [SRS](geo/geosite/private.srs) / [JSON](geo/geosite/private.json) | 131 |
-| proxy | [SRS](geo/geosite/proxy.srs) / [JSON](geo/geosite/proxy.json) | 31,061 |
+| proxy | [SRS](geo/geosite/proxy.srs) / [JSON](geo/geosite/proxy.json) | 31,064 |
 | sniffer-filter | [SRS](geo/geosite/sniffer-filter.srs) / [JSON](geo/geosite/sniffer-filter.json) | 7 |
 | taiwan | [SRS](geo/geosite/taiwan.srs) / [JSON](geo/geosite/taiwan.json) | 18 |
 | telegram | [SRS](geo/geosite/telegram.srs) / [JSON](geo/geosite/telegram.json) | 21 |

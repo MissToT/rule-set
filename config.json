@@ -345,7 +345,7 @@
       "include": {
         "inline": [],
         "urls": [
-          "https://anti-ad.net/mihomo.mrs",
+          "https://raw.githubusercontent.com/privacy-protection-tools/anti-ad.github.io/master/docs/mihomo.mrs",
           "https://github.com/MetaCubeX/meta-rules-dat/blob/meta/geo/geosite/18comic.yaml"
         ]
       },

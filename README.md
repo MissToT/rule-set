@@ -1,6 +1,6 @@
 # Mihomo 代理规则集
 
-最后更新: 2026-10-12 07:25:55 (UTC+8)
+最后更新: 2026-10-13 09:47:40 (UTC+8)
 
 ## GeoSite 域名规则
 
@@ -26,7 +26,7 @@
 | microsoft-cn | [MRS](geo/geosite/microsoft-cn.mrs) / [YAML](geo/geosite/microsoft-cn.yaml) | 189 |
 | mihoyo-cn | [MRS](geo/geosite/mihoyo-cn.mrs) / [YAML](geo/geosite/mihoyo-cn.yaml) | 16 |
 | private | [MRS](geo/geosite/private.mrs) / [YAML](geo/geosite/private.yaml) | 130 |
-| proxy | [MRS](geo/geosite/proxy.mrs) / [YAML](geo/geosite/proxy.yaml) | 31,070 |
+| proxy | [MRS](geo/geosite/proxy.mrs) / [YAML](geo/geosite/proxy.yaml) | 31,008 |
 | sniffer-filter | [MRS](geo/geosite/sniffer-filter.mrs) / [YAML](geo/geosite/sniffer-filter.yaml) | 7 |
 | taiwan | [MRS](geo/geosite/taiwan.mrs) / [YAML](geo/geosite/taiwan.yaml) | 18 |
 | telegram | [MRS](geo/geosite/telegram.mrs) / [YAML](geo/geosite/telegram.yaml) | 21 |
@@ -39,7 +39,7 @@
 | 规则名称 | 格式 | 条目数 |
 | :--- | :---: | :---: |
 | ai | [MRS](geo/geoip/ai.mrs) / [YAML](geo/geoip/ai.yaml) | 142 |
-| china | [MRS](geo/geoip/china.mrs) / [YAML](geo/geoip/china.yaml) | 17,499 |
+| china | [MRS](geo/geoip/china.mrs) / [YAML](geo/geoip/china.yaml) | 17,504 |
 | cloudflare | [MRS](geo/geoip/cloudflare.mrs) / [YAML](geo/geoip/cloudflare.yaml) | 826 |
 | google | [MRS](geo/geoip/google.mrs) / [YAML](geo/geoip/google.yaml) | 8,495 |
 | private | [MRS](geo/geoip/private.mrs) / [YAML](geo/geoip/private.yaml) | 18 |

@@ -1,6 +1,6 @@
 # Sing-box 代理规则集
 
-最后更新: 2026-10-15 06:57:40 (UTC+8)
+最后更新: 2026-10-15 19:01:42 (UTC+8)
 
 ## GeoSite 域名规则
 
@@ -9,12 +9,12 @@
 | adblock | [SRS](geo/geosite/adblock.srs) / [JSON](geo/geosite/adblock.json) | 102,610 |
 | adblock-filter | [SRS](geo/geosite/adblock-filter.srs) / [JSON](geo/geosite/adblock-filter.json) | 4 |
 | ai | [SRS](geo/geosite/ai.srs) / [JSON](geo/geosite/ai.json) | 190 |
-| china | [SRS](geo/geosite/china.srs) / [JSON](geo/geosite/china.json) | 115,679 |
+| china | [SRS](geo/geosite/china.srs) / [JSON](geo/geosite/china.json) | 115,700 |
 | cloudflare | [SRS](geo/geosite/cloudflare.srs) / [JSON](geo/geosite/cloudflare.json) | 57 |
 | cloudflare-cn | [SRS](geo/geosite/cloudflare-cn.srs) / [JSON](geo/geosite/cloudflare-cn.json) | 19 |
 | ehentai | [SRS](geo/geosite/ehentai.srs) / [JSON](geo/geosite/ehentai.json) | 8 |
 | emby | [SRS](geo/geosite/emby.srs) | 132 |
-| emby-cn | [SRS](geo/geosite/emby-cn.srs) | 41 |
+| emby-cn | [SRS](geo/geosite/emby-cn.srs) | 42 |
 | fake-ip | [SRS](geo/geosite/fake-ip.srs) / [JSON](geo/geosite/fake-ip.json) | 7 |
 | fake-ip-filter | [SRS](geo/geosite/fake-ip-filter.srs) / [JSON](geo/geosite/fake-ip-filter.json) | 146 |
 | game-platforms-download | [SRS](geo/geosite/game-platforms-download.srs) / [JSON](geo/geosite/game-platforms-download.json) | 491 |
@@ -39,11 +39,11 @@
 | 规则名称 | 格式 | 条目数 |
 | :--- | :---: | :---: |
 | ai | [SRS](geo/geoip/ai.srs) / [JSON](geo/geoip/ai.json) | 142 |
-| china | [SRS](geo/geoip/china.srs) / [JSON](geo/geoip/china.json) | 17,504 |
-| cloudflare | [SRS](geo/geoip/cloudflare.srs) / [JSON](geo/geoip/cloudflare.json) | 826 |
-| google | [SRS](geo/geoip/google.srs) / [JSON](geo/geoip/google.json) | 8,495 |
+| china | [SRS](geo/geoip/china.srs) / [JSON](geo/geoip/china.json) | 17,846 |
+| cloudflare | [SRS](geo/geoip/cloudflare.srs) / [JSON](geo/geoip/cloudflare.json) | 871 |
+| google | [SRS](geo/geoip/google.srs) / [JSON](geo/geoip/google.json) | 8,536 |
 | private | [SRS](geo/geoip/private.srs) / [JSON](geo/geoip/private.json) | 18 |
-| proxy | [SRS](geo/geoip/proxy.srs) / [JSON](geo/geoip/proxy.json) | 9,558 |
+| proxy | [SRS](geo/geoip/proxy.srs) / [JSON](geo/geoip/proxy.json) | 9,644 |
 | telegram | [SRS](geo/geoip/telegram.srs) / [JSON](geo/geoip/telegram.json) | 12 |
 | twitter | [SRS](geo/geoip/twitter.srs) / [JSON](geo/geoip/twitter.json) | 19 |
 

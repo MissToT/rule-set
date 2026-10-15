@@ -1,6 +1,6 @@
 # Sing-box 代理规则集
 
-最后更新: 2026-10-15 20:37:34 (UTC+8)
+最后更新: 2026-10-15 20:46:34 (UTC+8)
 
 ## GeoSite 域名规则
 
@@ -15,9 +15,7 @@
 | ehentai | [SRS](geo/geosite/ehentai.srs) / [JSON](geo/geosite/ehentai.json) | 8 |
 | emby | [SRS](geo/geosite/emby.srs) | 132 |
 | emby-cn | [SRS](geo/geosite/emby-cn.srs) | 42 |
-| fake-ip | [SRS](geo/geosite/fake-ip.srs) / [JSON](geo/geosite/fake-ip.json) | 7 |
-| fake-ip-filter | [SRS](geo/geosite/fake-ip-filter.srs) / [JSON](geo/geosite/fake-ip-filter.json) | 1 |
-| fakeip-filter | [SRS](geo/geosite/fakeip-filter.srs) / [JSON](geo/geosite/fakeip-filter.json) | 145 |
+| fakeip-filter | [SRS](geo/geosite/fakeip-filter.srs) / [JSON](geo/geosite/fakeip-filter.json) | 146 |
 | game-platforms-download | [SRS](geo/geosite/game-platforms-download.srs) / [JSON](geo/geosite/game-platforms-download.json) | 491 |
 | games | [SRS](geo/geosite/games.srs) / [JSON](geo/geosite/games.json) | 1,341 |
 | google | [SRS](geo/geosite/google.srs) / [JSON](geo/geosite/google.json) | 1,051 |

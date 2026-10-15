@@ -48,7 +48,7 @@
         "urls": []
       }
     },
-    "fake-ip-filter": {
+    "fakeip-filter": {
       "enable_local": true,
       "include": {
         "inline": [],

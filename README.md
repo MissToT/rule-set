@@ -1,6 +1,6 @@
 # Mihomo 代理规则集
 
-最后更新: 2026-10-15 20:37:34 (UTC+8)
+最后更新: 2026-10-15 20:46:34 (UTC+8)
 
 ## GeoSite 域名规则
 
@@ -15,9 +15,7 @@
 | ehentai | [MRS](geo/geosite/ehentai.mrs) / [YAML](geo/geosite/ehentai.yaml) | 8 |
 | emby | [MRS](geo/geosite/emby.mrs) | 132 |
 | emby-cn | [MRS](geo/geosite/emby-cn.mrs) | 42 |
-| fake-ip | [MRS](geo/geosite/fake-ip.mrs) / [YAML](geo/geosite/fake-ip.yaml) | 7 |
-| fake-ip-filter | [MRS](geo/geosite/fake-ip-filter.mrs) / [YAML](geo/geosite/fake-ip-filter.yaml) | 1 |
-| fakeip-filter | [MRS](geo/geosite/fakeip-filter.mrs) / [YAML](geo/geosite/fakeip-filter.yaml) | 113 |
+| fakeip-filter | [MRS](geo/geosite/fakeip-filter.mrs) / [YAML](geo/geosite/fakeip-filter.yaml) | 114 |
 | game-platforms-download | [MRS](geo/geosite/game-platforms-download.mrs) / [YAML](geo/geosite/game-platforms-download.yaml) | 491 |
 | games | [MRS](geo/geosite/games.mrs) / [YAML](geo/geosite/games.yaml) | 1,338 |
 | google | [MRS](geo/geosite/google.mrs) / [YAML](geo/geosite/google.yaml) | 1,049 |

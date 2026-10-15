@@ -1,20 +1,20 @@
 # Mihomo 代理规则集
 
-最后更新: 2026-10-13 09:47:40 (UTC+8)
+最后更新: 2026-10-15 19:01:42 (UTC+8)
 
 ## GeoSite 域名规则
 
 | 规则名称 | 格式 | 条目数 |
 | :--- | :---: | :---: |
-| adblock | [MRS](geo/geosite/adblock.mrs) / [YAML](geo/geosite/adblock.yaml) | 101,892 |
+| adblock | [MRS](geo/geosite/adblock.mrs) / [YAML](geo/geosite/adblock.yaml) | 102,610 |
 | adblock-filter | [MRS](geo/geosite/adblock-filter.mrs) / [YAML](geo/geosite/adblock-filter.yaml) | 4 |
 | ai | [MRS](geo/geosite/ai.mrs) / [YAML](geo/geosite/ai.yaml) | 189 |
-| china | [MRS](geo/geosite/china.mrs) / [YAML](geo/geosite/china.yaml) | 116,452 |
+| china | [MRS](geo/geosite/china.mrs) / [YAML](geo/geosite/china.yaml) | 115,692 |
 | cloudflare | [MRS](geo/geosite/cloudflare.mrs) / [YAML](geo/geosite/cloudflare.yaml) | 57 |
 | cloudflare-cn | [MRS](geo/geosite/cloudflare-cn.mrs) / [YAML](geo/geosite/cloudflare-cn.yaml) | 19 |
 | ehentai | [MRS](geo/geosite/ehentai.mrs) / [YAML](geo/geosite/ehentai.yaml) | 8 |
 | emby | [MRS](geo/geosite/emby.mrs) | 132 |
-| emby-cn | [MRS](geo/geosite/emby-cn.mrs) | 41 |
+| emby-cn | [MRS](geo/geosite/emby-cn.mrs) | 42 |
 | fake-ip | [MRS](geo/geosite/fake-ip.mrs) / [YAML](geo/geosite/fake-ip.yaml) | 7 |
 | fake-ip-filter | [MRS](geo/geosite/fake-ip-filter.mrs) / [YAML](geo/geosite/fake-ip-filter.yaml) | 114 |
 | game-platforms-download | [MRS](geo/geosite/game-platforms-download.mrs) / [YAML](geo/geosite/game-platforms-download.yaml) | 491 |
@@ -39,11 +39,11 @@
 | 规则名称 | 格式 | 条目数 |
 | :--- | :---: | :---: |
 | ai | [MRS](geo/geoip/ai.mrs) / [YAML](geo/geoip/ai.yaml) | 142 |
-| china | [MRS](geo/geoip/china.mrs) / [YAML](geo/geoip/china.yaml) | 17,504 |
-| cloudflare | [MRS](geo/geoip/cloudflare.mrs) / [YAML](geo/geoip/cloudflare.yaml) | 826 |
-| google | [MRS](geo/geoip/google.mrs) / [YAML](geo/geoip/google.yaml) | 8,495 |
+| china | [MRS](geo/geoip/china.mrs) / [YAML](geo/geoip/china.yaml) | 17,846 |
+| cloudflare | [MRS](geo/geoip/cloudflare.mrs) / [YAML](geo/geoip/cloudflare.yaml) | 871 |
+| google | [MRS](geo/geoip/google.mrs) / [YAML](geo/geoip/google.yaml) | 8,536 |
 | private | [MRS](geo/geoip/private.mrs) / [YAML](geo/geoip/private.yaml) | 18 |
-| proxy | [MRS](geo/geoip/proxy.mrs) / [YAML](geo/geoip/proxy.yaml) | 9,558 |
+| proxy | [MRS](geo/geoip/proxy.mrs) / [YAML](geo/geoip/proxy.yaml) | 9,644 |
 | telegram | [MRS](geo/geoip/telegram.mrs) / [YAML](geo/geoip/telegram.yaml) | 12 |
 | twitter | [MRS](geo/geoip/twitter.mrs) / [YAML](geo/geoip/twitter.yaml) | 19 |
 

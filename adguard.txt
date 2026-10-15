@@ -1,5 +1,5 @@
 ! Title: AdGuard Rule List
-! Updated: 2026-10-15 06:57:37
+! Updated: 2026-10-15 19:01:39
 ! Total Rules: 102059
 @@||ad.azure.com^
 @@||ads.finance^

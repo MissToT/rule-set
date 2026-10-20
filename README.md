@@ -1,14 +1,14 @@
 # Mihomo 代理规则集
 
-最后更新: 2026-10-19 06:12:14 (UTC+8)
+最后更新: 2026-10-21 06:54:43 (UTC+8)
 
 ## GeoSite 域名规则
 
 | 规则名称 | 格式 | 条目数 |
 | :--- | :---: | :---: |
-| adblock | [MRS](geo/geosite/adblock.mrs) / [YAML](geo/geosite/adblock.yaml) | 102,967 |
+| adblock | [MRS](geo/geosite/adblock.mrs) / [YAML](geo/geosite/adblock.yaml) | 103,752 |
 | adblock-filter | [MRS](geo/geosite/adblock-filter.mrs) / [YAML](geo/geosite/adblock-filter.yaml) | 4 |
-| ai | [MRS](geo/geosite/ai.mrs) / [YAML](geo/geosite/ai.yaml) | 192 |
+| ai | [MRS](geo/geosite/ai.mrs) / [YAML](geo/geosite/ai.yaml) | 193 |
 | china | [MRS](geo/geosite/china.mrs) / [YAML](geo/geosite/china.yaml) | 115,295 |
 | cloudflare | [MRS](geo/geosite/cloudflare.mrs) / [YAML](geo/geosite/cloudflare.yaml) | 57 |
 | cloudflare-cn | [MRS](geo/geosite/cloudflare-cn.mrs) / [YAML](geo/geosite/cloudflare-cn.yaml) | 19 |
@@ -17,15 +17,15 @@
 | emby-cn | [MRS](geo/geosite/emby-cn.mrs) | 42 |
 | fakeip-filter | [MRS](geo/geosite/fakeip-filter.mrs) / [YAML](geo/geosite/fakeip-filter.yaml) | 114 |
 | game-platforms-download | [MRS](geo/geosite/game-platforms-download.mrs) / [YAML](geo/geosite/game-platforms-download.yaml) | 491 |
-| games | [MRS](geo/geosite/games.mrs) / [YAML](geo/geosite/games.yaml) | 1,342 |
+| games | [MRS](geo/geosite/games.mrs) / [YAML](geo/geosite/games.yaml) | 1,339 |
 | google | [MRS](geo/geosite/google.mrs) / [YAML](geo/geosite/google.yaml) | 1,049 |
 | googlefcm | [MRS](geo/geosite/googlefcm.mrs) / [YAML](geo/geosite/googlefcm.yaml) | 10 |
 | japan | [MRS](geo/geosite/japan.mrs) / [YAML](geo/geosite/japan.yaml) | 40 |
-| microsoft | [MRS](geo/geosite/microsoft.mrs) / [YAML](geo/geosite/microsoft.yaml) | 561 |
+| microsoft | [MRS](geo/geosite/microsoft.mrs) / [YAML](geo/geosite/microsoft.yaml) | 558 |
 | microsoft-cn | [MRS](geo/geosite/microsoft-cn.mrs) / [YAML](geo/geosite/microsoft-cn.yaml) | 189 |
 | mihoyo-cn | [MRS](geo/geosite/mihoyo-cn.mrs) / [YAML](geo/geosite/mihoyo-cn.yaml) | 16 |
 | private | [MRS](geo/geosite/private.mrs) / [YAML](geo/geosite/private.yaml) | 132 |
-| proxy | [MRS](geo/geosite/proxy.mrs) / [YAML](geo/geosite/proxy.yaml) | 31,024 |
+| proxy | [MRS](geo/geosite/proxy.mrs) / [YAML](geo/geosite/proxy.yaml) | 31,036 |
 | sniffer-filter | [MRS](geo/geosite/sniffer-filter.mrs) / [YAML](geo/geosite/sniffer-filter.yaml) | 7 |
 | taiwan | [MRS](geo/geosite/taiwan.mrs) / [YAML](geo/geosite/taiwan.yaml) | 18 |
 | telegram | [MRS](geo/geosite/telegram.mrs) / [YAML](geo/geosite/telegram.yaml) | 21 |
@@ -38,7 +38,7 @@
 | 规则名称 | 格式 | 条目数 |
 | :--- | :---: | :---: |
 | ai | [MRS](geo/geoip/ai.mrs) / [YAML](geo/geoip/ai.yaml) | 142 |
-| china | [MRS](geo/geoip/china.mrs) / [YAML](geo/geoip/china.yaml) | 17,846 |
+| china | [MRS](geo/geoip/china.mrs) / [YAML](geo/geoip/china.yaml) | 17,847 |
 | cloudflare | [MRS](geo/geoip/cloudflare.mrs) / [YAML](geo/geoip/cloudflare.yaml) | 870 |
 | google | [MRS](geo/geoip/google.mrs) / [YAML](geo/geoip/google.yaml) | 8,552 |
 | home | [MRS](geo/geoip/home.mrs) / [YAML](geo/geoip/home.yaml) | 2 |

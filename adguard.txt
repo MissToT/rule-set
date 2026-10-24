@@ -1,6 +1,6 @@
 ! Title: AdGuard Rule List
-! Updated: 2026-10-24 06:52:18
-! Total Rules: 103970
+! Updated: 2026-10-25 06:13:50
+! Total Rules: 103969
 @@||ad.azure.com^
 @@||ads.finance^
 @@||ads.taboola.com^
@@ -46871,7 +46871,6 @@
 ||t.iz55.com^
 ||e.izaos.com^
 ||m.izaos.com^
-||izatcloud.net^
 ||izavjtqqznucm.site^
 ||izaybwqvajljf.space^
 ||izccryctmxtwb.website^

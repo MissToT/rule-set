@@ -5,7 +5,9 @@ axisnow.gh-proxy.org
 +.gh-proxy.org
 # Pixiv加速镜像
 i.pixiv.re
+i.pixiv.nl
 +.pixiv.re
++.pixiv.nl
 # 再漫画
 +.zaimanhua.com
 # 图床

@@ -1,6 +1,6 @@
 # Mihomo 代理规则集
 
-最后更新: 2026-11-03 09:58:53 (UTC+8)
+最后更新: 2026-11-04 08:21:16 (UTC+8)
 
 ## GeoSite 域名规则
 
@@ -38,7 +38,7 @@
 | 规则名称 | 格式 | 条目数 |
 | :--- | :---: | :---: |
 | ai | [MRS](geo/geoip/ai.mrs) / [YAML](geo/geoip/ai.yaml) | 146 |
-| china | [MRS](geo/geoip/china.mrs) / [YAML](geo/geoip/china.yaml) | 17,841 |
+| china | [MRS](geo/geoip/china.mrs) / [YAML](geo/geoip/china.yaml) | 17,513 |
 | cloudflare | [MRS](geo/geoip/cloudflare.mrs) / [YAML](geo/geoip/cloudflare.yaml) | 788 |
 | google | [MRS](geo/geoip/google.mrs) / [YAML](geo/geoip/google.yaml) | 8,559 |
 | home | [MRS](geo/geoip/home.mrs) / [YAML](geo/geoip/home.yaml) | 2 |

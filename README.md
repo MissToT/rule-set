@@ -1,6 +1,6 @@
 # Sing-box 代理规则集
 
-最后更新: 2026-11-03 09:58:53 (UTC+8)
+最后更新: 2026-11-04 08:21:16 (UTC+8)
 
 ## GeoSite 域名规则
 
@@ -38,7 +38,7 @@
 | 规则名称 | 格式 | 条目数 |
 | :--- | :---: | :---: |
 | ai | [SRS](geo/geoip/ai.srs) / [JSON](geo/geoip/ai.json) | 146 |
-| china | [SRS](geo/geoip/china.srs) / [JSON](geo/geoip/china.json) | 17,841 |
+| china | [SRS](geo/geoip/china.srs) / [JSON](geo/geoip/china.json) | 17,513 |
 | cloudflare | [SRS](geo/geoip/cloudflare.srs) / [JSON](geo/geoip/cloudflare.json) | 788 |
 | google | [SRS](geo/geoip/google.srs) / [JSON](geo/geoip/google.json) | 8,559 |
 | home | [SRS](geo/geoip/home.srs) / [JSON](geo/geoip/home.json) | 2 |

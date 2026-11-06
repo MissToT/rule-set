@@ -18,3 +18,5 @@ p.sda1.dev
 sub1.sntp.me
 # hills
 api.hills.im
+# 良心云
++.liangxin.xyz

@@ -175,6 +175,7 @@ payload:
   - '+.typesafe.ai'
   - '+.windsurf.build'
   - '+.windsurf.com'
+  - '+.workbuddy.ai'
   - '+.x.ai'
   - '+.youmind.ai'
   - '+.youmind.com'
@@ -216,4 +217,3 @@ payload:
   - 'production-openaicom-storage.azureedge.net'
   - 'servd-anthropic-website.b-cdn.net'
   - 'webchannel-alkalimakersuite-pa.clients6.google.com'
-  - 'www.workbuddy.ai'

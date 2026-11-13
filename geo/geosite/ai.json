@@ -39,8 +39,7 @@
         "production-copilot-host-westus.webpubsub.azure.com",
         "production-openaicom-storage.azureedge.net",
         "servd-anthropic-website.b-cdn.net",
-        "webchannel-alkalimakersuite-pa.clients6.google.com",
-        "www.workbuddy.ai"
+        "webchannel-alkalimakersuite-pa.clients6.google.com"
       ],
       "domain_suffix": [
         "agentclientprotocol.com",
@@ -219,6 +218,7 @@
         "typesafe.ai",
         "windsurf.build",
         "windsurf.com",
+        "workbuddy.ai",
         "x.ai",
         "youmind.ai",
         "youmind.com",

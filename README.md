@@ -1,15 +1,15 @@
 # Mihomo 代理规则集
 
-最后更新: 2026-11-13 10:19:35 (UTC+8)
+最后更新: 2026-11-14 08:38:22 (UTC+8)
 
 ## GeoSite 域名规则
 
 | 规则名称 | 格式 | 条目数 |
 | :--- | :---: | :---: |
-| adblock | [MRS](geo/geosite/adblock.mrs) / [YAML](geo/geosite/adblock.yaml) | 101,712 |
+| adblock | [MRS](geo/geosite/adblock.mrs) / [YAML](geo/geosite/adblock.yaml) | 102,732 |
 | adblock-filter | [MRS](geo/geosite/adblock-filter.mrs) / [YAML](geo/geosite/adblock-filter.yaml) | 4 |
 | ai | [MRS](geo/geosite/ai.mrs) / [YAML](geo/geosite/ai.yaml) | 218 |
-| china | [MRS](geo/geosite/china.mrs) / [YAML](geo/geosite/china.yaml) | 115,456 |
+| china | [MRS](geo/geosite/china.mrs) / [YAML](geo/geosite/china.yaml) | 115,549 |
 | cloudflare | [MRS](geo/geosite/cloudflare.mrs) / [YAML](geo/geosite/cloudflare.yaml) | 57 |
 | cloudflare-cn | [MRS](geo/geosite/cloudflare-cn.mrs) / [YAML](geo/geosite/cloudflare-cn.yaml) | 19 |
 | ehentai | [MRS](geo/geosite/ehentai.mrs) / [YAML](geo/geosite/ehentai.yaml) | 8 |

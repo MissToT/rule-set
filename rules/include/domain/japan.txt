@@ -2,3 +2,6 @@
 +.fantia.jp
 # Bookwalker
 +.bookwalker.jp
+# posfie 
++.posfie.com
++.tgstc.com

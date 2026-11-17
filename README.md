@@ -1,12 +1,12 @@
 # Mihomo 代理规则集
 
-最后更新: 2026-11-16 21:40:29 (UTC+8)
+最后更新: 2026-11-17 10:45:48 (UTC+8)
 
 ## GeoSite 域名规则
 
 | 规则名称 | 格式 | 条目数 |
 | :--- | :---: | :---: |
-| adblock | [MRS](geo/geosite/adblock.mrs) / [YAML](geo/geosite/adblock.yaml) | 102,732 |
+| adblock | [MRS](geo/geosite/adblock.mrs) / [YAML](geo/geosite/adblock.yaml) | 101,908 |
 | adblock-filter | [MRS](geo/geosite/adblock-filter.mrs) / [YAML](geo/geosite/adblock-filter.yaml) | 4 |
 | ai | [MRS](geo/geosite/ai.mrs) / [YAML](geo/geosite/ai.yaml) | 218 |
 | china | [MRS](geo/geosite/china.mrs) / [YAML](geo/geosite/china.yaml) | 115,559 |

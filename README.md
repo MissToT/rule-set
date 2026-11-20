@@ -1,15 +1,15 @@
 # Sing-box 代理规则集
 
-最后更新: 2026-11-19 09:41:41 (UTC+8)
+最后更新: 2026-11-20 09:37:57 (UTC+8)
 
 ## GeoSite 域名规则
 
 | 规则名称 | 格式 | 条目数 |
 | :--- | :---: | :---: |
-| adblock | [SRS](geo/geosite/adblock.srs) / [JSON](geo/geosite/adblock.json) | 101,908 |
+| adblock | [SRS](geo/geosite/adblock.srs) / [JSON](geo/geosite/adblock.json) | 102,817 |
 | adblock-filter | [SRS](geo/geosite/adblock-filter.srs) / [JSON](geo/geosite/adblock-filter.json) | 4 |
 | ai | [SRS](geo/geosite/ai.srs) / [JSON](geo/geosite/ai.json) | 220 |
-| china | [SRS](geo/geosite/china.srs) / [JSON](geo/geosite/china.json) | 115,567 |
+| china | [SRS](geo/geosite/china.srs) / [JSON](geo/geosite/china.json) | 115,581 |
 | cloudflare | [SRS](geo/geosite/cloudflare.srs) / [JSON](geo/geosite/cloudflare.json) | 57 |
 | cloudflare-cn | [SRS](geo/geosite/cloudflare-cn.srs) / [JSON](geo/geosite/cloudflare-cn.json) | 19 |
 | ehentai | [SRS](geo/geosite/ehentai.srs) / [JSON](geo/geosite/ehentai.json) | 8 |
@@ -37,13 +37,13 @@
 
 | 规则名称 | 格式 | 条目数 |
 | :--- | :---: | :---: |
-| ai | [SRS](geo/geoip/ai.srs) / [JSON](geo/geoip/ai.json) | 145 |
-| china | [SRS](geo/geoip/china.srs) / [JSON](geo/geoip/china.json) | 17,513 |
-| cloudflare | [SRS](geo/geoip/cloudflare.srs) / [JSON](geo/geoip/cloudflare.json) | 911 |
-| google | [SRS](geo/geoip/google.srs) / [JSON](geo/geoip/google.json) | 7,979 |
+| ai | [SRS](geo/geoip/ai.srs) / [JSON](geo/geoip/ai.json) | 150 |
+| china | [SRS](geo/geoip/china.srs) / [JSON](geo/geoip/china.json) | 17,526 |
+| cloudflare | [SRS](geo/geoip/cloudflare.srs) / [JSON](geo/geoip/cloudflare.json) | 908 |
+| google | [SRS](geo/geoip/google.srs) / [JSON](geo/geoip/google.json) | 7,090 |
 | home | [SRS](geo/geoip/home.srs) / [JSON](geo/geoip/home.json) | 2 |
 | private | [SRS](geo/geoip/private.srs) / [JSON](geo/geoip/private.json) | 28 |
-| proxy | [SRS](geo/geoip/proxy.srs) / [JSON](geo/geoip/proxy.json) | 9,129 |
+| proxy | [SRS](geo/geoip/proxy.srs) / [JSON](geo/geoip/proxy.json) | 8,236 |
 | telegram | [SRS](geo/geoip/telegram.srs) / [JSON](geo/geoip/telegram.json) | 12 |
 | twitter | [SRS](geo/geoip/twitter.srs) / [JSON](geo/geoip/twitter.json) | 20 |
 

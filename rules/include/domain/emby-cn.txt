@@ -55,6 +55,4 @@ c.aurx.top
 +.aurx.top
 cdn.aurx.top
 # 臻影
-movie.kingemby.com
 zy.kingemby.com
-+.kingemby.com

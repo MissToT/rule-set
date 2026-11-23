@@ -1,15 +1,15 @@
 # Sing-box 代理规则集
 
-最后更新: 2026-11-22 08:04:07 (UTC+8)
+最后更新: 2026-11-23 08:35:07 (UTC+8)
 
 ## GeoSite 域名规则
 
 | 规则名称 | 格式 | 条目数 |
 | :--- | :---: | :---: |
-| adblock | [SRS](geo/geosite/adblock.srs) / [JSON](geo/geosite/adblock.json) | 102,817 |
+| adblock | [SRS](geo/geosite/adblock.srs) / [JSON](geo/geosite/adblock.json) | 103,385 |
 | adblock-filter | [SRS](geo/geosite/adblock-filter.srs) / [JSON](geo/geosite/adblock-filter.json) | 4 |
 | ai | [SRS](geo/geosite/ai.srs) / [JSON](geo/geosite/ai.json) | 220 |
-| china | [SRS](geo/geosite/china.srs) / [JSON](geo/geosite/china.json) | 115,579 |
+| china | [SRS](geo/geosite/china.srs) / [JSON](geo/geosite/china.json) | 115,589 |
 | cloudflare | [SRS](geo/geosite/cloudflare.srs) / [JSON](geo/geosite/cloudflare.json) | 57 |
 | cloudflare-cn | [SRS](geo/geosite/cloudflare-cn.srs) / [JSON](geo/geosite/cloudflare-cn.json) | 19 |
 | ehentai | [SRS](geo/geosite/ehentai.srs) / [JSON](geo/geosite/ehentai.json) | 8 |
@@ -20,12 +20,12 @@
 | games | [SRS](geo/geosite/games.srs) / [JSON](geo/geosite/games.json) | 1,364 |
 | google | [SRS](geo/geosite/google.srs) / [JSON](geo/geosite/google.json) | 1,054 |
 | googlefcm | [SRS](geo/geosite/googlefcm.srs) / [JSON](geo/geosite/googlefcm.json) | 10 |
-| japan | [SRS](geo/geosite/japan.srs) / [JSON](geo/geosite/japan.json) | 42 |
+| japan | [SRS](geo/geosite/japan.srs) / [JSON](geo/geosite/japan.json) | 43 |
 | microsoft | [SRS](geo/geosite/microsoft.srs) / [JSON](geo/geosite/microsoft.json) | 571 |
 | microsoft-cn | [SRS](geo/geosite/microsoft-cn.srs) / [JSON](geo/geosite/microsoft-cn.json) | 189 |
 | mihoyo-cn | [SRS](geo/geosite/mihoyo-cn.srs) / [JSON](geo/geosite/mihoyo-cn.json) | 17 |
 | private | [SRS](geo/geosite/private.srs) / [JSON](geo/geosite/private.json) | 133 |
-| proxy | [SRS](geo/geosite/proxy.srs) / [JSON](geo/geosite/proxy.json) | 31,330 |
+| proxy | [SRS](geo/geosite/proxy.srs) / [JSON](geo/geosite/proxy.json) | 31,351 |
 | sniffer-filter | [SRS](geo/geosite/sniffer-filter.srs) / [JSON](geo/geosite/sniffer-filter.json) | 7 |
 | taiwan | [SRS](geo/geosite/taiwan.srs) / [JSON](geo/geosite/taiwan.json) | 18 |
 | telegram | [SRS](geo/geosite/telegram.srs) / [JSON](geo/geosite/telegram.json) | 21 |

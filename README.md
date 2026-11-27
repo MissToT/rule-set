@@ -1,6 +1,6 @@
 # Mihomo 代理规则集
 
-最后更新: 2026-11-26 10:37:09 (UTC+8)
+最后更新: 2026-11-27 10:37:50 (UTC+8)
 
 ## GeoSite 域名规则
 
@@ -25,7 +25,7 @@
 | microsoft-cn | [MRS](geo/geosite/microsoft-cn.mrs) / [YAML](geo/geosite/microsoft-cn.yaml) | 189 |
 | mihoyo-cn | [MRS](geo/geosite/mihoyo-cn.mrs) / [YAML](geo/geosite/mihoyo-cn.yaml) | 16 |
 | private | [MRS](geo/geosite/private.mrs) / [YAML](geo/geosite/private.yaml) | 132 |
-| proxy | [MRS](geo/geosite/proxy.mrs) / [YAML](geo/geosite/proxy.yaml) | 31,215 |
+| proxy | [MRS](geo/geosite/proxy.mrs) / [YAML](geo/geosite/proxy.yaml) | 31,226 |
 | sniffer-filter | [MRS](geo/geosite/sniffer-filter.mrs) / [YAML](geo/geosite/sniffer-filter.yaml) | 7 |
 | taiwan | [MRS](geo/geosite/taiwan.mrs) / [YAML](geo/geosite/taiwan.yaml) | 18 |
 | telegram | [MRS](geo/geosite/telegram.mrs) / [YAML](geo/geosite/telegram.yaml) | 21 |
@@ -37,13 +37,13 @@
 
 | 规则名称 | 格式 | 条目数 |
 | :--- | :---: | :---: |
-| ai | [MRS](geo/geoip/ai.mrs) / [YAML](geo/geoip/ai.yaml) | 150 |
-| china | [MRS](geo/geoip/china.mrs) / [YAML](geo/geoip/china.yaml) | 17,526 |
-| cloudflare | [MRS](geo/geoip/cloudflare.mrs) / [YAML](geo/geoip/cloudflare.yaml) | 908 |
-| google | [MRS](geo/geoip/google.mrs) / [YAML](geo/geoip/google.yaml) | 7,090 |
+| ai | [MRS](geo/geoip/ai.mrs) / [YAML](geo/geoip/ai.yaml) | 149 |
+| china | [MRS](geo/geoip/china.mrs) / [YAML](geo/geoip/china.yaml) | 17,528 |
+| cloudflare | [MRS](geo/geoip/cloudflare.mrs) / [YAML](geo/geoip/cloudflare.yaml) | 916 |
+| google | [MRS](geo/geoip/google.mrs) / [YAML](geo/geoip/google.yaml) | 6,915 |
 | home | [MRS](geo/geoip/home.mrs) / [YAML](geo/geoip/home.yaml) | 2 |
 | private | [MRS](geo/geoip/private.mrs) / [YAML](geo/geoip/private.yaml) | 28 |
-| proxy | [MRS](geo/geoip/proxy.mrs) / [YAML](geo/geoip/proxy.yaml) | 8,236 |
+| proxy | [MRS](geo/geoip/proxy.mrs) / [YAML](geo/geoip/proxy.yaml) | 8,067 |
 | telegram | [MRS](geo/geoip/telegram.mrs) / [YAML](geo/geoip/telegram.yaml) | 12 |
 | twitter | [MRS](geo/geoip/twitter.mrs) / [YAML](geo/geoip/twitter.yaml) | 20 |
 

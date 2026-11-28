@@ -1,6 +1,6 @@
 # Mihomo 代理规则集
 
-最后更新: 2026-11-27 10:37:50 (UTC+8)
+最后更新: 2026-11-28 10:27:54 (UTC+8)
 
 ## GeoSite 域名规则
 
@@ -21,11 +21,11 @@
 | google | [MRS](geo/geosite/google.mrs) / [YAML](geo/geosite/google.yaml) | 1,053 |
 | googlefcm | [MRS](geo/geosite/googlefcm.mrs) / [YAML](geo/geosite/googlefcm.yaml) | 10 |
 | japan | [MRS](geo/geosite/japan.mrs) / [YAML](geo/geosite/japan.yaml) | 43 |
-| microsoft | [MRS](geo/geosite/microsoft.mrs) / [YAML](geo/geosite/microsoft.yaml) | 571 |
+| microsoft | [MRS](geo/geosite/microsoft.mrs) / [YAML](geo/geosite/microsoft.yaml) | 572 |
 | microsoft-cn | [MRS](geo/geosite/microsoft-cn.mrs) / [YAML](geo/geosite/microsoft-cn.yaml) | 189 |
 | mihoyo-cn | [MRS](geo/geosite/mihoyo-cn.mrs) / [YAML](geo/geosite/mihoyo-cn.yaml) | 16 |
 | private | [MRS](geo/geosite/private.mrs) / [YAML](geo/geosite/private.yaml) | 132 |
-| proxy | [MRS](geo/geosite/proxy.mrs) / [YAML](geo/geosite/proxy.yaml) | 31,226 |
+| proxy | [MRS](geo/geosite/proxy.mrs) / [YAML](geo/geosite/proxy.yaml) | 31,227 |
 | sniffer-filter | [MRS](geo/geosite/sniffer-filter.mrs) / [YAML](geo/geosite/sniffer-filter.yaml) | 7 |
 | taiwan | [MRS](geo/geosite/taiwan.mrs) / [YAML](geo/geosite/taiwan.yaml) | 18 |
 | telegram | [MRS](geo/geosite/telegram.mrs) / [YAML](geo/geosite/telegram.yaml) | 21 |
